@@ -5,6 +5,7 @@ import EnvironmentPlugin from 'vite-plugin-environment'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/radio',
   plugins: [
     vue(),
     tsconfigPaths(),
