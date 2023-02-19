@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Taylor Swift",
+    "src": "https://streaming.exclusive.radio/er/taylorswift/icecast.audio",
+    "id": 1
+  },
+  {
+    "name": "WBGO Jazz 88.3 FM - Newark, NJ",
+    "src": "https://wbgo.streamguys1.com/wbgo128",
+    "id": 2
+  },
+  {
+    "name": "WQXR Classical",
+    "src": "https://stream.wqxr.org/wqxr-web",
+    "id": 3
+  },
+  {
+    "name": "Exclusively Dua Lipa",
+    "src": "https://prod.radio-api.net/stations/now-playing?stationIds=exclusivelydualipa",
+    "id": 4
+  }
+]
