@@ -2,5 +2,5 @@
 import { iPlayer } from 'features'
 </script>
 <template>
-  <iPlayer class="m-auto w-max md:ml-0" />
+  <iPlayer class="m-auto w-max lg:ml-20" />
 </template>

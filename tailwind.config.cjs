@@ -6,7 +6,6 @@ module.exports = {
     colors: {
       blue: {
         100: '#98b3cf', // основной цвет текста
-        200: '#009bf3', // ховер основного текста
       },
       light: {
         100: '#eef7ff', // светлый бэкграунд
@@ -22,6 +21,30 @@ module.exports = {
     extend: {
       boxShadow: {
         button: '0px 0px 5px rgba(206, 206, 206, 0.5)',
+      },
+      fontFamily: {
+        cyberpunk: ['Cyberpunk', 'system-ui'],
+      },
+      animation: {
+        firstWave: 'opacity 2s ease-out infinite',
+        secondWave: 'opacitySecond 2s ease-out infinite',
+        thirdWave: 'opacityThird 2s ease-out infinite',
+      },
+      keyframes: {
+        opacity: {
+          '0%': { opacity: 0 },
+          '50%': { opacity: 1 },
+        },
+        opacitySecond: {
+          '0%': { opacity: 1 },
+          '25%': { opacity: 0 },
+          '75%': { opacity: 1 },
+        },
+        opacityThird: {
+          '0%': { opacity: 1 },
+          '50%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
       },
     },
   },

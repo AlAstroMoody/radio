@@ -46,7 +46,7 @@ const isPlaying = ref<boolean>(false)
   <div class="py-4">
     <figure>
       <figcaption class="text-left font-semibold">
-        Listen radio: {{ activeRadio.name }}
+        Listen: {{ activeRadio.name }}
       </figcaption>
       <audio :src="activeRadio.src" ref="audio" class="hidden" />
     </figure>
@@ -55,11 +55,22 @@ const isPlaying = ref<boolean>(false)
         title="prev"
         @click="changeRadio(false)"
         class="rounded-l-full"
+        text-class="-mt-4"
       />
-      <iButton :title="isPlaying ? 'pause' : 'play'" @click="play" class="w-40">
+      <iButton
+        :title="isPlaying ? 'pause' : 'play'"
+        @click="play"
+        class="w-40"
+        text-class="-mt-4"
+      >
         <iPlay :is-play="isPlaying" class="mr-2" />
       </iButton>
-      <iButton title="next" @click="changeRadio(true)" class="rounded-r-full" />
+      <iButton
+        title="next"
+        @click="changeRadio(true)"
+        class="rounded-r-full"
+        text-class="-mt-4"
+      />
     </div>
     <!-- <iButton title="mute" @click="mute" class="rounded-full" /> -->
   </div>

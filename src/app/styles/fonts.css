@@ -30,3 +30,14 @@
     url('/fonts/ProximaNova-Bold.ttf') format('ttf'),
     url('/fonts/ProximaNova-Bold.eot') format('eot');
 }
+
+@font-face {
+  font-display: swap;
+  font-family: 'Cyberpunk';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Cyberpunk'), local('Cyberpunk'),
+    url('/fonts/Cyberpunk.woff') format('woff'),
+    url('/fonts/Cyberpunk.ttf') format('ttf'),
+    url('/fonts/Cyberpunk.eot') format('eot');
+}

@@ -5,18 +5,28 @@
     "id": 1
   },
   {
-    "name": "WBGO Jazz 88.3 FM - Newark, NJ",
-    "src": "https://wbgo.streamguys1.com/wbgo128",
+    "name": "America's Greatest 70's Hits",
+    "src": "http://hydra.cdnstream.com/1823_128",
     "id": 2
   },
   {
-    "name": "WQXR Classical",
-    "src": "https://stream.wqxr.org/wqxr-web",
+    "name": "Beatles Radio",
+    "src": "https://strw1.openstream.co/981",
     "id": 3
   },
   {
     "name": "Exclusively Dua Lipa",
-    "src": "https://prod.radio-api.net/stations/now-playing?stationIds=exclusivelydualipa",
+    "src": "https://streaming.exclusive.radio/er/dualipa/icecast.audio",
     "id": 4
+  },
+  {
+    "name": "Today's Hits - Hitsradio",
+    "src": "https://playerservices.streamtheworld.com/api/livestream-redirect/977_HITS.mp3",
+    "id": 5
+  },
+  {
+    "name": "SOUL RADIO Classics",
+    "src": "https://listen.soulradio.us/us",
+    "id": 6
   }
 ]
