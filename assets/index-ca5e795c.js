@@ -1,4 +1,4 @@
-import{d as f,u as g,o as n,c,a as o,b as _,e as k,r as h,f as R,t as w,g as a,h as r,_ as p,w as $,i as v,n as B,j as C}from"./index-ef9dd860.js";const M={xmlns:"http://www.w3.org/2000/svg",width:"28",height:"28",viewBox:"0 0 1280.000000 1280.000000",preserveAspectRatio:"xMidYMid meet",fill:"#98b3cf"},z={transform:"translate(0.000000,1280.000000) scale(0.100000,-0.100000)",stroke:"none"},A=o("path",{d:`M5845 12795 c-11 -2 -69 -9 -130 -15 -1865 -193 -3586 -1240 -4642
+import{d as f,u as g,o as n,c,a as o,b as _,e as k,r as h,f as R,t as w,g as a,h as r,_ as p,w as $,i as v,n as B,j as C}from"./index-2331709a.js";const M={xmlns:"http://www.w3.org/2000/svg",width:"28",height:"28",viewBox:"0 0 1280.000000 1280.000000",preserveAspectRatio:"xMidYMid meet",fill:"#98b3cf"},z={transform:"translate(0.000000,1280.000000) scale(0.100000,-0.100000)",stroke:"none"},A=o("path",{d:`M5845 12795 c-11 -2 -69 -9 -130 -15 -1865 -193 -3586 -1240 -4642
 -2825 -598 -898 -947 -1893 -1050 -2995 -24 -258 -24 -853 0 -1105 80 -834
 282 -1553 638 -2276 621 -1260 1633 -2276 2894 -2906 718 -360 1460 -569 2300
 -650 252 -24 858 -24 1110 0 706 68 1320 222 1955 489 188 80 567 272 745 378
