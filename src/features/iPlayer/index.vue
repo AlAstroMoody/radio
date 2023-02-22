@@ -16,11 +16,6 @@ const play = (): void => {
   isPlaying.value = !isPlaying.value
 }
 
-// const mute = (bool: boolean): void => {
-//   audio.value ? (audio.value.muted = bool) : null
-//   isMuted.value = !isMuted.value
-// }
-
 const changeRadio = (value: boolean): void => {
   if (!value) {
     if (state.activeRadio.value > 0) {
@@ -40,10 +35,9 @@ const changeRadio = (value: boolean): void => {
 }
 
 const isPlaying = ref<boolean>(false)
-// const isMuted = ref<boolean>(false)
 </script>
 <template>
-  <div class="py-4">
+  <div class="fixed bottom-0 left-0 right-0 py-4 md:relative">
     <figure>
       <figcaption class="text-left font-semibold">
         Listen: {{ activeRadio.name }}
@@ -72,6 +66,5 @@ const isPlaying = ref<boolean>(false)
         text-class="-mt-4"
       />
     </div>
-    <!-- <iButton title="mute" @click="mute" class="rounded-full" /> -->
   </div>
 </template>
