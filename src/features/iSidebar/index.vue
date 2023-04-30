@@ -8,7 +8,9 @@ const toggleDark = useToggle(isDarkTheme)
 </script>
 <template>
   <aside class="flex flex-col justify-between">
-    <div class="mb-4 font-cyberpunk text-6xl text-black dark:text-white">
+    <div
+      class="mb-4 w-full max-w-sm font-cyberpunk text-6xl text-black dark:text-white"
+    >
       <div class="text-left">Amazing</div>
       <div class="text-right">radio</div>
     </div>
@@ -23,7 +25,7 @@ const toggleDark = useToggle(isDarkTheme)
     </iButton>
     <iButton
       @click="toggleDark()"
-      class="relative ml-auto h-12 w-12 rounded-full md:hidden"
+      class="absolute top-1 right-1 ml-auto h-12 w-12 rounded-full md:hidden"
       variant="control"
     >
       <iLamp class="ml-[10px]" />

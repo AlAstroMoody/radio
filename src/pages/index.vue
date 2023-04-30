@@ -10,7 +10,7 @@ import { RouterView } from 'vue-router'
     <iSidebar
       class="z-10 w-full overflow-hidden p-4 md:h-screen md:w-96 md:min-w-[24rem]"
     />
-    <div class="z-10 flex h-full w-full px-4 md:h-screen">
+    <div class="z-10 flex h-full w-full md:h-screen md:px-4">
       <router-view />
     </div>
     <img
