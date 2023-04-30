@@ -17,12 +17,14 @@ const toggleDark = useToggle(isDarkTheme)
       @click="toggleDark()"
       class="mx-8 mb-8 mt-auto hidden w-max rounded-xl text-xl font-bold md:flex"
       :title="isDarkTheme ? 'Light theme' : 'Dark theme'"
+      variant="control"
     >
       <iLamp class="mr-2" />
     </iButton>
     <iButton
       @click="toggleDark()"
       class="relative ml-auto h-12 w-12 rounded-full md:hidden"
+      variant="control"
     >
       <iLamp class="ml-[10px]" />
     </iButton>

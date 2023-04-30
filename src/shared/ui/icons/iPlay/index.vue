@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
     height="28"
     viewBox="0 0 1280.000000 1280.000000"
     preserveAspectRatio="xMidYMid meet"
-    fill="#98b3cf"
+    class="fill-blue-100"
   >
     <g
       transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"

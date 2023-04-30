@@ -17,11 +17,10 @@ const props = withDefaults(defineProps<Props>(), {
     xmlns="http://www.w3.org/2000/svg"
     width="24"
     height="28"
-    fill="#98b3cf"
     viewBox="0 0 1001.000000 1280.000000"
     preserveAspectRatio="xMidYMid meet"
     :class="{ 'rotate-180': isPlay }"
-    class="transition duration-500"
+    class="fill-blue-100 transition duration-500"
   >
     <g
       transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"

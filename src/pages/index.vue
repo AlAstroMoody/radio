@@ -15,12 +15,12 @@ import { RouterView } from 'vue-router'
     </div>
     <img
       src="/images/flame-left.webp"
-      class="pointer-events-none absolute top-0 left-0 z-0"
+      class="pointer-events-none fixed top-0 left-0 z-0"
       alt=""
     />
     <img
       src="/images/flame-right.webp"
-      class="pointer-events-none absolute bottom-0 right-0 z-0"
+      class="pointer-events-none fixed bottom-0 right-0 z-0"
       alt=""
     />
   </div>

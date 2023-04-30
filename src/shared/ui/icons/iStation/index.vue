@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import { useDark } from '@vueuse/core'
-const isDarkTheme = useDark()
-</script>
 <template>
   <svg
     version="1.0"
@@ -14,7 +10,7 @@ const isDarkTheme = useDark()
     <g
       transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
       stroke="none"
-      :fill="isDarkTheme ? '#98b3cf' : '#1a385b'"
+      class="fill-blue-200 dark:fill-blue-100"
     >
       <path
         class="animate-thirdWave"
