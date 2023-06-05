@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useDark } from '@vueuse/core'
-const isDarkTheme = useDark()
-
 interface Props {
   isPlay?: boolean
 }

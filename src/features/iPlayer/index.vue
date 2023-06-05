@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { iPlay, iButton, iSpin } from 'shared'
+import { iPlay, iButton, iSpin, iSound } from 'shared'
 
 import { radioList, useGlobalState } from 'processes'
 
@@ -21,9 +21,15 @@ const activeRadio = computed(() =>
   radioList.find((radio) => radio.id === state.activeRadio.value)
 )
 
+const volume = ref<number>(50)
+
 watch(activeRadio, () => {
   pending.value = true
   audio.value ? (audio.value.oncanplay = () => play()) : null
+})
+
+watch(volume, () => {
+  audio.value ? (audio.value.volume = volume.value / 100) : null
 })
 
 const pending = ref<boolean>(false)
@@ -88,7 +94,7 @@ function visualize() {
 
     for (let i = 0; i < bufferLength.value; i++) {
       barHeight = dataArray.value[i]
-      canvasContext.value.fillStyle = `rgb(${barHeight},4, 160)`
+      canvasContext.value.fillStyle = `rgb(100,${barHeight * 4},30)`
       barHeight *= heightScale
       canvasContext.value.fillRect(
         x,
@@ -106,44 +112,66 @@ function visualize() {
 }
 </script>
 <template>
-  <div class="mt-auto py-4 md:relative">
-    <figure>
-      <figcaption class="text-left font-semibold">
-        Listen: {{ activeRadio?.name }}
-      </figcaption>
-      <audio
-        :src="activeRadio?.src"
-        ref="audio"
-        class="hidden"
-        crossorigin="anonymous"
-      />
-    </figure>
-    <div class="flex pt-2 text-3xl font-normal">
-      <iButton
-        title="prev"
-        @click="state.prevRadio"
-        class="rounded-l-full"
-        text-class="-mt-4"
-        variant="control"
-      />
-      <iButton
-        :title="isPlaying ? 'pause' : 'play'"
-        @click="isPlaying ? pause() : play()"
-        class="w-40"
-        text-class="-mt-4"
-        variant="control"
-      >
-        <iPlay :is-play="isPlaying" class="mr-2" v-show="!pending" />
-        <iSpin v-show="pending" />
-      </iButton>
-      <iButton
-        title="next"
-        @click="state.nextRadio"
-        class="rounded-r-full"
-        text-class="-mt-4"
-        variant="control"
+  <div class="flex">
+    <div class="mt-auto py-4 md:relative">
+      <figure>
+        <figcaption class="text-left font-semibold">
+          Listen: {{ activeRadio?.name }}
+        </figcaption>
+
+        <div class="mx-auto flex w-[300px] justify-center">
+          <img
+            alt="taylor"
+            src="/images/taylor.webp"
+            class="pointer-events-none w-32 object-cover"
+          />
+          <div class="mt-auto flex-1 items-center">
+            <div class="flex items-center text-xl">
+              <span>{{ volume }}%</span>
+            </div>
+            <input type="range" class="h-7" v-model="volume" />
+          </div>
+        </div>
+
+        <audio
+          :src="activeRadio?.src"
+          ref="audio"
+          class="hidden"
+          crossorigin="anonymous"
+        />
+      </figure>
+      <div class="flex text-3xl font-normal">
+        <iButton
+          title="prev"
+          @click="state.prevRadio"
+          class="rounded-l-full"
+          text-class="-mt-4"
+          variant="control"
+        />
+        <iButton
+          :title="isPlaying ? 'pause' : 'play'"
+          @click="isPlaying ? pause() : play()"
+          class="w-40"
+          text-class="-mt-4"
+          variant="control"
+        >
+          <iPlay :is-play="isPlaying" class="mr-2" v-show="!pending" />
+          <iSpin v-show="pending" />
+        </iButton>
+        <iButton
+          title="next"
+          @click="state.nextRadio"
+          class="rounded-r-full"
+          text-class="-mt-4"
+          variant="control"
+        />
+      </div>
+      <canvas
+        ref="canvas"
+        width="300"
+        height="200"
+        class="mx-auto rotate-180"
       />
     </div>
-    <canvas ref="canvas" width="300" height="200" class="mx-auto rotate-180" />
   </div>
 </template>

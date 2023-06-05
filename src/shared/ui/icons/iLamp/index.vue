@@ -1,8 +1,3 @@
-<script setup lang="ts">
-import { useDark } from '@vueuse/core'
-const isDarkTheme = useDark()
-</script>
-
 <template>
   <svg
     version="1.0"
