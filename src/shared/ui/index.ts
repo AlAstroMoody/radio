@@ -1,2 +1,2 @@
 export * from './icons'
-export * from './iButton'
+export { default as iButton } from './iButton.vue'

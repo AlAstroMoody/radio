@@ -94,7 +94,7 @@ function visualize() {
 
     for (let i = 0; i < bufferLength.value; i++) {
       barHeight = dataArray.value[i]
-      canvasContext.value.fillStyle = `rgb(100,${barHeight * 4},30)`
+      canvasContext.value.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)'
       barHeight *= heightScale
       canvasContext.value.fillRect(
         x,

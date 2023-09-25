@@ -3,8 +3,7 @@
   font-family: 'ProximaNova';
   font-style: normal;
   font-weight: 400;
-  src: url('/fonts/ProximaNova-Regular.woff2') format('woff2'),
-    url('/fonts/ProximaNova-Regular.woff') format('woff');
+  src: url('/fonts/ProximaNova-Regular.woff2') format('woff2');
 }
 
 @font-face {
@@ -12,8 +11,7 @@
   font-family: 'ProximaNova';
   font-style: normal;
   font-weight: 600;
-  src: url('/fonts/ProximaNova-Semibold.woff2') format('woff2'),
-    url('/fonts/ProximaNova-Semibold.woff') format('woff');
+  src: url('/fonts/ProximaNova-Semibold.woff2') format('woff2');
 }
 
 @font-face {
@@ -21,8 +19,7 @@
   font-family: 'ProximaNova';
   font-style: normal;
   font-weight: 700;
-  src: url('/fonts/ProximaNova-Bold.woff2') format('woff2'),
-    url('/fonts/ProximaNova-Bold.woff') format('woff');
+  src: url('/fonts/ProximaNova-Bold.woff2') format('woff2');
 }
 
 @font-face {
@@ -30,6 +27,5 @@
   font-family: 'Cyberpunk';
   font-style: normal;
   font-weight: 400;
-  src: url('/fonts/Cyberpunk.woff2') format('woff2'),
-    url('/fonts/Cyberpunk.woff') format('woff');
+  src: url('/fonts/Cyberpunk.woff2') format('woff2');
 }

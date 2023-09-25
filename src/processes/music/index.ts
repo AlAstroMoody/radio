@@ -1,2 +1,1 @@
-import radioList from './music.json'
-export { radioList }
+export { default as radioList } from './music.json'
