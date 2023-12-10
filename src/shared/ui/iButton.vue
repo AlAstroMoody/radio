@@ -24,7 +24,7 @@ const classes: Record<string, string> = {
     :class="classes[props.variant]"
     class="flex items-center"
   >
-    <slot></slot>
+    <slot />
     <span :class="textClass">{{ title }}</span>
   </button>
 </template>

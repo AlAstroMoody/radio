@@ -3,9 +3,7 @@ interface Props {
   isPlay?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  isPlay: true,
-})
+defineProps({ isPlay: Boolean })
 </script>
 
 <template>

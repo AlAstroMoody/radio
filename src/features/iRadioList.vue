@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { radioList } from 'processes'
-import { useGlobalState } from 'processes'
+import { radioList, useGlobalState } from 'processes'
 import { iButton, iStation } from 'shared'
+
 const state = useGlobalState()
 const activeRadio = computed(() => state.activeRadio.value)
 </script>
+
 <template>
   <div class="h-96 w-full font-medium md:h-auto">
     <div
@@ -14,12 +15,12 @@ const activeRadio = computed(() => state.activeRadio.value)
       favorites
     </div>
     <iButton
-      :title="radio.name"
       v-for="radio in radioList"
-      class="pt-2 pb-3 md:py-1"
       :key="radio.id"
-      @click="state.changeActiveRadio(radio.id)"
+      :title="radio.name"
+      class="pt-2 pb-3 md:py-1"
       :class="{ 'font-bold': radio.id === activeRadio }"
+      @click="state.changeActiveRadio(radio.id)"
     >
       <iStation v-if="radio.id === activeRadio" class="mr-2" />
     </iButton>

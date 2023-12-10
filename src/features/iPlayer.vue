@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { iPlay, iButton, iSpin, iSound } from 'shared'
+import { computed, onMounted, ref, watch } from 'vue'
+import { iButton, iPlay, iSpin } from 'shared'
 
 import { radioList, useGlobalState } from 'processes'
 
@@ -10,8 +10,8 @@ const audio = ref<HTMLAudioElement | null>()
 const audioCtx = window.AudioContext
 const audioContext = ref<AudioContext | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
-let canvasContext = ref<CanvasRenderingContext2D | null>(null)
-var analyser = ref<AnalyserNode | null>(null)
+const canvasContext = ref<CanvasRenderingContext2D | null>(null)
+const analyser = ref<AnalyserNode | null>(null)
 const width = ref<number>(400)
 const height = ref<number>(256)
 const bufferLength = ref<number>(1)
@@ -23,30 +23,22 @@ const activeRadio = computed(() =>
 
 const volume = ref<number>(50)
 
-watch(activeRadio, () => {
-  pending.value = true
-  audio.value ? (audio.value.oncanplay = () => play()) : null
-})
-
-watch(volume, () => {
-  audio.value ? (audio.value.volume = volume.value / 100) : null
-})
-
 const pending = ref<boolean>(false)
 const isPlaying = ref<boolean>(false)
+const rafVisualize = ref(0)
 
 async function play(): Promise<void> {
   if (!audioContext.value) {
     audioContext.value = new audioCtx()
     audioContext.value.resume()
     buildAudioGraph()
-    requestAnimationFrame(visualize)
   }
 
   pending.value = true
   await audio.value?.play()
   isPlaying.value = true
   pending.value = false
+  requestAnimationFrame(visualize)
 }
 
 function pause(): void {
@@ -54,14 +46,6 @@ function pause(): void {
   isPlaying.value = false
   pending.value = false
 }
-
-onMounted(() => {
-  if (canvas.value) {
-    width.value = canvas.value.width
-    height.value = canvas.value.height
-    canvasContext.value = canvas.value.getContext('2d')
-  }
-})
 
 function buildAudioGraph() {
   if (audioContext.value && audio.value) {
@@ -76,44 +60,53 @@ function buildAudioGraph() {
   }
 }
 
-function visualize() {
-  // очистить canvas
-  if (canvasContext.value && analyser.value && dataArray.value) {
-    canvasContext.value.clearRect(0, 0, width.value, height.value)
-    canvasContext.value.fillStyle = 'rgba (0, 0, 0, 0.5)'
+function clearCanvas() {
+  canvasContext.value?.clearRect(0, 0, width.value, height.value)
+}
 
+function visualize() {
+  clearCanvas()
+  if (canvasContext.value && analyser.value && dataArray.value) {
     // Получить данные анализатора
     analyser.value.getByteFrequencyData(dataArray.value)
-
-    let barWidth = width.value / bufferLength.value
-    let barHeight
+    const barWidth = width.value / bufferLength.value
     let x = 0
 
     // коэффициент масштабирования полос
-    const heightScale = height.value / 256
-
-    for (let i = 0; i < bufferLength.value; i++) {
-      barHeight = dataArray.value[i]
-      canvasContext.value.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)'
-      barHeight *= heightScale
-      canvasContext.value.fillRect(
-        x,
-        height.value - barHeight / 2,
-        barWidth,
-        barHeight / 2
-      )
-
-      // 1 - количество пикселей между столбцами
-      x += barWidth + 1
-    }
-
-    requestAnimationFrame(visualize)
+    dataArray.value.forEach((value, index) => {
+      if (canvasContext.value) {
+        canvasContext.value.fillStyle = `rgb(${value + index - 50},${index},${
+          value + index
+        })`
+        canvasContext.value.fillRect(x, height.value - value / 2, 1, value / 2)
+        x += barWidth + 1
+      }
+    })
   }
+  rafVisualize.value = requestAnimationFrame(visualize)
 }
+
+watch(activeRadio, () => {
+  pending.value = true
+  audio.value ? (audio.value.oncanplay = () => play()) : null
+})
+
+watch(volume, () => {
+  audio.value ? (audio.value.volume = volume.value / 100) : null
+})
+
+onMounted(() => {
+  if (canvas.value) {
+    width.value = canvas.value.width
+    height.value = canvas.value.height
+    canvasContext.value = canvas.value.getContext('2d')
+  }
+})
 </script>
+
 <template>
-  <div class="flex">
-    <div class="mt-auto py-4 md:relative">
+  <div class="relative">
+    <div class="z-10 mt-auto md:relative">
       <figure>
         <figcaption class="text-left font-semibold">
           Listen: {{ activeRadio?.name }}
@@ -129,13 +122,13 @@ function visualize() {
             <div class="flex items-center text-xl">
               <span>{{ volume }}%</span>
             </div>
-            <input type="range" class="h-7" v-model="volume" />
+            <input v-model="volume" type="range" class="h-7" />
           </div>
         </div>
 
         <audio
-          :src="activeRadio?.src"
           ref="audio"
+          :src="activeRadio?.src"
           class="hidden"
           crossorigin="anonymous"
         />
@@ -143,35 +136,35 @@ function visualize() {
       <div class="flex text-3xl font-normal">
         <iButton
           title="prev"
-          @click="state.prevRadio"
           class="rounded-l-full"
           text-class="-mt-4"
           variant="control"
+          @click="state.prevRadio"
         />
         <iButton
           :title="isPlaying ? 'pause' : 'play'"
-          @click="isPlaying ? pause() : play()"
           class="w-40"
           text-class="-mt-4"
           variant="control"
+          @click="isPlaying ? pause() : play()"
         >
-          <iPlay :is-play="isPlaying" class="mr-2" v-show="!pending" />
+          <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
         </iButton>
         <iButton
           title="next"
-          @click="state.nextRadio"
           class="rounded-r-full"
           text-class="-mt-4"
           variant="control"
+          @click="state.nextRadio"
         />
       </div>
-      <canvas
-        ref="canvas"
-        width="300"
-        height="200"
-        class="mx-auto rotate-180"
-      />
     </div>
+    <canvas
+      ref="canvas"
+      width="300"
+      height="200"
+      class="pointer-events-none m-auto rotate-180"
+    />
   </div>
 </template>

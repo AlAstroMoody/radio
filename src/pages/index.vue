@@ -11,17 +11,17 @@ import { RouterView } from 'vue-router'
       class="z-10 w-full overflow-hidden p-4 md:h-screen md:w-96 md:min-w-[24rem]"
     />
     <div class="z-10 flex h-full w-full md:h-screen md:px-4">
-      <router-view />
+      <RouterView />
     </div>
     <img
       src="/images/flame-left.webp"
       class="pointer-events-none fixed top-0 left-0 z-0"
       alt=""
-    />
+    >
     <img
       src="/images/flame-right.webp"
       class="pointer-events-none fixed bottom-0 right-0 z-0"
       alt=""
-    />
+    >
   </div>
 </template>
