@@ -4,7 +4,7 @@ import { iSidebar, iPlayer, iLovePwa, iRadioList } from 'features'
 
 <template>
   <div
-    class="flex min-h-dvh w-full flex-col bg-light-100 text-blue-100 transition-colors dark:bg-dark-100 md:flex-row"
+    class="flex min-h-svh w-full flex-col bg-light-100 text-blue-100 transition-colors dark:bg-dark-100 md:flex-row"
   >
     <iSidebar
       class="z-10 w-full overflow-hidden p-4 md:h-screen md:w-96 md:min-w-[24rem]"
