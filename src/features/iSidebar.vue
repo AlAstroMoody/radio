@@ -12,14 +12,10 @@ const toggleDark = useToggle(isDarkTheme)
     <div
       class="mb-4 w-full max-w-sm font-cyberpunk text-6xl text-black dark:text-white"
     >
-      <div class="text-left">
-        Amazing
-      </div>
-      <div class="text-right">
-        radio
-      </div>
+      <div class="text-left">Amazing</div>
+      <div class="text-right">radio</div>
     </div>
-    <iRadioList />
+    <iRadioList class="hidden md:block" />
     <iButton
       class="mx-8 mb-8 mt-auto hidden w-max rounded-xl text-xl font-bold md:flex"
       :title="isDarkTheme ? 'Light theme' : 'Dark theme'"
@@ -29,7 +25,7 @@ const toggleDark = useToggle(isDarkTheme)
       <iLamp class="mr-2" />
     </iButton>
     <iButton
-      class="absolute top-1 right-1 ml-auto h-12 w-12 rounded-full md:hidden"
+      class="absolute left-4 top-24 ml-auto h-12 w-12 rounded-full md:hidden"
       variant="control"
       @click="toggleDark()"
     >
