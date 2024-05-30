@@ -21,6 +21,15 @@ function installPWA() {
   })
 }
 
+// async function hideComponent() {
+//   if ('getInstalledRelatedApps' in navigator) {
+//     const relatedApps = await navigator.getInstalledRelatedApps()
+//     const PWAisInstalled = relatedApps.length > 0
+
+//     if (PWAisInstalled) isShow.value = false
+//   }
+// }
+
 useEventListener(
   document,
   'beforeinstallprompt',
@@ -36,7 +45,7 @@ useEventListener(
 <template>
   <div
     v-if="isShow"
-    class="fixed right-0 z-10 flex gap-1 rounded-bl-xl bg-dark-200 p-4 text-light-200"
+    class="pwa-install-button fixed right-0 z-10 flex gap-1 rounded-bl-xl bg-dark-200 p-4 text-light-200"
   >
     <button @click="installPWA" class="rounded-l-xl border p-1">
       Install PWA
@@ -46,3 +55,11 @@ useEventListener(
     </button>
   </div>
 </template>
+
+<style>
+@media (display-mode: standalone), (display-mode: window-controls-overlay) {
+  .pwa-install-button {
+    display: none;
+  }
+}
+</style>
