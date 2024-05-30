@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -21,14 +21,17 @@ function installPWA() {
   })
 }
 
-// async function hideComponent() {
-//   if ('getInstalledRelatedApps' in navigator) {
-//     const relatedApps = await navigator.getInstalledRelatedApps()
-//     const PWAisInstalled = relatedApps.length > 0
-
-//     if (PWAisInstalled) isShow.value = false
-//   }
-// }
+async function hideComponent() {
+  if ('getInstalledRelatedApps' in navigator) {
+    try {
+      // @ts-ignore
+      const relatedApps = await navigator.getInstalledRelatedApps()
+      const PWAisInstalled = relatedApps.length > 0
+      if (PWAisInstalled) isShow.value = false
+    } catch {}
+  }
+}
+onMounted(() => hideComponent())
 
 useEventListener(
   document,
