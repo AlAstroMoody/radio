@@ -36,6 +36,12 @@
       "type": "image/webp",
       "form_factor": "wide",
       "label": "Application"
+    },
+    {
+      "src": "./screenshot.webp",
+      "type": "image/webp",
+      "sizes": "370x666",
+      "form_factor": "narrow"
     }
   ]
 }
