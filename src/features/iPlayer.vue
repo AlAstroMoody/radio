@@ -116,7 +116,9 @@ onMounted(() => {
           <img
             alt="taylor"
             src="/images/taylor.webp"
-            class="pointer-events-none w-32 object-cover"
+            class="pointer-events-none object-cover"
+            width="128"
+            height="96"
           />
           <div class="mt-auto flex-1 items-center">
             <div class="flex items-center text-xl">
