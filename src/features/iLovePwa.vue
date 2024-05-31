@@ -34,10 +34,9 @@ async function hideComponent() {
 onMounted(() => hideComponent())
 
 useEventListener(
-  document,
+  window,
   'beforeinstallprompt',
   (e: BeforeInstallPromptEvent) => {
-    alert('before magic...')
     e.preventDefault()
     installEvent.value = e
     isShow.value = true
@@ -48,10 +47,10 @@ useEventListener(
 <template>
   <div
     v-if="isShow"
-    class="pwa-install-button fixed right-0 z-10 flex gap-1 rounded-bl-xl bg-dark-200 p-4 text-light-200"
+    class="pwa-install-button fixed right-0 z-10 flex gap-1 rounded-bl-xl bg-dark-200 p-4 text-light-200 lg:hidden"
   >
     <button @click="installPWA" class="rounded-l-xl border p-1">
-      Install PWA
+      Install Radio!
     </button>
     <button @click="isShow = false" class="rounded-r-xl border p-1">
       No, thanks
