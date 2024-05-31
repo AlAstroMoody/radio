@@ -11,12 +11,12 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
 }
 
-const isShow = ref(true)
+const isShow = ref(false)
 const installEvent = ref<BeforeInstallPromptEvent>()
 function installPWA() {
   if (!installEvent.value) return
   installEvent.value.prompt()
-  installEvent.value.userChoice.then((choice) => {
+  installEvent.value.userChoice.then(() => {
     isShow.value = false
   })
 }

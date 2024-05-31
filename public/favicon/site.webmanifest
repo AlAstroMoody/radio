@@ -2,7 +2,7 @@
   "name": "Amazing Radio",
   "short_name": "Radio",
   "start_url": "https://alastromoody.github.io/radio/",
-  "description": "amazing!",
+  "description": "Amazing!",
   "id": "Amazing_Radio",
   "icons": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "src": "./favicon-32x32.png",
-      "sizes": "16x16",
+      "sizes": "32x32",
       "type": "image/png"
     },
     {
@@ -28,5 +28,14 @@
   ],
   "theme_color": "#0e1a2c",
   "background_color": "#bc430e",
-  "display": "standalone"
+  "display": "standalone",
+  "screenshots": [
+    {
+      "src": "./screenshot.webp",
+      "sizes": "370x666",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Application"
+    }
+  ]
 }

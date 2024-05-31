@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^9.12.0",
+    "vite-plugin-minify": "^1.5.2",
     "vue": "^3.3.4",
     "vue-router": "^4.1.6"
   },
