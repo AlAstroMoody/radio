@@ -4,14 +4,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --host 192.168.31.168",
+    "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vueuse/core": "^9.12.0",
     "vite-plugin-minify": "^1.5.2",
-    "vue": "^3.3.4",
+    "vue": "^3.4.27",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {

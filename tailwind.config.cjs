@@ -46,6 +46,9 @@ module.exports = {
           '100%': { opacity: 1 },
         },
       },
+      transitionDelay: {
+        225: '225ms',
+      },
     },
   },
   plugins: [],

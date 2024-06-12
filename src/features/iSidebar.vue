@@ -5,6 +5,14 @@ import { iRadioList } from 'features'
 
 const isDarkTheme = useDark()
 const toggleDark = useToggle(isDarkTheme)
+
+const title = [
+  { char: 'r', class: 'delay-0' },
+  { char: 'a', class: 'delay-75' },
+  { char: 'd', class: 'delay-150' },
+  { char: 'i', class: 'delay-225' },
+  { char: 'o', class: 'delay-300' },
+]
 </script>
 
 <template>
@@ -13,7 +21,11 @@ const toggleDark = useToggle(isDarkTheme)
       class="mb-4 w-full max-w-sm font-cyberpunk text-6xl text-black dark:text-white"
     >
       <div class="text-left">Amazing</div>
-      <div class="text-right">radio</div>
+      <div class="text-right delay-100">
+        <span v-for="(el, index) in title" :class="el.class" :key="index">
+          {{ el.char }}
+        </span>
+      </div>
     </div>
     <iRadioList class="hidden md:block" />
     <iButton
@@ -28,6 +40,7 @@ const toggleDark = useToggle(isDarkTheme)
       class="absolute left-4 top-24 ml-auto h-12 w-12 rounded-full md:hidden"
       variant="control"
       @click="toggleDark()"
+      aria-label="theme"
     >
       <iLamp class="ml-[10px]" />
     </iButton>

@@ -124,7 +124,12 @@ onMounted(() => {
             <div class="flex items-center text-xl">
               <span>{{ volume }}%</span>
             </div>
-            <input v-model="volume" type="range" class="h-7" />
+            <input
+              v-model="volume"
+              type="range"
+              class="h-7"
+              aria-label="volume"
+            />
           </div>
         </div>
 
