@@ -33,6 +33,8 @@ async function play(): Promise<void> {
     audioContext.value.resume()
     buildAudioGraph()
   }
+  if (!activeRadio.value) return
+  audio.value = new Audio(activeRadio.value.src)
 
   pending.value = true
   await audio.value?.play()
@@ -132,13 +134,6 @@ onMounted(() => {
             />
           </div>
         </div>
-
-        <audio
-          ref="audio"
-          :src="activeRadio?.src"
-          class="hidden"
-          crossorigin="anonymous"
-        />
       </figure>
       <div class="flex text-3xl font-normal">
         <iButton

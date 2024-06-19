@@ -17,12 +17,12 @@ import { iSidebar, iPlayer, iLovePwa, iRadioList } from 'features'
 
     <picture class="pointer-events-none fixed bottom-0 right-0 z-0">
       <source srcset="/images/flame-right.webp" media="(min-width: 768px)" />
-      <img src="/images/flame-right-mobile.webp" alt="flame" />
+      <img src="/images/flame-right-mobile.webp" alt="flame" loading="lazy" />
     </picture>
 
     <picture class="pointer-events-none fixed left-0 top-0 z-0 h-full md:h-fit">
       <source srcset="/images/flame-left.webp" media="(min-width: 768px)" />
-      <img src="/images/flame-left-mobile.webp" alt="flame" />
+      <img src="/images/flame-left-mobile.webp" alt="flame" loading="lazy" />
     </picture>
   </div>
 </template>
