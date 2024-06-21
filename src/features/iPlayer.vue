@@ -7,7 +7,7 @@ import { radioList, useGlobalState } from 'processes'
 const state = useGlobalState()
 
 const audio = ref<HTMLAudioElement | null>()
-const audioCtx = window.AudioContext
+const audioConstructor = ref<HTMLAudioElement | null>()
 const audioContext = ref<AudioContext | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const canvasContext = ref<CanvasRenderingContext2D | null>(null)
@@ -21,6 +21,10 @@ const activeRadio = computed(() =>
   radioList.find((radio) => radio.id === state.activeRadio.value)
 )
 
+const repeatableAudio = computed(
+  () => audioConstructor.value?.src === activeRadio.value?.src
+)
+
 const volume = ref<number>(50)
 
 const pending = ref<boolean>(false)
@@ -28,24 +32,41 @@ const isPlaying = ref<boolean>(false)
 const rafVisualize = ref(0)
 
 async function play(): Promise<void> {
-  if (!audioContext.value) {
-    audioContext.value = new audioCtx()
-    audioContext.value.resume()
-    buildAudioGraph()
-  }
+  clearCanvas()
+  cancelAnimationFrame(rafVisualize.value)
   if (!activeRadio.value) return
-  audio.value = new Audio(activeRadio.value.src)
-
   pending.value = true
-  await audio.value?.play()
-  isPlaying.value = true
-  pending.value = false
-  requestAnimationFrame(visualize)
+
+  try {
+    await fetch(activeRadio.value.src, { method: 'OPTIONS' })
+    audio.value?.play().then(() => {
+      changeFlags()
+      rafVisualize.value = requestAnimationFrame(visualize)
+    })
+    if (!audioContext.value) {
+      audioContext.value = new window.AudioContext()
+      audioContext.value.resume()
+      buildAudioGraph()
+    }
+  } catch (e) {
+    if (!repeatableAudio.value)
+      audioConstructor.value = new Audio(activeRadio.value.src)
+    audioConstructor.value?.play()
+    changeFlags()
+  }
 }
 
 function pause(): void {
   audio.value?.pause()
+  audioConstructor.value?.pause()
   isPlaying.value = false
+  pending.value = false
+  cancelAnimationFrame(rafVisualize.value)
+  clearCanvas()
+}
+
+function changeFlags() {
+  isPlaying.value = true
   pending.value = false
 }
 
@@ -90,7 +111,8 @@ function visualize() {
 
 watch(activeRadio, () => {
   pending.value = true
-  audio.value ? (audio.value.oncanplay = () => play()) : null
+  pause()
+  play()
 })
 
 watch(volume, () => {
@@ -134,6 +156,12 @@ onMounted(() => {
             />
           </div>
         </div>
+        <audio
+          ref="audio"
+          :src="activeRadio?.src"
+          class="hidden"
+          crossorigin="anonymous"
+        />
       </figure>
       <div class="flex text-3xl font-normal">
         <iButton
@@ -145,8 +173,9 @@ onMounted(() => {
         />
         <iButton
           :title="isPlaying ? 'pause' : 'play'"
-          class="w-40"
+          class="w-40 disabled:opacity-80"
           text-class="-mt-4"
+          :disabled="pending"
           variant="control"
           @click="isPlaying ? pause() : play()"
         >
