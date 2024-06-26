@@ -116,7 +116,8 @@ watch(activeRadio, () => {
 })
 
 watch(volume, () => {
-  audio.value ? (audio.value.volume = volume.value / 100) : null
+  if (audio.value) audio.value.volume = volume.value / 100
+  if (audioConstructor.value) audioConstructor.value.volume = volume.value / 100
 })
 
 onMounted(() => {
