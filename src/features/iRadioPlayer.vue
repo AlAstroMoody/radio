@@ -116,6 +116,7 @@ watch(activeRadio, () => {
 })
 
 watch(volume, () => {
+  localStorage.setItem('volume', `${volume.value}`)
   if (audio.value) audio.value.volume = volume.value / 100
   if (audioConstructor.value) audioConstructor.value.volume = volume.value / 100
 })
@@ -125,6 +126,12 @@ onMounted(() => {
     width.value = canvas.value.width
     height.value = canvas.value.height
     canvasContext.value = canvas.value.getContext('2d')
+  }
+  const storageVolume = localStorage.getItem('volume')
+  if (storageVolume) volume.value = +storageVolume
+  else {
+    volume.value = 50
+    localStorage.setItem('volume', '50')
   }
 })
 </script>
