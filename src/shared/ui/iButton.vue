@@ -2,7 +2,7 @@
 interface Props {
   title?: string
   textClass?: string
-  variant?: string
+  variant?: 'base' | 'control'
 }
 
 const props = withDefaults(defineProps<Props>(), {

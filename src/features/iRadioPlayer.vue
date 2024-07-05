@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { iButton, iPlay, iSpin } from 'shared'
+import { computed, onMounted, ref, watch, onUnmounted } from 'vue'
+import { iButton, iPlay, iSpin } from 'shared/ui'
 
 import { radioList, useGlobalState } from 'processes'
 
@@ -133,6 +133,11 @@ onMounted(() => {
     volume.value = 50
     localStorage.setItem('volume', '50')
   }
+})
+
+onUnmounted(() => {
+  if (!audioContext.value) return
+  audioContext.value.close()
 })
 </script>
 

@@ -2,6 +2,8 @@
 import { iButton, iLamp } from 'shared'
 import { useDark, useToggle } from '@vueuse/core'
 import { iRadioList } from 'features'
+import { useFps } from '@vueuse/core'
+const fps = useFps()
 
 const isDarkTheme = useDark()
 const toggleDark = useToggle(isDarkTheme)
@@ -17,6 +19,7 @@ const title = [
 
 <template>
   <aside class="flex flex-col justify-between">
+    <div class="fixed right-8 top-1 w-14">fps: {{ fps }}</div>
     <div
       class="mb-4 w-full max-w-sm font-cyberpunk text-6xl text-black dark:text-white"
     >

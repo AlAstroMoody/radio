@@ -2,10 +2,14 @@
 import {
   iSidebar,
   iRadioPlayer,
-  // iMusicPlayer,
+  iMusicPlayer,
   iLovePwa,
   iRadioList,
 } from 'features'
+import { iButton, iStation, iNote } from 'shared/ui'
+import { ref } from 'vue'
+
+const isRadioMode = ref(true)
 </script>
 
 <template>
@@ -16,11 +20,20 @@ import {
       class="z-10 w-full overflow-hidden p-4 md:h-screen md:w-96 md:min-w-[24rem]"
     />
     <div class="z-10 flex h-full w-full md:h-screen md:px-4">
-      <iRadioPlayer class="m-auto w-max lg:ml-20" />
+      <iButton
+        class="absolute left-20 top-24 ml-auto h-12 w-12 rounded-full md:hidden"
+        variant="control"
+        @click="isRadioMode = !isRadioMode"
+        aria-label="mode"
+      >
+        <iNote class="ml-[5px]" v-if="isRadioMode" />
+        <iStation class="ml-[10px]" v-else />
+      </iButton>
+      <iRadioPlayer class="m-auto w-max lg:ml-20" v-if="isRadioMode" />
 
-      <!-- <iMusicPlayer class="m-auto w-max lg:ml-20" /> -->
+      <iMusicPlayer class="m-auto w-full md:w-max lg:ml-20" v-else />
     </div>
-    <iRadioList class="z-20 -mt-52 block p-4 md:hidden" />
+    <iRadioList class="z-20 -mt-52 block p-4 md:hidden" v-if="isRadioMode" />
     <iLovePwa />
 
     <picture class="pointer-events-none fixed bottom-0 right-0 z-0">
