@@ -17,6 +17,7 @@ module.exports = {
       },
       white: '#fffffF',
       black: '#2f353d',
+      menu: 'rgba(238, 247, 255, 0.2)', // цвет подложки меню
     },
     extend: {
       boxShadow: {
