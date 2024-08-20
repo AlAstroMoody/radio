@@ -154,7 +154,7 @@ function startAnimation() {
 
   const piece = audio.value.currentTime / audio.value.duration
 
-  let radius = 50
+  let radius = 35
 
   canvasContext.value.clearRect(0, 0, width.value, height.value)
 
@@ -167,13 +167,13 @@ function startAnimation() {
     Math.PI * (2 * piece)
   )
   canvasContext.value.strokeStyle = '#1a385b'
-  canvasContext.value.lineWidth = 30
+  canvasContext.value.lineWidth = 35
   canvasContext.value.stroke()
 
   progress.value = Math.trunc(piece * 100)
   analyser.value.getByteFrequencyData(frequencyArray.value)
   for (let i = 0; i < bars; i++) {
-    radius = 65
+    radius = 50
     const rads = (Math.PI * 2) / bars
     const barHeight = frequencyArray.value[i] * 0.4
 
@@ -215,79 +215,79 @@ onUnmounted(() => {
 <template>
   <div class="relative">
     <div class="z-10 mt-auto md:relative">
-      <figure class="flex flex-col">
-        <div
-          ref="dropZone"
-          class="relative mx-auto flex h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
-        >
-          <span class="absolute left-0 right-0 text-center">
-            click or drag
-            <br />
-            for add files
-          </span>
-          <input
-            type="file"
-            accept="audio/*"
-            ref="input"
-            multiple
-            class="h-full w-full cursor-pointer opacity-0"
-          />
-        </div>
-
-        <div class="mx-auto flex gap-2" v-if="currentFile">
-          <iButton
-            class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200 md:py-1"
-            @click="openNextFile(true)"
-          >
-            next
-          </iButton>
-          <iButton
-            @click="openFiles"
-            class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
-          >
-            Load
-          </iButton>
-
-          <iButton
-            class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200 md:py-1"
-            @click="openNextFile(false)"
-          >
-            prev
-          </iButton>
-        </div>
-        <div class="flex w-full justify-between gap-2 px-4" v-if="currentFile">
-          <span class="max-w-60 overflow-hidden text-nowrap">
-            {{ currentFile.name }}</span
-          >
-          <div class="flex w-12 items-center justify-center text-center">
-            {{ progress }}%
-          </div>
-        </div>
-      </figure>
-      <div class="flex text-3xl font-normal"></div>
-    </div>
-    <canvas
-      ref="canvas"
-      height="320"
-      class="pointer-events-none m-auto block w-full rotate-180"
-    />
-    <iButton
-      v-if="currentFile"
-      class="absolute inset-1/2 -ml-8 mt-1 h-[65px] w-[65px] rounded-full md:hidden"
-      variant="base"
-      @click="isPlaying ? pause() : play()"
-      aria-label="mode"
-    >
-      <span class="absolute left-0 right-0 flex">
-        <iPlay
-          v-show="!pending"
-          :is-play="isPlaying"
-          class="m-auto"
-          width="65"
-          height="65"
+      <div
+        ref="dropZone"
+        class="fixed left-0 z-10 right-0 mx-auto flex h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
+      >
+        <span class="absolute left-0 right-0 text-center">
+          click or drag
+          <br />
+          for add files
+        </span>
+        <input
+          type="file"
+          accept="audio/*"
+          ref="input"
+          multiple
+          class="h-full w-full cursor-pointer opacity-0"
         />
-        <iSpin v-show="pending" class="m-auto" width="65" height="65" />
+      </div>
+    </div>
+    <div class="w-full relative h-96">
+      <canvas
+        ref="canvas"
+        height="320"
+        class="pointer-events-none m-auto block w-full rotate-180"
+      />
+    </div>
+    <div class="flex w-full justify-between gap-2 px-4" v-if="currentFile">
+      <span class="max-w-60 overflow-hidden text-nowrap">
+        {{ currentFile.name }}
       </span>
-    </iButton>
+      <div class="flex w-12 items-center justify-center text-center">
+        {{ progress }}%
+      </div>
+    </div>
+    <div class="flex flex-col my-2" v-if="currentFile">
+      <div class="mx-auto flex gap-2">
+        <iButton
+          label="next"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200 md:py-1"
+          @click="openNextFile(true)"
+        >
+          next
+        </iButton>
+        <iButton
+          @click="openFiles"
+          label="load"
+          class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+        >
+          Load
+        </iButton>
+        <iButton
+          v-if="currentFile"
+          variant="base"
+          @click="isPlaying ? pause() : play()"
+          label="mode"
+        >
+          <iPlay
+            v-show="!pending"
+            :is-play="isPlaying"
+            class="m-auto"
+            width="48"
+            height="48"
+          />
+          <iSpin v-show="pending" class="m-auto" width="48" height="48" />
+        </iButton>
+
+        <iButton
+          label="prev"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200 md:py-1"
+          @click="openNextFile(false)"
+        >
+          prev
+        </iButton>
+      </div>
+    </div>
   </div>
 </template>

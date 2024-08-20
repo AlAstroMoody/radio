@@ -1,26 +1,44 @@
 import { ref } from 'vue'
-import { createGlobalState } from '@vueuse/core'
-import { radioList } from 'processes'
+import { radioWaves, Wave } from 'processes'
 
-export const useGlobalState = createGlobalState(() => {
-  const activeRadio = ref<number | undefined>(radioList[0].id)
+const isRadioMode = ref(true)
+const activeRadio = ref<Wave>(radioWaves[0])
+const isActivePlaylist = ref(false)
 
-  const changeActiveRadio = (id: number): void => {
-    activeRadio.value = radioList.find(radio => radio.id === id)?.id
-  }
-
+export const useGlobalState = () => {
   const findNeighbour = (number: number) => {
-    const index = radioList.findIndex(
-      radio => radio?.id === activeRadio.value,
+    const index = radioWaves.findIndex(
+      (radio) => radio?.id === activeRadio.value.id
     )
-    activeRadio.value
-      = number > 0
-        ? radioList[index + number]?.id || radioList[0]?.id
-        : radioList[index + number]?.id || radioList[radioList.length - 1]?.id
+    activeRadio.value =
+      number > 0
+        ? radioWaves[index + number] || radioWaves[0]
+        : radioWaves[index + number] || radioWaves[radioWaves.length - 1]
   }
 
   const nextRadio = () => findNeighbour(1)
   const prevRadio = () => findNeighbour(-1)
+  function changeActiveRadio(id: number) {
+    const wave = radioWaves.find((radio) => radio.id === id)
+    if (wave) activeRadio.value = wave
+  }
 
-  return { activeRadio, changeActiveRadio, nextRadio, prevRadio }
-})
+  function changeMode() {
+    isRadioMode.value = !isRadioMode.value
+  }
+
+  function togglePlaylist() {
+    isActivePlaylist.value = !isActivePlaylist.value
+  }
+
+  return {
+    activeRadio,
+    changeActiveRadio,
+    nextRadio,
+    prevRadio,
+    isRadioMode,
+    changeMode,
+    isActivePlaylist,
+    togglePlaylist,
+  }
+}

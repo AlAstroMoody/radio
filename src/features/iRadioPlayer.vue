@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onUnmounted } from 'vue'
+import { computed, onMounted, ref, watch, onUnmounted, reactive } from 'vue'
 import { iButton, iPlay, iSpin } from 'shared/ui'
 
-import { radioList, useGlobalState } from 'processes'
+import { useGlobalState } from 'processes'
+import { useParallax } from '@vueuse/core'
 
-const state = useGlobalState()
+const { activeRadio, nextRadio, prevRadio } = useGlobalState()
 
 const audio = ref<HTMLAudioElement | null>()
 const audioConstructor = ref<HTMLAudioElement | null>()
@@ -17,9 +18,16 @@ const height = ref<number>(256)
 const bufferLength = ref<number>(1)
 const dataArray = ref<Uint8Array | null>(null)
 
-const activeRadio = computed(() =>
-  radioList.find((radio) => radio.id === state.activeRadio.value)
-)
+const parallax = reactive(useParallax(canvas))
+const cardStyle = computed(() => ({
+  borderRadius: '20px',
+  overflow: 'hidden',
+  transition: '.3s ease-out all',
+  boxShadow: '0 0 20px 0 rgba(255, 255, 255, 0.25)',
+  transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
+    parallax.tilt * 20 + 170
+  }deg)`,
+}))
 
 const repeatableAudio = computed(
   () => audioConstructor.value?.src === activeRadio.value?.src
@@ -36,7 +44,6 @@ async function play(): Promise<void> {
   cancelAnimationFrame(rafVisualize.value)
   if (!activeRadio.value) return
   pending.value = true
-
   try {
     await fetch(activeRadio.value.src, { method: 'OPTIONS' })
     audio.value?.play().then(() => {
@@ -145,28 +152,21 @@ onUnmounted(() => {
   <div class="relative">
     <div class="z-10 mt-auto md:relative">
       <figure>
-        <figcaption class="text-left font-semibold">
-          Listen: {{ activeRadio?.name }}
-        </figcaption>
-
         <div class="mx-auto flex w-[300px] justify-center">
-          <img
-            alt="taylor"
-            src="/images/taylor.webp"
-            class="pointer-events-none object-cover"
-            width="128"
-            height="96"
-          />
-          <div class="mt-auto flex-1 items-center">
+          <div class="relative mt-auto flex-1 items-center">
             <div class="flex items-center text-xl">
+              <input
+                v-model="volume"
+                type="range"
+                class="h-7 mr-1"
+                label="volume"
+              />
               <span>{{ volume }}%</span>
             </div>
-            <input
-              v-model="volume"
-              type="range"
-              class="h-7"
-              aria-label="volume"
-            />
+
+            <div class="text-left font-semibold">
+              {{ activeRadio?.name }}
+            </div>
           </div>
         </div>
         <audio
@@ -176,39 +176,70 @@ onUnmounted(() => {
           crossorigin="anonymous"
         />
       </figure>
-      <div class="flex text-3xl font-normal">
+      <div class="relative z-10 flex text-3xl font-normal">
         <iButton
-          title="prev"
           class="rounded-l-full"
-          text-class="-mt-4"
           variant="control"
-          @click="state.prevRadio"
-        />
+          @click="prevRadio"
+          label="prev"
+        >
+          <span class="-mt-4">prev</span>
+        </iButton>
         <iButton
-          :title="isPlaying ? 'pause' : 'play'"
           class="w-40 disabled:opacity-80"
-          text-class="-mt-4"
           :disabled="pending"
           variant="control"
+          label="play"
           @click="isPlaying ? pause() : play()"
         >
           <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
+          <span class="-mt-4">{{ isPlaying ? 'pause' : 'play' }}</span>
         </iButton>
         <iButton
-          title="next"
           class="rounded-r-full"
-          text-class="-mt-4"
           variant="control"
-          @click="state.nextRadio"
-        />
+          label="next"
+          @click="nextRadio"
+        >
+          <span class="-mt-4">next</span>
+        </iButton>
       </div>
     </div>
     <canvas
+      :style="cardStyle"
       ref="canvas"
-      width="300"
+      width="360"
       height="200"
-      class="pointer-events-none m-auto rotate-180"
+      class="pointer-events-none mx-auto my-2 rotate-180"
     />
+    <Transition name="taylor">
+      <img
+        alt="taylor"
+        src="/images/taylor.webp"
+        class="pointer-events-none fixed right-6 object-cover bottom-0"
+        width="128"
+        height="96"
+        v-if="activeRadio?.id === 1 && isPlaying"
+      />
+    </Transition>
   </div>
 </template>
+<style>
+.taylor-enter-active {
+  animation: bounce-in 0.5s;
+}
+.taylor-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: translateY(80px);
+  }
+  50% {
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+</style>
