@@ -31,8 +31,9 @@ function changeFiles() {
     if (
       files.value.map(file => file.name).join()
       === filesArray.map(file => file.name).join()
-    )
+    ) {
       return
+    }
 
     if (files.value)
       pause()
@@ -249,21 +250,21 @@ onUnmounted(() => {
       <div class="mx-auto flex gap-2 font-semibold">
         <iButton
           label="next"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openNextFile(true)"
         >
           Next
         </iButton>
         <iButton
           label="load"
-          class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openFiles"
         >
           Load
         </iButton>
         <iButton
           label="play"
-          class="w-25 rounded-bl-xl rounded-br-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          class="w-25 rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="isPlaying ? pause() : play()"
         >
           <span v-show="!pending" class="m-auto">
@@ -273,7 +274,7 @@ onUnmounted(() => {
 
         <iButton
           label="prev"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openNextFile(false)"
         >
           Prev
