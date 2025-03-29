@@ -1,6 +1,80 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-*: initial;
+  --color-blue-100: #98b3cf;
+
+  --color-light-100: #eef7ff;
+  --color-light-200: #e2effd;
+
+  --color-dark-100: #0e1a2c;
+  --color-dark-200: #1a385b;
+
+  --color-white: #ffffff;
+  --color-black: #2f353d;
+  --color-menu: rgba(238, 247, 255, 0.2);
+
+  --shadow-button: 0px 0px 5px rgba(206, 206, 206, 0.5);
+
+  --font-cyberpunk: Cyberpunk, system-ui;
+
+  --animate-first-wave: opacity 2s ease-out infinite;
+  --animate-second-wave: opacitySecond 2s ease-out infinite;
+  --animate-third-wave: opacityThird 2s ease-out infinite;
+  --animate-marquee: marquee 10s linear infinite;
+
+  --transition-delay-225: 225ms;
+
+  @keyframes opacity {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes opacitySecond {
+    0% {
+      opacity: 1;
+    }
+    25% {
+      opacity: 0;
+    }
+    75% {
+      opacity: 1;
+    }
+  }
+  @keyframes opacityThird {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes marquee {
+    0% { 
+      transform: translateX(100%)
+     },
+    100% { 
+      transform: translateX(-200%)
+     }
+  }
+}
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 @layer base {
   html {

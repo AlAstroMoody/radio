@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onUnmounted, reactive } from 'vue'
-import { iButton, iPlay, iSpin } from 'shared/ui'
-
-import { useGlobalState } from 'processes'
 import { useParallax } from '@vueuse/core'
+import { useRadio } from 'composables/useRadio'
 
-const { activeRadio, nextRadio, prevRadio } = useGlobalState()
+import { iButton, iPlay, iSpin } from 'shared/ui'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+
+const { activeRadio, nextRadio, prevRadio } = useRadio()
 
 const audio = ref<HTMLAudioElement | null>()
 const audioConstructor = ref<HTMLAudioElement | null>()
@@ -30,7 +30,7 @@ const cardStyle = computed(() => ({
 }))
 
 const repeatableAudio = computed(
-  () => audioConstructor.value?.src === activeRadio.value?.src
+  () => audioConstructor.value?.src === activeRadio.value?.src,
 )
 
 const volume = ref<number>(50)
@@ -42,7 +42,8 @@ const rafVisualize = ref(0)
 async function play(): Promise<void> {
   clearCanvas()
   cancelAnimationFrame(rafVisualize.value)
-  if (!activeRadio.value) return
+  if (!activeRadio.value)
+    return
   pending.value = true
   try {
     await fetch(activeRadio.value.src, { method: 'OPTIONS' })
@@ -55,11 +56,13 @@ async function play(): Promise<void> {
       audioContext.value.resume()
       buildAudioGraph()
     }
-  } catch (e) {
+  }
+  catch (e) {
     if (!repeatableAudio.value)
       audioConstructor.value = new Audio(activeRadio.value.src)
     audioConstructor.value?.play()
     changeFlags()
+    throw e
   }
 }
 
@@ -124,8 +127,10 @@ watch(activeRadio, () => {
 
 watch(volume, () => {
   localStorage.setItem('volume', `${volume.value}`)
-  if (audio.value) audio.value.volume = volume.value / 100
-  if (audioConstructor.value) audioConstructor.value.volume = volume.value / 100
+  if (audio.value)
+    audio.value.volume = volume.value / 100
+  if (audioConstructor.value)
+    audioConstructor.value.volume = volume.value / 100
 })
 
 onMounted(() => {
@@ -135,7 +140,9 @@ onMounted(() => {
     canvasContext.value = canvas.value.getContext('2d')
   }
   const storageVolume = localStorage.getItem('volume')
-  if (storageVolume) volume.value = +storageVolume
+  if (storageVolume) {
+    volume.value = +storageVolume
+  }
   else {
     volume.value = 50
     localStorage.setItem('volume', '50')
@@ -143,7 +150,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (!audioContext.value) return
+  if (!audioContext.value)
+    return
   audioContext.value.close()
 })
 </script>
@@ -160,7 +168,7 @@ onUnmounted(() => {
                 type="range"
                 class="h-7 mr-1"
                 label="volume"
-              />
+              >
               <span>{{ volume }}%</span>
             </div>
 
@@ -176,12 +184,12 @@ onUnmounted(() => {
           crossorigin="anonymous"
         />
       </figure>
-      <div class="relative z-10 flex text-3xl font-normal">
+      <div class="relative z-10 flex justify-center text-3xl font-normal h-15">
         <iButton
           class="rounded-l-full"
           variant="control"
-          @click="prevRadio"
           label="prev"
+          @click="prevRadio"
         >
           <span class="-mt-4">prev</span>
         </iButton>
@@ -207,24 +215,25 @@ onUnmounted(() => {
       </div>
     </div>
     <canvas
-      :style="cardStyle"
       ref="canvas"
+      :style="cardStyle"
       width="360"
       height="200"
       class="pointer-events-none mx-auto my-2 rotate-180"
     />
     <Transition name="taylor">
       <img
+        v-if="activeRadio?.id === 1 && isPlaying"
         alt="taylor"
         src="/images/taylor.webp"
         class="pointer-events-none fixed right-6 object-cover bottom-0"
         width="128"
         height="96"
-        v-if="activeRadio?.id === 1 && isPlaying"
-      />
+      >
     </Transition>
   </div>
 </template>
+
 <style>
 .taylor-enter-active {
   animation: bounce-in 0.5s;

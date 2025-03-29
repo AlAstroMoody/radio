@@ -5,3 +5,7 @@ interface ImportMetaEnv extends Readonly<Record<string, string>> {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Navigator {
+  getInstalledRelatedApps: () => Promise<Array<{ id: string }>>
+}

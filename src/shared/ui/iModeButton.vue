@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { iButton, iStation, iNote } from 'shared/ui'
+import { iButton, iNote, iStation } from 'shared/ui'
 
-import { useGlobalState } from 'processes'
-
-const { changeMode, isRadioMode } = useGlobalState()
+const isRadioMode = defineModel()
 </script>
 
 <template>
   <iButton
     class="h-12 w-12 rounded-full"
     variant="control"
-    @click="changeMode"
     label="mode"
   >
-    <iNote class="ml-[5px]" v-if="isRadioMode" />
-    <iStation class="ml-[10px]" v-else />
+    <iNote v-if="isRadioMode" class="ml-[5px]" />
+    <iStation v-else class="ml-[10px]" />
   </iButton>
 </template>

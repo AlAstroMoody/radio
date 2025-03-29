@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { radioWaves, useGlobalState } from 'processes'
+import { useRadio } from 'composables/useRadio'
+import { radioWaves } from 'music'
 import { iButton, iStation } from 'shared'
 
-const { changeActiveRadio, activeRadio } = useGlobalState()
+const { changeActiveRadio, activeRadio } = useRadio()
 </script>
 
 <template>

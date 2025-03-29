@@ -1,8 +1,4 @@
 <script setup lang="ts">
-interface Props {
-  isPlay?: boolean
-}
-
 defineProps({ isPlay: Boolean })
 </script>
 

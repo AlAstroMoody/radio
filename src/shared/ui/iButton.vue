@@ -1,13 +1,8 @@
 <script setup lang="ts">
-interface Props {
+const { variant = 'base', label = '' } = defineProps<{
   variant?: 'base' | 'control'
-  label: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'base',
-  label: '',
-})
+  label?: string
+}>()
 
 const classes: Record<string, string> = {
   base: 'text-left text-xl text-dark-200 dark:text-blue-100',
@@ -19,8 +14,8 @@ const classes: Record<string, string> = {
 <template>
   <button
     :aria-label="label"
-    :class="classes[props.variant]"
-    class="flex items-center"
+    :class="classes[variant]"
+    class="flex items-center hover:font-bold"
   >
     <slot />
   </button>

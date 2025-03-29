@@ -1,5 +1,5 @@
-export * from './icons'
 export { default as iButton } from './iButton.vue'
-export { default as iThemeButton } from './iThemeButton.vue'
+export * from './icons'
 export { default as iModeButton } from './iModeButton.vue'
 export { default as iPlaylistButton } from './iPlaylistButton.vue'
+export { default as iThemeButton } from './iThemeButton.vue'
