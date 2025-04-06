@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { useParallax } from '@vueuse/core'
+import { usePlayer } from 'composables/usePlayer'
 import { useRadio } from 'composables/useRadio'
-import { useVisualizer } from 'composables/useVisualizer'
 import { iButton, iPlay, iSpin } from 'shared/ui'
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
-
-const audio = ref<HTMLAudioElement | null>()
-const audioConstructor = ref<HTMLAudioElement | null>()
-const audioContext = ref<AudioContext | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
-const analyser = ref<AnalyserNode | null>(null)
 
-const { startVisualization } = useVisualizer(canvas, analyser)
+const {
+  audio,
+  volume,
+  pending,
+  isPlaying,
+  play,
+  pause,
+} = usePlayer(canvas, activeRadio)
 
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
@@ -26,115 +28,10 @@ const cardStyle = computed(() => ({
   }deg)`,
 }))
 
-const repeatableAudio = computed(
-  () => audioConstructor.value?.src === activeRadio.value?.src,
-)
-
-const volume = ref<number>(50)
-const pending = ref<boolean>(false)
-const isPlaying = ref<boolean>(false)
-const audioError = ref(true)
-
-async function play(): Promise<void> {
-  if (!activeRadio.value || !audio.value)
-    return
-
-  pending.value = true
-  audio.value.onerror = null
-  audio.value.onloadedmetadata = null
-
-  if (audio.value?.error && audioError.value)
-    handleAudioError()
-
-  if (audio.value.readyState) {
-    handleAudioPlay()
-  }
-
-  audio.value.onerror = () => {
-    handleAudioError()
-  }
-
-  audio.value.onloadedmetadata = async () => {
-    handleAudioPlay()
-  }
-}
-
-async function handleAudioPlay() {
-  await audio.value?.play()
-  if (audio.value?.readyState === HTMLMediaElement.HAVE_FUTURE_DATA) {
-    pending.value = false
-  isPlaying.value = true
-  audioError.value = false
-  }
-  startVisualization()
-  if (!audioContext.value) {
-    audioContext.value = new window.AudioContext()
-    audioContext.value.resume()
-    buildAudioGraph()
-  }
- 
-}
-
-async function handleAudioError() {
-  audioError.value = true
-  if (!repeatableAudio.value) {
-    audioConstructor.value = new Audio(activeRadio.value.src)
-  }
-  await audioConstructor.value?.play()
-  pending.value = false
-  isPlaying.value = true
-  audioError.value = false
-}
-
-function pause(): void {
-  audio.value?.pause()
-  audioConstructor.value?.pause()
-  isPlaying.value = false
-  pending.value = false
-}
-
-function buildAudioGraph() {
-  if (audioContext.value && audio.value) {
-    const sourceNode = audioContext.value.createMediaElementSource(audio.value)
-    analyser.value = audioContext.value.createAnalyser()
-    // 512, 256, 128 и т.д: меняет количество полос
-    analyser.value.fftSize = 1024
-    sourceNode.connect(analyser.value)
-    analyser.value.connect(audioContext.value.destination)
-  }
-}
-
 watch(activeRadio, async () => {
   pending.value = true
   pause()
   await play()
-})
-
-watch(volume, () => {
-  localStorage.setItem('volume', `${volume.value}`)
-  if (audio.value) {
-    audio.value.volume = volume.value / 100
-  }
-  if (audioConstructor.value) {
-    audioConstructor.value.volume = volume.value / 100
-  }
-})
-
-onMounted(() => {
-  const storageVolume = localStorage.getItem('volume')
-  if (storageVolume) {
-    volume.value = +storageVolume
-  }
-  else {
-    volume.value = 50
-    localStorage.setItem('volume', '50')
-  }
-})
-
-onUnmounted(() => {
-  if (!audioContext.value)
-    return
-  audioContext.value.close()
 })
 </script>
 
