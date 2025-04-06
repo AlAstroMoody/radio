@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useParallax } from '@vueuse/core'
 import { useRadio } from 'composables/useRadio'
-
+import { useVisualizer } from 'composables/useVisualizer'
 import { iButton, iPlay, iSpin } from 'shared/ui'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
@@ -11,12 +11,9 @@ const audio = ref<HTMLAudioElement | null>()
 const audioConstructor = ref<HTMLAudioElement | null>()
 const audioContext = ref<AudioContext | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
-const canvasContext = ref<CanvasRenderingContext2D | null>(null)
 const analyser = ref<AnalyserNode | null>(null)
-const width = ref<number>(400)
-const height = ref<number>(256)
-const bufferLength = ref<number>(1)
-const dataArray = ref<Uint8Array | null>(null)
+
+const { startVisualization } = useVisualizer(canvas, analyser)
 
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
@@ -34,49 +31,65 @@ const repeatableAudio = computed(
 )
 
 const volume = ref<number>(50)
-
 const pending = ref<boolean>(false)
 const isPlaying = ref<boolean>(false)
-const rafVisualize = ref(0)
+const audioError = ref(true)
 
 async function play(): Promise<void> {
-  clearCanvas()
-  cancelAnimationFrame(rafVisualize.value)
-  if (!activeRadio.value)
+  if (!activeRadio.value || !audio.value)
     return
+
   pending.value = true
-  try {
-    await fetch(activeRadio.value.src, { method: 'OPTIONS' })
-    audio.value?.play().then(() => {
-      changeFlags()
-      rafVisualize.value = requestAnimationFrame(visualize)
-    })
-    if (!audioContext.value) {
-      audioContext.value = new window.AudioContext()
-      audioContext.value.resume()
-      buildAudioGraph()
-    }
+  audio.value.onerror = null
+  audio.value.onloadedmetadata = null
+
+  if (audio.value?.error && audioError.value)
+    handleAudioError()
+
+  if (audio.value.readyState) {
+    handleAudioPlay()
   }
-  catch (e) {
-    if (!repeatableAudio.value)
-      audioConstructor.value = new Audio(activeRadio.value.src)
-    audioConstructor.value?.play()
-    changeFlags()
-    throw e
+
+  audio.value.onerror = () => {
+    handleAudioError()
   }
+
+  audio.value.onloadedmetadata = async () => {
+    handleAudioPlay()
+  }
+}
+
+async function handleAudioPlay() {
+  await audio.value?.play()
+  if (audio.value?.readyState === HTMLMediaElement.HAVE_FUTURE_DATA) {
+    pending.value = false
+  isPlaying.value = true
+  audioError.value = false
+  }
+  startVisualization()
+  if (!audioContext.value) {
+    audioContext.value = new window.AudioContext()
+    audioContext.value.resume()
+    buildAudioGraph()
+  }
+ 
+}
+
+async function handleAudioError() {
+  audioError.value = true
+  if (!repeatableAudio.value) {
+    audioConstructor.value = new Audio(activeRadio.value.src)
+  }
+  await audioConstructor.value?.play()
+  pending.value = false
+  isPlaying.value = true
+  audioError.value = false
 }
 
 function pause(): void {
   audio.value?.pause()
   audioConstructor.value?.pause()
   isPlaying.value = false
-  pending.value = false
-  cancelAnimationFrame(rafVisualize.value)
-  clearCanvas()
-}
-
-function changeFlags() {
-  isPlaying.value = true
   pending.value = false
 }
 
@@ -86,59 +99,28 @@ function buildAudioGraph() {
     analyser.value = audioContext.value.createAnalyser()
     // 512, 256, 128 и т.д: меняет количество полос
     analyser.value.fftSize = 1024
-    bufferLength.value = analyser.value.frequencyBinCount
-    dataArray.value = new Uint8Array(bufferLength.value)
     sourceNode.connect(analyser.value)
     analyser.value.connect(audioContext.value.destination)
   }
 }
 
-function clearCanvas() {
-  canvasContext.value?.clearRect(0, 0, width.value, height.value)
-}
-
-function visualize() {
-  clearCanvas()
-  if (canvasContext.value && analyser.value && dataArray.value) {
-    // Получить данные анализатора
-    analyser.value.getByteFrequencyData(dataArray.value)
-    const barWidth = width.value / bufferLength.value
-    let x = 0
-
-    // коэффициент масштабирования полос
-    dataArray.value.forEach((value, index) => {
-      if (canvasContext.value) {
-        canvasContext.value.fillStyle = `rgb(${value + index - 50},${index},${
-          value + index
-        })`
-        canvasContext.value.fillRect(x, height.value - value / 2, 1, value / 2)
-        x += barWidth + 1
-      }
-    })
-  }
-  rafVisualize.value = requestAnimationFrame(visualize)
-}
-
-watch(activeRadio, () => {
+watch(activeRadio, async () => {
   pending.value = true
   pause()
-  play()
+  await play()
 })
 
 watch(volume, () => {
   localStorage.setItem('volume', `${volume.value}`)
-  if (audio.value)
+  if (audio.value) {
     audio.value.volume = volume.value / 100
-  if (audioConstructor.value)
+  }
+  if (audioConstructor.value) {
     audioConstructor.value.volume = volume.value / 100
+  }
 })
 
 onMounted(() => {
-  if (canvas.value) {
-    width.value = canvas.value.width
-    height.value = canvas.value.height
-    canvasContext.value = canvas.value.getContext('2d')
-  }
   const storageVolume = localStorage.getItem('volume')
   if (storageVolume) {
     volume.value = +storageVolume
@@ -182,9 +164,10 @@ onUnmounted(() => {
           :src="activeRadio?.src"
           class="hidden"
           crossorigin="anonymous"
+          preload="metadata"
         />
       </figure>
-      <div class="relative z-10 flex justify-center text-3xl font-normal h-15">
+      <div class="relative z-10 flex text-3xl font-normal">
         <iButton
           class="rounded-l-full"
           variant="control"
@@ -236,19 +219,9 @@ onUnmounted(() => {
 
 <style>
 .taylor-enter-active {
-  animation: bounce-in 0.5s;
+  animation: var(--animate-bounce-in);
 }
 .taylor-leave-active {
-  animation: bounce-in 0.5s reverse;
-}
-@keyframes bounce-in {
-  0% {
-    transform: translateY(80px);
-  }
-  50% {
-  }
-  100% {
-    transform: translateY(0);
-  }
+  animation: var(--animate-bounce-in) reverse;
 }
 </style>

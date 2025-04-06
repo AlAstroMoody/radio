@@ -24,7 +24,7 @@
   --animate-second-wave: opacitySecond 2s ease-out infinite;
   --animate-third-wave: opacityThird 2s ease-out infinite;
   --animate-marquee: marquee 10s linear infinite;
-
+  --animate-bounce-in: bounce-in 0.5s ease;
   --transition-delay-225: 225ms;
 
   @keyframes opacity {
@@ -64,6 +64,17 @@
     100% { 
       transform: translateX(-200%)
      }
+  }
+  @keyframes bounce-in {
+    0% {
+      transform: translateY(80px);
+    }
+    50% {
+      /* Пустой этап */
+    }
+    100% {
+      transform: translateY(0);
+    }
   }
 }
 @layer base {
