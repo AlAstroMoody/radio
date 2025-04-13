@@ -1,11 +1,9 @@
 import type { Wave } from 'music'
 import type { Ref } from 'vue'
-import { useAudioSettings } from 'composables/useAudioSettings'
 import { useVisualizer } from 'composables/useVisualizer'
 import { computed, onUnmounted, ref } from 'vue'
 
 export interface UsePlayerReturn {
-  volume: Ref<number>
   audio: Ref<HTMLAudioElement | null>
   pending: Ref<boolean>
   isPlaying: Ref<boolean>
@@ -21,7 +19,6 @@ export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Re
   const analyser = ref<AnalyserNode | null>(null)
 
   const { startVisualization, drawText } = useVisualizer(canvas, analyser)
-  const { volume } = useAudioSettings([audio, audioConstructor])
 
   const pending = ref<boolean>(false)
   const isPlaying = ref<boolean>(false)
@@ -71,16 +68,18 @@ export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Re
   }
 
   function setFlags(): void {
-    pending.value = false
     isPlaying.value = true
     audioError.value = false
+    if (!audio.value)
+      return
+    if ([3, 4].includes(audio.value.readyState)) {
+      pending.value = false
+    }
   }
 
   async function handleAudioPlay(): Promise<void> {
     await audio.value?.play()
-    if (audio.value?.readyState === HTMLMediaElement.HAVE_FUTURE_DATA) {
-      setFlags()
-    }
+    setFlags()
 
     if (!audioContext.value) {
       audioContext.value = new window.AudioContext()
@@ -123,7 +122,6 @@ export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Re
   })
 
   return {
-    volume,
     audio,
     pending,
     isPlaying,

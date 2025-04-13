@@ -25,7 +25,8 @@
   --animate-third-wave: opacityThird 2s ease-out infinite;
   --animate-marquee: marquee 10s linear infinite;
   --animate-bounce-in: bounce-in 0.5s ease;
-  --transition-delay-225: 225ms;
+  --animate-bounce-tooltip: bounce-tooltip 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  --animate-step-rotate: step-rotate 5s linear infinite;
 
   @keyframes opacity {
     0% {
@@ -76,6 +77,25 @@
       transform: translateY(0);
     }
   }
+  @keyframes bounce-tooltip {
+    0% {
+      transform: translateY(10px);
+    }
+    30% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes step-rotate {
+    0%, 90% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(60deg);
+    }
+  }
 }
 @layer base {
   *,
@@ -84,11 +104,5 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
-  }
-}
-
-@layer base {
-  html {
-    font-family: ProximaNova, system-ui, sans-serif;
   }
 }

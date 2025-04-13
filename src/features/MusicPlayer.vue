@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { iButton } from 'shared/ui'
+import { BaseButton } from 'shared/ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const dropZone = ref<HTMLDivElement | null>()
@@ -248,21 +248,21 @@ onUnmounted(() => {
     </div>
     <div v-if="currentFile" class="flex flex-col my-2">
       <div class="mx-auto flex gap-2 font-semibold">
-        <iButton
+        <BaseButton
           label="next"
           class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openNextFile(true)"
         >
           Next
-        </iButton>
-        <iButton
+        </BaseButton>
+        <BaseButton
           label="load"
           class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openFiles"
         >
           Load
-        </iButton>
-        <iButton
+        </BaseButton>
+        <BaseButton
           label="play"
           class="w-25 rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="isPlaying ? pause() : play()"
@@ -270,15 +270,15 @@ onUnmounted(() => {
           <span v-show="!pending" class="m-auto">
             {{ isPlaying ? 'Pause' : 'Play' }}
           </span>
-        </iButton>
+        </BaseButton>
 
-        <iButton
+        <BaseButton
           label="prev"
           class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openNextFile(false)"
         >
           Prev
-        </iButton>
+        </BaseButton>
       </div>
     </div>
     <div class="max-w-80 sm:max-w-96 m-auto">

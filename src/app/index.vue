@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { iLovePwa, iMusicPlayer, iRadioList, iRadioPlayer } from 'features'
-
-import { iModeButton, iPlaylistButton, iThemeButton } from 'shared/ui'
+import { useDark, useToggle } from '@vueuse/core'
+import { useModal } from 'composables/useModal'
+import { AudioSettings, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
+import { BaseModal, ButtonWithIcon, iLamp, iNote, iPlaylist, iSettings, iStation } from 'shared/ui'
 import { ref } from 'vue'
 
-const isRadioMode = ref(true)
-const isActivePlaylist = ref(false)
+const isDarkTheme = useDark()
+const toggleDark = useToggle(isDarkTheme)
+const { isOpen, modalContent, openModal, closeModal } = useModal()
 
-function showPlaylist() {
-  isActivePlaylist.value = !isActivePlaylist.value
-  isRadioMode.value = true
-}
+const isRadioMode = ref(true)
 </script>
 
 <template>
@@ -21,39 +20,36 @@ function showPlaylist() {
       class="flex flex-col z-10 w-full overflow-hidden px-4 md:h-screen md:w-96 md:min-w-[24rem]"
     >
       <div
-        class="mb-4 w-full max-w-sm font-cyberpunk text-6xl text-black dark:text-white"
+        class="mb-4 w-full max-w-sm font-cyberpunk text-4xl text-black dark:text-white text-center"
       >
-        <div class="text-left">
-          Amazing
-        </div>
-        <div class="text-right delay-100">
-          Radio
-        </div>
+        Amazing radio
       </div>
 
-      <iRadioList v-if="isRadioMode" class="hidden md:block h-fit" />
-      <div class="mt-auto ml-2 hidden md:flex gap-2">
-        <iThemeButton />
-        <iModeButton v-model="isRadioMode" @click="isRadioMode = !isRadioMode" />
-      </div>
-
+      <RadioList v-if="isRadioMode" class="hidden md:block h-fit" />
       <div
-        class="flex gap-4 items-center bg-menu p-2 fixed bottom-0 left-0 right-0 md:hidden"
+        class="flex gap-4 items-center bg-menu p-2 fixed bottom-0 left-0 right-0"
       >
-        <iPlaylistButton @click="showPlaylist" />
-        <iThemeButton />
-        <iModeButton v-model="isRadioMode" @click="isRadioMode = !isRadioMode" />
+        <ButtonWithIcon label="theme" @click="toggleDark()">
+          <iLamp />
+        </ButtonWithIcon>
+        <ButtonWithIcon label="playlist" @click="openModal(RadioList)">
+          <iPlaylist />
+        </ButtonWithIcon>
+        <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click="isRadioMode = !isRadioMode">
+          <iNote v-if="isRadioMode" />
+          <iStation v-else />
+        </ButtonWithIcon>
+        <ButtonWithIcon label="settings" @click="openModal(AudioSettings)">
+          <iSettings />
+        </ButtonWithIcon>
       </div>
     </aside>
 
     <div class="flex z-10 h-full w-full md:h-screen md:px-4">
-      <iRadioPlayer v-if="isRadioMode" class="m-auto w-max lg:ml-20" />
-      <iMusicPlayer v-else class="m-auto w-full md:w-max lg:ml-20" />
+      <RadioPlayer v-if="isRadioMode" class="m-auto w-max lg:ml-20" />
+      <MusicPlayer v-else class="m-auto w-full md:w-max lg:ml-20" />
     </div>
-    <iRadioList
-      v-if="isRadioMode && isActivePlaylist"
-      class="z-20 block p-4 md:hidden fixed top-0 bottom-0 h-[calc(100dvh-64px)] bg-menu backdrop-blur-2xl"
-    />
+
     <iLovePwa />
 
     <picture class="pointer-events-none fixed bottom-0 right-0 z-0">
@@ -65,6 +61,10 @@ function showPlaylist() {
       <source srcset="/images/flame-left.webp" media="(min-width: 768px)">
       <img src="/images/flame-left-mobile.webp" alt="flame">
     </picture>
+
+    <BaseModal :is-open="!!isOpen" @close="closeModal">
+      <component :is="modalContent" />
+    </BaseModal>
   </div>
 </template>
 

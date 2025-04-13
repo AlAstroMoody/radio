@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useParallax } from '@vueuse/core'
+import { useAudioSettings } from 'composables/useAudioSettings'
 import { usePlayer } from 'composables/usePlayer'
 import { useRadio } from 'composables/useRadio'
-import { iButton, iPlay, iSpin } from 'shared/ui'
+import { BaseButton, iPlay, iSpin } from 'shared/ui'
 import { computed, reactive, ref, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
@@ -10,7 +11,6 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 
 const {
   audio,
-  volume,
   pending,
   isPlaying,
   play,
@@ -29,9 +29,9 @@ const cardStyle = computed(() => ({
 }))
 
 watch(activeRadio, async () => {
-  pending.value = true
   pause()
   await play()
+  useAudioSettings().applySettings()
 })
 </script>
 
@@ -39,22 +39,8 @@ watch(activeRadio, async () => {
   <div class="relative">
     <div class="z-10 mt-auto md:relative">
       <figure>
-        <div class="mx-auto flex w-[300px] justify-center">
-          <div class="relative mt-auto flex-1 items-center">
-            <div class="flex items-center text-xl">
-              <input
-                v-model="volume"
-                type="range"
-                class="h-7 mr-1"
-                label="volume"
-              >
-              <span>{{ volume }}%</span>
-            </div>
-
-            <div class="text-left font-semibold">
-              {{ activeRadio?.name }}
-            </div>
-          </div>
+        <div class="mx-auto flex w-[300px] justify-start font-cyberpunk">
+          {{ activeRadio?.name }}
         </div>
         <audio
           ref="audio"
@@ -65,15 +51,15 @@ watch(activeRadio, async () => {
         />
       </figure>
       <div class="relative z-10 flex text-3xl font-normal">
-        <iButton
+        <BaseButton
           class="rounded-l-full"
           variant="control"
           label="prev"
           @click="prevRadio"
         >
           <span class="-mt-4">prev</span>
-        </iButton>
-        <iButton
+        </BaseButton>
+        <BaseButton
           class="w-40 disabled:opacity-80"
           :disabled="pending"
           variant="control"
@@ -83,15 +69,15 @@ watch(activeRadio, async () => {
           <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
           <span class="-mt-4">{{ isPlaying ? 'pause' : 'play' }}</span>
-        </iButton>
-        <iButton
+        </BaseButton>
+        <BaseButton
           class="rounded-r-full"
           variant="control"
           label="next"
           @click="nextRadio"
         >
           <span class="-mt-4">next</span>
-        </iButton>
+        </BaseButton>
       </div>
     </div>
     <canvas
@@ -106,7 +92,7 @@ watch(activeRadio, async () => {
         v-if="activeRadio?.id === 1 && isPlaying"
         alt="taylor"
         src="/images/taylor.webp"
-        class="pointer-events-none fixed right-6 object-cover bottom-0"
+        class="pointer-events-none fixed right-2 object-cover bottom-0"
         width="128"
         height="96"
       >

@@ -41,8 +41,14 @@ export const radioWaves: Wave[] = [
     id: 7,
   },
   {
-    name: 'Rock - разное',
+    name: 'Some rock',
     src: 'https://pub0102.101.ru:8443/stream/personal/aacp/64/834597',
     id: 8,
   },
+  {
+    name: 'Relax FM',
+    src: 'https://srv21.gpmradio.ru:8443/stream/trust/mp3/128/266',
+    id: 9,
+  },
+
 ]

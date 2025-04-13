@@ -1,7 +1,14 @@
 import type { Ref } from 'vue'
 import { useDark } from '@vueuse/core'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useAudioSettings } from 'composables/useAudioSettings'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+const { visualization } = useAudioSettings()
+
+export enum VisualizationType {
+  Bars = 'bars',
+  Radial = 'radial',
+}
 interface UseVisualizerReturn {
   startVisualization: () => void
   stopVisualization: () => void
@@ -20,20 +27,69 @@ export function useVisualizer(
   const height = ref(256)
   const bufferLength = ref(1)
   const dataArray = ref<Uint8Array | null>(null)
+  const centerX = computed(() => width.value / 2)
+  const centerY = computed(() => height.value / 2)
+  const bars = 360
+  const barWidth = ref(1)
 
   const isAnimating = ref(false)
 
-  function startVisualization(): void {
-    if (isAnimating.value) {
+  function drawBars(): void {
+    if (!canvas.value || !dataArray.value)
       return
-    }
 
+    const ctx = canvas.value.getContext('2d')
+    if (!ctx)
+      return
+
+    const barWidth = width.value / bufferLength.value
+    let x = 0
+
+    dataArray.value.forEach((value, i) => {
+      ctx.fillStyle = `rgb(${value + i - 50},${i},${value + i})`
+      ctx.fillRect(x, height.value - value / 2, 1, value / 2)
+      x += barWidth + 1
+    })
+  }
+
+  function drawRadial(): void {
+    if (!canvas.value || !dataArray.value)
+      return
+
+    const ctx = canvas.value.getContext('2d')
+    if (!ctx)
+      return
+
+    const radius = 20
+    const rads = (Math.PI * 2) / bars
+
+    for (let i = 0; i < bars; i++) {
+      const barHeight = dataArray.value[i] * 0.4
+      const x = centerX.value + Math.cos(rads * i) * radius
+      const y = centerY.value + Math.sin(rads * i) * radius
+      const xEnd = centerX.value + Math.cos(rads * i) * (radius + barHeight)
+      const yEnd = centerY.value + Math.sin(rads * i) * (radius + barHeight)
+
+      const lineColor = `rgb(${dataArray.value[i]}, ${dataArray.value[i]}, 205)`
+      ctx.strokeStyle = lineColor
+      ctx.lineWidth = barWidth.value
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(xEnd, yEnd)
+      ctx.stroke()
+    }
+  }
+
+  function startVisualization(): void {
+    if (isAnimating.value)
+      return
     if (!analyser.value)
       return
 
     isAnimating.value = true
     bufferLength.value = analyser.value.frequencyBinCount
     dataArray.value = new Uint8Array(bufferLength.value)
+
     const draw = (): void => {
       if (!canvas.value || !dataArray.value)
         return
@@ -45,14 +101,17 @@ export function useVisualizer(
       analyser.value!.getByteFrequencyData(dataArray.value)
       ctx.clearRect(0, 0, width.value, height.value)
 
-      const barWidth = width.value / bufferLength.value
-      let x = 0
+      switch (visualization.value) {
+        case VisualizationType.Bars:
+          drawBars()
+          break
+        case VisualizationType.Radial:
+          drawRadial()
+          break
+        default:
+          break
+      }
 
-      dataArray.value.forEach((value, i) => {
-        ctx.fillStyle = `rgb(${value + i - 50},${i},${value + i})`
-        ctx.fillRect(x, height.value - value / 2, 1, value / 2)
-        x += barWidth + 1
-      })
       rafId.value = requestAnimationFrame(draw)
     }
 
@@ -98,7 +157,8 @@ export function useVisualizer(
   })
 
   watch(isDarkTheme, () => {
-    drawText()
+    if (text.value)
+      drawText()
   })
 
   onUnmounted(() => {

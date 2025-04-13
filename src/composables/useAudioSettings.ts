@@ -1,41 +1,50 @@
 import type { Ref } from 'vue'
-import { onMounted, ref, watch } from 'vue'
+import { useStorage } from '@vueuse/core'
+import { onMounted, watch } from 'vue'
 
 export interface useAudioSettingsReturn {
   volume: Ref<number>
+  playbackRate: Ref<number>
+  loop: Ref<boolean>
+  autoplay: Ref<boolean>
+  visualization: Ref<string>
+  applySettings: () => void
 }
 
 const BASE_VOLUME = 50
+const BASE_PLAYBACK_RATE = 1
 
-export function useAudioSettings(audioRefs: Ref<HTMLAudioElement | null>[]): useAudioSettingsReturn {
-  const volume = ref<number>(BASE_VOLUME)
+export function useAudioSettings(): useAudioSettingsReturn {
+  const volume = useStorage('volume', BASE_VOLUME)
+  const playbackRate = useStorage('playbackRate', BASE_PLAYBACK_RATE)
+  const loop = useStorage('loop', false)
+  const autoplay = useStorage('autoplay', false)
+  const visualization = useStorage('visualization', 'bars')
 
-  function applyVolumeSettings(): void {
-    audioRefs.forEach((audio) => {
-      if (audio.value) {
-        audio.value.volume = volume.value / 100
-      }
-    })
+  function applySettings(): void {
+    const audio = document.querySelector('audio')
+    if (!audio)
+      return
+    audio.volume = volume.value / 100
+    audio.playbackRate = playbackRate.value
+    audio.loop = loop.value
+    audio.autoplay = autoplay.value
   }
 
   onMounted(() => {
-    const storageVolume = localStorage.getItem('volume')
-    if (storageVolume) {
-      volume.value = +storageVolume
-    }
-    else {
-      volume.value = BASE_VOLUME
-      localStorage.setItem('volume', `${BASE_VOLUME}`)
-    }
-    applyVolumeSettings()
+    applySettings()
   })
 
-  watch(volume, () => {
-    localStorage.setItem('volume', `${volume.value}`)
-    applyVolumeSettings()
+  watch([volume, playbackRate, loop, autoplay, visualization], () => {
+    applySettings()
   })
 
   return {
     volume,
+    playbackRate,
+    loop,
+    autoplay,
+    visualization,
+    applySettings,
   }
 }
