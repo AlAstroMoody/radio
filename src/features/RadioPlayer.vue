@@ -50,7 +50,7 @@ watch(activeRadio, async () => {
           preload="metadata"
         />
       </figure>
-      <div class="relative z-10 flex text-3xl font-normal">
+      <div class="relative z-10 flex text-3xl font-normal justify-center">
         <BaseButton
           class="rounded-l-full"
           variant="control"
