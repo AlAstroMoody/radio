@@ -17,15 +17,15 @@ const isRadioMode = ref(true)
     class="flex min-h-svh w-full flex-col bg-light-100 text-blue-100 transition-colors dark:bg-dark-100 md:flex-row"
   >
     <aside
-      class="flex flex-col z-10 w-full overflow-hidden px-4 md:h-screen md:w-96 md:min-w-[24rem]"
+      class="flex flex-col z-1 w-full overflow-hidden px-4 md:h-screen md:w-96 md:min-w-[24rem]"
     >
       <div
-        class="mb-4 w-full max-w-sm font-cyberpunk text-4xl text-black dark:text-white text-center"
+        class="my-4 w-full max-w-sm font-cyberpunk text-4xl text-black dark:text-white text-center"
       >
         Amazing radio
       </div>
 
-      <RadioList v-if="isRadioMode" class="hidden md:block h-fit" />
+      <RadioList class="hidden md:block h-fit" :is-radio-mode />
       <div
         class="flex gap-4 items-center bg-menu p-2 fixed bottom-0 left-0 right-0"
       >
@@ -35,7 +35,7 @@ const isRadioMode = ref(true)
         <ButtonWithIcon label="playlist" @click="openModal(RadioList)">
           <iPlaylist />
         </ButtonWithIcon>
-        <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click="isRadioMode = !isRadioMode">
+        <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click=" isRadioMode = !isRadioMode">
           <iNote v-if="isRadioMode" />
           <iStation v-else />
         </ButtonWithIcon>
@@ -45,9 +45,9 @@ const isRadioMode = ref(true)
       </div>
     </aside>
 
-    <div class="flex z-10 h-full w-full md:h-screen md:px-4">
-      <RadioPlayer v-if="isRadioMode" class="m-auto w-max lg:ml-20" />
-      <MusicPlayer v-else class="m-auto w-full md:w-max lg:ml-20" />
+    <div class="flex h-full w-full md:px-4 mt-auto mb-15 z-[1]">
+      <RadioPlayer v-if="isRadioMode" class="m-auto w-max lg:ml-20 mb-5" />
+      <MusicPlayer v-else class="m-auto w-full md:w-max lg:ml-20 mb-3" />
     </div>
 
     <iLovePwa />

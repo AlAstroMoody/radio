@@ -1,23 +1,38 @@
 <script setup lang="ts">
+import { useEventListener } from '@vueuse/core'
+import { useAudioPosition } from 'composables/useAudioPosition'
+import { useAudioSettings } from 'composables/useAudioSettings'
+import { useFileList } from 'composables/useFileList'
+import { useVisualizer } from 'composables/useVisualizer'
 import { BaseButton } from 'shared/ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+const { files, activeFile, nextFile, prevFile, changeActiveFile } = useFileList()
 
 const dropZone = ref<HTMLDivElement | null>()
 const input = ref<HTMLInputElement | null>()
 
-const files = ref<File[]>([])
-const activeIndex = ref(0)
-const currentFile = computed(() => files.value[activeIndex.value])
+const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
 const progress = ref(0)
-const audio = ref<HTMLAudioElement>()
-const frequencyArray = ref()
+const audio = ref<HTMLAudioElement>(new Audio())
+const canvas = ref<HTMLCanvasElement | null>(null)
 const audioContext = ref<AudioContext | null>(null)
+const analyser = ref<AnalyserNode | null>(null)
+const pending = ref<boolean>(false)
+const isPlaying = ref<boolean>(false)
+const sourceNode = ref<MediaElementAudioSourceNode>()
+
+const { startVisualization } = useVisualizer(canvas, analyser)
+const { applySettings } = useAudioSettings()
+
+const { savePosition, restorePosition, clearPosition } = useAudioPosition(
+  audio,
+  currentFileName,
+)
 
 function openFiles() {
-  if (!input.value)
-    return
-  input.value.click()
+  input.value?.click()
 }
 
 function changeFiles() {
@@ -28,38 +43,25 @@ function changeFiles() {
       return
 
     const filesArray = [...input.value.files]
-    if (
-      files.value.map(file => file.name).join()
-      === filesArray.map(file => file.name).join()
-    ) {
+    if (files.value?.map(file => file.name).join() === filesArray.map(file => file.name).join()) {
       return
     }
 
-    if (files.value)
+    if (filesArray.length) {
       pause()
-    activeIndex.value = 0
-    files.value = filesArray
-    playTrack()
+      files.value = filesArray
+      changeActiveFile(0)
+      playTrack()
+    }
   }
 }
-const canvas = ref<HTMLCanvasElement | null>(null)
-const canvasContext = ref<CanvasRenderingContext2D | null>(null)
-const width = ref<number>(400)
-const height = ref<number>(256)
-const audioConstructor = ref<HTMLAudioElement | null>()
-
-const analyser = ref<AnalyserNode | null>(null)
-
-const pending = ref<boolean>(false)
-const isPlaying = ref<boolean>(false)
-const rafVisualize = ref(0)
-
-const centerX = computed(() => width.value / 2)
-const centerY = computed(() => height.value / 2)
-const bars = 360
-const barWidth = ref(1)
 
 onMounted(() => {
+  if (files.value.length) {
+    playTrack()
+    setListeners()
+    return
+  }
   if (!dropZone.value)
     return
 
@@ -74,148 +76,67 @@ onMounted(() => {
             files.value.push(file)
         }
       })
-      activeIndex.value = 0
       playTrack()
     }
   }
 
   dropZone.value.ondragover = e => e.preventDefault()
-
   dropZone.value.onclick = () => changeFiles()
 
-  if (canvas.value) {
-    width.value = canvas.value.width
-    height.value = canvas.value.height
-    canvasContext.value = canvas.value.getContext('2d')
-  }
+  setListeners()
 })
 
-function playTrack() {
+function setListeners() {
+  useEventListener(audio.value, 'timeupdate', changeProgress)
+  useEventListener(audio.value, 'ended', () => {
+    clearPosition()
+    nextFile()
+  })
+}
+
+function changeProgress() {
+  const piece = Number.isNaN(audio.value.duration)
+    ? 0
+    : audio.value.currentTime / audio.value.duration
+  progress.value = Math.trunc(piece * 100)
+  savePosition()
+}
+
+async function playTrack() {
   if (!dropZone.value)
     return
-  // dropZone.value.style.display = 'none'
-  start()
 
-  function start() {
-    audio.value = new Audio()
-    audioContext.value = new AudioContext()
+  audioContext.value = new AudioContext()
+  audio.value.src = URL.createObjectURL(activeFile.value)
+  if (!sourceNode.value) {
     analyser.value = audioContext.value.createAnalyser()
-
-    audio.value.src = URL.createObjectURL(currentFile.value)
-
-    const sourceNode = audioContext.value.createMediaElementSource(audio.value)
-
-    sourceNode.connect(analyser.value)
+    sourceNode.value = audioContext.value.createMediaElementSource(audio.value)
+    sourceNode.value.connect(analyser.value)
     analyser.value.connect(audioContext.value.destination)
-
-    frequencyArray.value = new Uint8Array(analyser.value.frequencyBinCount)
-
-    audio.value.play().then(() => (isPlaying.value = true))
-
-    audio.value.loop = true
-
-    startAnimation()
   }
+  restorePosition()
+  play()
 }
 
 async function play(): Promise<void> {
-  clearCanvas()
   pending.value = true
-  audio.value?.play().then(() => {
-    isPlaying.value = true
-    pending.value = false
-  })
-  startAnimation()
+  await audio.value?.play()
+  isPlaying.value = true
+  pending.value = false
+  startVisualization()
+  applySettings()
 }
 
 function pause() {
   audio.value?.pause()
-  audioConstructor.value?.pause()
   isPlaying.value = false
   pending.value = false
-  setTimeout(() => {
-    if (!isPlaying.value)
-      cancelAnimationFrame(rafVisualize.value)
-  }, 400)
 }
 
-function clearCanvas() {
-  canvasContext.value?.clearRect(0, 0, width.value, height.value)
-}
-
-function openNextFile(bool: boolean) {
+watch(activeFile, () => {
   pause()
-  if (bool) {
-    if (activeIndex.value < files.value.length - 1)
-      activeIndex.value += 1
-    else activeIndex.value = 0
-  }
-  else {
-    if (activeIndex.value > 0)
-      activeIndex.value -= 1
-    else activeIndex.value = files.value.length - 1
-  }
   playTrack()
-}
-
-function startAnimation() {
-  if (!canvas.value || !canvasContext.value || !analyser.value || !audio.value)
-    return
-
-  const piece = audio.value.currentTime / audio.value.duration
-
-  let radius = 35
-
-  canvasContext.value.clearRect(0, 0, width.value, height.value)
-
-  canvasContext.value.beginPath()
-  canvasContext.value.arc(
-    centerX.value,
-    centerY.value,
-    radius,
-    0,
-    Math.PI * (2 * piece),
-  )
-  canvasContext.value.strokeStyle = '#1a385b'
-  canvasContext.value.lineWidth = 35
-  canvasContext.value.stroke()
-
-  progress.value = Math.trunc(piece * 100)
-  analyser.value.getByteFrequencyData(frequencyArray.value)
-  for (let i = 0; i < bars; i++) {
-    radius = 50
-    const rads = (Math.PI * 2) / bars
-    const barHeight = frequencyArray.value[i] * 0.4
-
-    const x = centerX.value + Math.cos(rads * i) * radius
-    const y = centerY.value + Math.sin(rads * i) * radius
-    const xEnd = centerX.value + Math.cos(rads * i) * (radius + barHeight)
-    const yEnd = centerY.value + Math.sin(rads * i) * (radius + barHeight)
-
-    drawBar(x, y, xEnd, yEnd, barWidth.value, frequencyArray.value[i])
-  }
-  rafVisualize.value = requestAnimationFrame(startAnimation)
-}
-
-function drawBar(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  width: number,
-  frequency: number,
-) {
-  if (!canvasContext.value)
-    return
-  const lineColor = `rgb(${frequency}, ${frequency}, ${205})`
-
-  canvasContext.value.strokeStyle = lineColor
-  canvasContext.value.lineWidth = width
-  canvasContext.value.beginPath()
-  canvasContext.value.moveTo(x1, y1)
-  canvasContext.value.lineTo(x2, y2)
-  canvasContext.value.stroke()
-}
+})
 
 onUnmounted(() => {
   if (!audioContext.value)
@@ -225,12 +146,31 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative flex flex-col justify-between">
+    <div class="sm:max-w-96 m-auto max-w-lvw">
+      <canvas
+        ref="canvas"
+
+        width="360"
+        height="200"
+        class="pointer-events-none mx-auto my-2"
+      />
+      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4">
+        <div class="max-w-[calc(100%-(48px)] overflow-hidden whitespace-nowrap">
+          <div class="animate-marquee hover:animate-pause -translate-x-[90%]">
+            {{ currentFileName }}
+          </div>
+        </div>
+        <div class="flex  items-center justify-center text-center min-w-[48px]">
+          {{ progress }}%
+        </div>
+      </div>
+    </div>
     <div class="z-10 mt-auto md:relative">
       <div
         ref="dropZone"
-        :class="files.length ? 'hidden' : 'flex'"
-        class="fixed left-0 z-10 right-0 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
+        :class="files?.length ? 'hidden' : 'flex'"
+        class="fixed left-0 z-10 right-0 bottom-80 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
       >
         <span class="absolute left-0 right-0 text-center">
           click or drag
@@ -244,17 +184,24 @@ onUnmounted(() => {
           multiple
           class="h-full w-full cursor-pointer opacity-0"
         >
+        <audio
+          ref="audio"
+          class="hidden"
+          crossorigin="anonymous"
+          preload="metadata"
+        />
       </div>
     </div>
-    <div v-if="currentFile" class="flex flex-col my-2">
+    <div v-if="activeFile" class="flex flex-col my-2">
       <div class="mx-auto flex gap-2 font-semibold">
         <BaseButton
-          label="next"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
-          @click="openNextFile(true)"
+          label="prev"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          @click="prevFile"
         >
-          Next
+          Prev
         </BaseButton>
+
         <BaseButton
           label="load"
           class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
@@ -273,31 +220,12 @@ onUnmounted(() => {
         </BaseButton>
 
         <BaseButton
-          label="prev"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
-          @click="openNextFile(false)"
+          label="next"
+          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          @click="nextFile"
         >
-          Prev
+          Next
         </BaseButton>
-      </div>
-    </div>
-    <div class="max-w-80 sm:max-w-96 m-auto">
-      <div class="w-full relative h-96">
-        <canvas
-          ref="canvas"
-          height="320"
-          class="pointer-events-none m-auto block w-full rotate-180"
-        />
-      </div>
-      <div v-if="currentFile" class="flex w-full justify-between gap-2 px-4">
-        <div class="max-w-[calc(100%-(48px)] overflow-hidden whitespace-nowrap">
-          <div class="animate-marquee hover:animate-pause -translate-x-[90%]">
-            {{ currentFile.name }}
-          </div>
-        </div>
-        <div class="flex  items-center justify-center text-center min-w-[48px]">
-          {{ progress }}%
-        </div>
       </div>
     </div>
   </div>

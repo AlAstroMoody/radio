@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { onMounted, watch } from 'vue'
+import { onMounted, watchEffect } from 'vue'
 
 export interface useAudioSettingsReturn {
   volume: Ref<number>
@@ -22,22 +22,25 @@ export function useAudioSettings(): useAudioSettingsReturn {
   const visualization = useStorage('visualization', 'bars')
 
   function applySettings(): void {
-    const audio = document.querySelector('audio')
+    const audio = document.querySelector('audio') || undefined
+
     if (!audio)
       return
-    audio.volume = volume.value / 100
-    audio.playbackRate = playbackRate.value
-    audio.loop = loop.value
-    audio.autoplay = autoplay.value
+    if (audio.volume !== volume.value / 100)
+      audio.volume = volume.value / 100
+    if (audio.playbackRate !== playbackRate.value)
+      audio.playbackRate = playbackRate.value
+    if (audio.loop !== loop.value)
+      audio.loop = loop.value
+    if (audio.autoplay !== autoplay.value)
+      audio.autoplay = autoplay.value
   }
 
   onMounted(() => {
     applySettings()
   })
 
-  watch([volume, playbackRate, loop, autoplay, visualization], () => {
-    applySettings()
-  })
+  watchEffect(() => applySettings())
 
   return {
     volume,

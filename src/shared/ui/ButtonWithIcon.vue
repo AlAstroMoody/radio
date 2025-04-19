@@ -20,7 +20,7 @@ const classes: Record<string, string> = {
     <slot />
     <div
       v-if="label"
-      class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 "
+      class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none"
     >
       <div
         class="bg-black text-white text-sm px-3 py-1.5 rounded-md whitespace-nowrap transform translate-y-0 group-hover:animate-bounce-tooltip"

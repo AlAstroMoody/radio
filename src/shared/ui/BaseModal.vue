@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { useWindowSize } from '@vueuse/core'
+import { useEventListener, useWindowSize } from '@vueuse/core'
 import { iClose } from 'shared/ui/icons'
 import { computed } from 'vue'
 
-defineProps<{
+const { isOpen } = defineProps<{
   isOpen: boolean
 }>()
 const emit = defineEmits(['close'])
+
+useEventListener(window, 'keydown', handleKeydown)
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isOpen) {
+    emit('close')
+  }
+}
 
 const { width: windowWidth } = useWindowSize()
 const isMobile = computed(() => windowWidth.value < 768)
@@ -39,6 +46,7 @@ const contentClasses = computed(() => [
     <div
       v-if="isOpen"
       :class="modalClasses"
+      tabindex="-1"
       @click.self="emit('close')"
     >
       <div :class="contentClasses" class="m-auto">

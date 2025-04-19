@@ -30,13 +30,24 @@ const cardStyle = computed(() => ({
 
 watch(activeRadio, async () => {
   pause()
-  await play()
-  useAudioSettings().applySettings()
+  playRadio()
 })
+
+async function playRadio() {
+  useAudioSettings().applySettings()
+  await play()
+}
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative flex flex-col justify-between">
+    <canvas
+      ref="canvas"
+      :style="cardStyle"
+      width="360"
+      height="200"
+      class="pointer-events-none mx-auto my-2 rotate-180"
+    />
     <div class="z-10 mt-auto md:relative">
       <figure>
         <div class="mx-auto flex w-[300px] justify-start font-cyberpunk">
@@ -50,7 +61,7 @@ watch(activeRadio, async () => {
           preload="metadata"
         />
       </figure>
-      <div class="relative z-10 flex text-3xl font-normal justify-center">
+      <div class="relative z-10 flex text-3xl font-normal justify-center h-16">
         <BaseButton
           class="rounded-l-full"
           variant="control"
@@ -64,7 +75,7 @@ watch(activeRadio, async () => {
           :disabled="pending"
           variant="control"
           label="play"
-          @click="isPlaying ? pause() : play()"
+          @click="isPlaying ? pause() : playRadio()"
         >
           <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
@@ -80,14 +91,7 @@ watch(activeRadio, async () => {
         </BaseButton>
       </div>
     </div>
-    <canvas
-      ref="canvas"
-      :style="cardStyle"
-      width="360"
-      height="200"
-      class="pointer-events-none mx-auto my-2 rotate-180"
-    />
-    <Transition name="taylor">
+    <!-- <Transition name="taylor">
       <img
         v-if="activeRadio?.id === 1 && isPlaying"
         alt="taylor"
@@ -96,15 +100,15 @@ watch(activeRadio, async () => {
         width="128"
         height="96"
       >
-    </Transition>
+    </Transition> -->
   </div>
 </template>
 
-<style>
+<!-- <style>
 .taylor-enter-active {
   animation: var(--animate-bounce-in);
 }
 .taylor-leave-active {
   animation: var(--animate-bounce-in) reverse;
 }
-</style>
+</style> -->
