@@ -1,3 +1,15 @@
+interface FilePickerOptions {
+  multiple?: boolean
+  types?: Array<{
+    accept: Record<string, string[]>
+    description: string
+  }>
+}
+
+interface FileSystemFileHandle {
+  getFile: () => Promise<File>
+}
+
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
@@ -20,4 +32,5 @@ interface Navigator {
 
 interface Window {
   launchQueue?: LaunchQueue
+  showOpenFilePicker: (options?: FilePickerOptions) => Promise<FileSystemFileHandle[]>
 }
