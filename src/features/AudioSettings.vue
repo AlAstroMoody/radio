@@ -29,6 +29,7 @@ const visualizationOptions = [
   { label: 'Waveform', value: 'waveform' },
   { label: 'Particle', value: 'particle' },
   { label: 'Spectrum', value: 'spectrum' },
+  { label: 'CircleWave', value: 'circlewave' },
   { label: 'Nothing', value: '' },
 ]
 </script>

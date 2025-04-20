@@ -8,6 +8,7 @@ const { visualization, visualizationIntensity } = useAudioSettings()
 
 enum VisualizationType {
   Bars = 'bars',
+  CircleWave = 'circlewave',
   Particle = 'particle',
   Radial = 'radial',
   Spectrum = 'spectrum',
@@ -186,6 +187,29 @@ export function useVisualizer(
     })
   }
 
+  function drawCircleWave(ctx: CanvasRenderingContext2D): void {
+    if (!dataArray.value || !analyser.value)
+      return
+
+    analyser.value.getByteFrequencyData(dataArray.value)
+    const lowFreqData = dataArray.value.slice(0, 10)
+    const intensity = (lowFreqData.reduce((sum, val) => sum + val, 0) / lowFreqData.length) * visualizationIntensity.value
+
+    const baseRadius = 40
+    const maxRadius = baseRadius + intensity / 5
+    ctx.beginPath()
+    ctx.arc(
+      centerX.value,
+      centerY.value,
+      maxRadius,
+      0,
+      Math.PI * 2,
+    )
+    ctx.strokeStyle = isDarkTheme.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+  }
+
   function draw(): void {
     if (!isAnimating.value)
       return
@@ -201,6 +225,9 @@ export function useVisualizer(
     switch (visualization.value) {
       case VisualizationType.Bars:
         drawBars(ctx)
+        break
+      case VisualizationType.CircleWave:
+        drawCircleWave(ctx)
         break
       case VisualizationType.Particle:
         drawParticle(ctx)
