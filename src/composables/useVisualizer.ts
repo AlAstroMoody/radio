@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+
 import { useDark } from '@vueuse/core'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -10,9 +11,9 @@ export enum VisualizationType {
   Radial = 'radial',
 }
 interface UseVisualizerReturn {
+  drawText: (text: string) => void
   startVisualization: () => void
   stopVisualization: () => void
-  drawText: (text: string) => void
 }
 
 const isDarkTheme = useDark()
@@ -26,7 +27,7 @@ export function useVisualizer(
   const width = ref(400)
   const height = ref(256)
   const bufferLength = ref(1)
-  const dataArray = ref<Uint8Array | null>(null)
+  const dataArray = ref<null | Uint8Array>(null)
   const centerX = computed(() => width.value / 2)
   const centerY = computed(() => height.value / 2)
   const bars = 360
@@ -166,8 +167,8 @@ export function useVisualizer(
   })
 
   return {
+    drawText,
     startVisualization,
     stopVisualization,
-    drawText,
   }
 }

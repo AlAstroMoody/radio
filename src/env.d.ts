@@ -1,13 +1,9 @@
-interface ImportMetaEnv extends Readonly<Record<string, string>> {
-  readonly VITE_APP_API_URL: string
-}
-
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-interface Navigator {
-  getInstalledRelatedApps: () => Promise<Array<{ id: string }>>
+interface ImportMetaEnv extends Readonly<Record<string, string>> {
+  readonly VITE_APP_API_URL: string
 }
 
 interface LaunchParams {
@@ -16,6 +12,10 @@ interface LaunchParams {
 
 interface LaunchQueue {
   setConsumer: (callback: (params: LaunchParams) => void) => void
+}
+
+interface Navigator {
+  getInstalledRelatedApps: () => Promise<Array<{ id: string }>>
 }
 
 interface Window {

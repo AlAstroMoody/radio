@@ -1,15 +1,16 @@
 import type { Wave } from 'music'
 import type { Ref } from 'vue'
+
 import { useVisualizer } from 'composables/useVisualizer'
 import { computed, onUnmounted, ref } from 'vue'
 
 export interface UsePlayerReturn {
   audio: Ref<HTMLAudioElement | null>
-  pending: Ref<boolean>
-  isPlaying: Ref<boolean>
-  play: () => Promise<void>
-  pause: () => void
   buildAudioGraph: () => void
+  isPlaying: Ref<boolean>
+  pause: () => void
+  pending: Ref<boolean>
+  play: () => Promise<void>
 }
 
 export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Ref<Wave>): UsePlayerReturn {
@@ -18,7 +19,7 @@ export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Re
   const audioContext = ref<AudioContext | null>(null)
   const analyser = ref<AnalyserNode | null>(null)
 
-  const { startVisualization, drawText } = useVisualizer(canvas, analyser)
+  const { drawText, startVisualization } = useVisualizer(canvas, analyser)
 
   const pending = ref<boolean>(false)
   const isPlaying = ref<boolean>(false)
@@ -123,10 +124,10 @@ export function usePlayer(canvas: Ref<HTMLCanvasElement | null>, activeRadio: Re
 
   return {
     audio,
-    pending,
-    isPlaying,
-    play,
-    pause,
     buildAudioGraph,
+    isPlaying,
+    pause,
+    pending,
+    play,
   }
 }

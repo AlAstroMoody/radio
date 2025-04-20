@@ -8,8 +8,8 @@ import { computed } from 'vue'
 const { isRadioMode } = defineProps({
   isRadioMode: Boolean,
 })
-const { changeActiveRadio, activeRadio } = useRadio()
-const { files, activeFile, changeActiveFile } = useFileList()
+const { activeRadio, changeActiveRadio } = useRadio()
+const { activeFile, changeActiveFile, files } = useFileList()
 const playlist = computed(() => files.value.map(file => file.name))
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 </script>

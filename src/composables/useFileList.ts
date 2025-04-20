@@ -1,12 +1,13 @@
 import type { Ref } from 'vue'
+
 import { computed, ref } from 'vue'
 
 interface UseFileListReturn {
   activeFile: Ref<Blob | MediaSource>
   changeActiveFile: (index: number) => void
+  files: Ref<File[]>
   nextFile: () => void
   prevFile: () => void
-  files: Ref<File[]>
 }
 
 const files = ref<File[]>([])
@@ -30,8 +31,8 @@ export function useFileList(): UseFileListReturn {
   return {
     activeFile,
     changeActiveFile,
+    files,
     nextFile,
     prevFile,
-    files,
   }
 }

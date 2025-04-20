@@ -7,7 +7,7 @@ import { useVisualizer } from 'composables/useVisualizer'
 import { BaseButton } from 'shared/ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-const { files, activeFile, nextFile, prevFile, changeActiveFile } = useFileList()
+const { activeFile, changeActiveFile, files, nextFile, prevFile } = useFileList()
 
 const dropZone = ref<HTMLDivElement | null>()
 const input = ref<HTMLInputElement | null>()
@@ -26,14 +26,10 @@ const sourceNode = ref<MediaElementAudioSourceNode>()
 const { startVisualization } = useVisualizer(canvas, analyser)
 const { applySettings } = useAudioSettings()
 
-const { savePosition, restorePosition, clearPosition } = useAudioPosition(
+const { clearPosition, restorePosition, savePosition } = useAudioPosition(
   audio,
   currentFileName,
 )
-
-function openFiles() {
-  input.value?.click()
-}
 
 function changeFiles() {
   if (!input.value)
@@ -54,6 +50,10 @@ function changeFiles() {
       playTrack()
     }
   }
+}
+
+function openFiles() {
+  input.value?.click()
 }
 
 onMounted(() => {
@@ -86,20 +86,27 @@ onMounted(() => {
   setListeners()
 })
 
-function setListeners() {
-  useEventListener(audio.value, 'timeupdate', changeProgress)
-  useEventListener(audio.value, 'ended', () => {
-    clearPosition()
-    nextFile()
-  })
-}
-
 function changeProgress() {
   const piece = Number.isNaN(audio.value.duration)
     ? 0
     : audio.value.currentTime / audio.value.duration
   progress.value = Math.trunc(piece * 100)
   savePosition()
+}
+
+function pause() {
+  audio.value?.pause()
+  isPlaying.value = false
+  pending.value = false
+}
+
+async function play(): Promise<void> {
+  pending.value = true
+  await audio.value?.play()
+  isPlaying.value = true
+  pending.value = false
+  startVisualization()
+  applySettings()
 }
 
 async function playTrack() {
@@ -118,19 +125,12 @@ async function playTrack() {
   play()
 }
 
-async function play(): Promise<void> {
-  pending.value = true
-  await audio.value?.play()
-  isPlaying.value = true
-  pending.value = false
-  startVisualization()
-  applySettings()
-}
-
-function pause() {
-  audio.value?.pause()
-  isPlaying.value = false
-  pending.value = false
+function setListeners() {
+  useEventListener(audio.value, 'timeupdate', changeProgress)
+  useEventListener(audio.value, 'ended', () => {
+    clearPosition()
+    nextFile()
+  })
 }
 
 watch(activeFile, () => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-const { variant = 'base', label = '' } = defineProps<{
-  variant?: 'base' | 'control'
+const { label = '', variant = 'base' } = defineProps<{
   label?: string
+  variant?: 'base' | 'control'
 }>()
 
 const classes: Record<string, string> = {

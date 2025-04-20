@@ -1,14 +1,15 @@
 import type { Ref } from 'vue'
+
 import { useStorage } from '@vueuse/core'
 import { onMounted, watchEffect } from 'vue'
 
 export interface useAudioSettingsReturn {
-  volume: Ref<number>
-  playbackRate: Ref<number>
-  loop: Ref<boolean>
-  autoplay: Ref<boolean>
-  visualization: Ref<string>
   applySettings: () => void
+  autoplay: Ref<boolean>
+  loop: Ref<boolean>
+  playbackRate: Ref<number>
+  visualization: Ref<string>
+  volume: Ref<number>
 }
 
 const BASE_VOLUME = 50
@@ -43,11 +44,11 @@ export function useAudioSettings(): useAudioSettingsReturn {
   watchEffect(() => applySettings())
 
   return {
-    volume,
-    playbackRate,
-    loop,
-    autoplay,
-    visualization,
     applySettings,
+    autoplay,
+    loop,
+    playbackRate,
+    visualization,
+    volume,
   }
 }

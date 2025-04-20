@@ -23,8 +23,8 @@ const modalClasses = computed(() => [
   'flex items-center justify-center',
   'bg-lavender/80 dark:bg-black/80 backdrop-blur-sm',
   {
-    'p-4': !isMobile.value,
     'p-0': isMobile.value,
+    'p-4': !isMobile.value,
   },
 ])
 
@@ -35,8 +35,8 @@ const contentClasses = computed(() => [
   'overflow-hidden',
   'flex',
   {
-    'w-full h-full': isMobile.value,
     'min-w-2xl max-h-[90vh]': !isMobile.value,
+    'w-full h-full': isMobile.value,
   },
 ])
 </script>

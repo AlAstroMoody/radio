@@ -4,24 +4,15 @@ import { onMounted, ref } from 'vue'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>
+  prompt: () => Promise<void>
   readonly userChoice: Promise<{
     outcome: 'accepted' | 'dismissed'
     platform: string
   }>
-  prompt: () => Promise<void>
 }
 
 const isShow = ref(false)
 const installEvent = ref<BeforeInstallPromptEvent>()
-function installPWA() {
-  if (!installEvent.value)
-    return
-  installEvent.value.prompt()
-  installEvent.value.userChoice.then(() => {
-    isShow.value = false
-  })
-}
-
 async function hideComponent() {
   if ('getInstalledRelatedApps' in navigator) {
     try {
@@ -32,6 +23,15 @@ async function hideComponent() {
     }
     catch {}
   }
+}
+
+function installPWA() {
+  if (!installEvent.value)
+    return
+  installEvent.value.prompt()
+  installEvent.value.userChoice.then(() => {
+    isShow.value = false
+  })
 }
 onMounted(() => {
   hideComponent()

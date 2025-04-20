@@ -12,8 +12,8 @@ export default defineConfig({
     tsconfigPaths(),
     ViteMinifyPlugin({}),
     VitePWA({
-      registerType: 'autoUpdate',
       injectRegister: 'auto',
+      registerType: 'autoUpdate',
       workbox: {
         cleanupOutdatedCaches: false,
         globPatterns: [

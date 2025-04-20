@@ -1,11 +1,12 @@
 import type { Component } from 'vue'
+
 import { ref } from 'vue'
 
 export function useModal(): {
+  closeModal: () => void
   isOpen: ReturnType<typeof ref<boolean>>
   modalContent: ReturnType<typeof ref<Component | null>>
   openModal: (component: Component) => void
-  closeModal: () => void
 } {
   const isOpen = ref(false)
   const modalContent = ref<Component | null>(null)
@@ -21,9 +22,9 @@ export function useModal(): {
   }
 
   return {
+    closeModal,
     isOpen,
     modalContent,
     openModal,
-    closeModal,
   }
 }

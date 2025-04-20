@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+
 import { useStorage } from '@vueuse/core'
 
 interface AudioPosition {
@@ -11,9 +12,9 @@ const MAX_POSITIONS = 10
 const positions = useStorage<AudioPosition[]>('audioPositions', [])
 
 export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileName: Ref<string>): {
-  savePosition: () => void
-  restorePosition: () => void
   clearPosition: () => void
+  restorePosition: () => void
+  savePosition: () => void
 } {
   function savePosition(): void {
     if (!audio.value || !fileName.value)
@@ -52,8 +53,8 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileN
   }
 
   return {
-    savePosition,
-    restorePosition,
     clearPosition,
+    restorePosition,
+    savePosition,
   }
 }

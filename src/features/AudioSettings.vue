@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
 
-const { volume, playbackRate, loop, autoplay, visualization } = useAudioSettings()
+const { autoplay, loop, playbackRate, visualization, volume } = useAudioSettings()
 
 const playbackRateOptions = [
-  { value: 0.5, label: '0.5x' },
-  { value: 0.75, label: '0.75x' },
-  { value: 1, label: '1x' },
-  { value: 1.25, label: '1.25x' },
-  { value: 1.5, label: '1.5x' },
-  { value: 2, label: '2x' },
+  { label: '0.5x', value: 0.5 },
+  { label: '0.75x', value: 0.75 },
+  { label: '1x', value: 1 },
+  { label: '1.25x', value: 1.25 },
+  { label: '1.5x', value: 1.5 },
+  { label: '2x', value: 2 },
 ]
 
 const visualizationOptions = [
-  { value: 'bars', label: 'bars' },
-  { value: 'radial', label: 'radial' },
-  { value: '', label: 'nothing' },
+  { label: 'bars', value: 'bars' },
+  { label: 'radial', value: 'radial' },
+  { label: 'nothing', value: '' },
 ]
 </script>
 

@@ -11,21 +11,21 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 
 const {
   audio,
-  pending,
   isPlaying,
-  play,
   pause,
+  pending,
+  play,
 } = usePlayer(canvas, activeRadio)
 
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
   borderRadius: '20px',
-  overflow: 'hidden',
-  transition: '.3s ease-out all',
   boxShadow: '0 0 20px 0 rgba(255, 255, 255, 0.25)',
+  overflow: 'hidden',
   transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
     parallax.tilt * 20 + 170
   }deg)`,
+  transition: '.3s ease-out all',
 }))
 
 watch(activeRadio, async () => {

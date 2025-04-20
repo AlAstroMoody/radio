@@ -7,7 +7,7 @@ import { ref } from 'vue'
 
 const isDarkTheme = useDark()
 const toggleDark = useToggle(isDarkTheme)
-const { isOpen, modalContent, openModal, closeModal } = useModal()
+const { closeModal, isOpen, modalContent, openModal } = useModal()
 
 const isRadioMode = ref(true)
 </script>
