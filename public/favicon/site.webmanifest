@@ -58,5 +58,13 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ], 
+  "file_handlers": [
+    {
+      "action": "/?action=open-audio-file",
+      "accept": {
+        "audio/*": [".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"]
+      }
+    }
   ]
 }

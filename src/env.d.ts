@@ -19,7 +19,7 @@ interface ImportMetaEnv extends Readonly<Record<string, string>> {
 }
 
 interface LaunchParams {
-  files: ReadableArray<FileSystemHandle>
+  files: FileSystemFileHandle[]
 }
 
 interface LaunchQueue {

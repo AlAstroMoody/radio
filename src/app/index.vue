@@ -3,13 +3,22 @@ import { useDark, useToggle } from '@vueuse/core'
 import { useModal } from 'composables/useModal'
 import { AudioSettings, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal, ButtonWithIcon, iLamp, iNote, iPlaylist, iSettings, iStation } from 'shared/ui'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const isDarkTheme = useDark()
+
 const toggleDark = useToggle(isDarkTheme)
-const { closeModal, isOpen, modalContent, openModal } = useModal()
+const { closeModal, isOpen, modalContent, modalProps, openModal } = useModal()
 
 const isRadioMode = ref(true)
+
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const action = urlParams.get('action')
+  if (action === 'open-audio-file') {
+    isRadioMode.value = false
+  }
+})
 </script>
 
 <template>
@@ -24,7 +33,6 @@ const isRadioMode = ref(true)
       >
         Amazing radio
       </div>
-
       <RadioList class="hidden md:block h-fit" :is-radio-mode />
       <div
         class="flex gap-4 items-center bg-menu p-2 fixed bottom-0 left-0 right-0"
@@ -32,7 +40,7 @@ const isRadioMode = ref(true)
         <ButtonWithIcon label="theme" @click="toggleDark()">
           <iLamp />
         </ButtonWithIcon>
-        <ButtonWithIcon label="playlist" @click="openModal(RadioList)">
+        <ButtonWithIcon label="playlist" @click="openModal(RadioList, { isRadioMode })">
           <iPlaylist />
         </ButtonWithIcon>
         <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click=" isRadioMode = !isRadioMode">
@@ -63,7 +71,7 @@ const isRadioMode = ref(true)
     </picture>
 
     <BaseModal :is-open="!!isOpen" @close="closeModal">
-      <component :is="modalContent" />
+      <component :is="modalContent" v-bind="modalProps" />
     </BaseModal>
   </div>
 </template>

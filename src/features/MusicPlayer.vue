@@ -200,6 +200,21 @@ function updateFilterSettings(filters: Filters) {
 }
 
 onMounted(() => {
+  if (window.launchQueue) {
+    window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
+      const fileHandles = launchParams.files
+      if (fileHandles.length > 0) {
+        try {
+          const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
+          files.value = newFiles
+        }
+        catch (error) {
+          console.error('Error processing launchQueue files:', error)
+        }
+      }
+    })
+  }
+
   if (files.value.length) {
     initializeAudio()
     setListeners()
