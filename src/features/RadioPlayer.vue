@@ -19,9 +19,6 @@ const {
 
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
-  borderRadius: '20px',
-  boxShadow: '0 0 20px 0 rgba(255, 255, 255, 0.25)',
-  overflow: 'hidden',
   transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
     parallax.tilt * 20 + 170
   }deg)`,
@@ -46,7 +43,7 @@ async function playRadio() {
       :style="cardStyle"
       width="360"
       height="200"
-      class="pointer-events-none mx-auto my-2 rotate-180"
+      class="pointer-events-none mx-auto my-2 rotate-180 overflow-hidden rounded-2xl shadow-next dark:shadow-card"
     />
     <div class="z-10 mt-auto md:relative">
       <figure>

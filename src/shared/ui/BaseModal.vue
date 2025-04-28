@@ -32,7 +32,7 @@ const contentClasses = computed(() => [
   'bg-menu',
   'rounded-lg',
   'shadow-xl',
-  'overflow-hidden',
+  'overflow-auto',
   'flex',
   {
     'min-w-2xl max-h-[90vh]': !isMobile.value,

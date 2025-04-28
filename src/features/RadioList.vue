@@ -17,11 +17,11 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 <template>
   <div class="font-medium md:h-auto px-5">
     <div
-      class="my-4 text-center font-cyberpunk text-3xl text-black dark:text-white"
+      class="mb-4 text-center font-cyberpunk text-3xl text-black dark:text-white"
     >
       favorites
     </div>
-    <div class="overflow-auto max-h-[calc(100dvh-150px)] md:h-96 -scale-x-100">
+    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96 -scale-x-100">
       <div class="-scale-x-100 pl-2">
         <template v-if="!playlist.length || isRadioMode">
           <BaseButton

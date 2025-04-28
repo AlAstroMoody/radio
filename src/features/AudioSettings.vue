@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
+import { BaseSelect } from 'shared'
 
 const {
   applyPreset,
@@ -28,6 +29,7 @@ const visualizationOptions = [
   { label: 'Radial', value: 'radial' },
   { label: 'Waveform', value: 'waveform' },
   { label: 'Particle', value: 'particle' },
+  { label: 'TroisWave', value: 'troiswave' },
   { label: 'Spectrum', value: 'spectrum' },
   { label: 'CircleWave', value: 'circlewave' },
   { label: 'Nothing', value: '' },
@@ -49,39 +51,8 @@ const visualizationOptions = [
       <span class="w-12">{{ volume }}%</span>
     </div>
 
-    <div class="flex items-center gap-2">
-      <label for="playbackRate" class="w-32">Playback Rate:</label>
-      <select
-        id="playbackRate"
-        v-model.number="playbackRate"
-        class="px-2 py-1 border rounded"
-      >
-        <option
-          v-for="option in playbackRateOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <label for="visualization" class="w-32">Visualization:</label>
-      <select
-        id="visualization"
-        v-model="visualization"
-        class="px-2 py-1 border rounded"
-      >
-        <option
-          v-for="option in visualizationOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
+    <BaseSelect v-model="playbackRate" :options="playbackRateOptions" placeholder="default" label="Playback Rate:" />
+    <BaseSelect v-model="visualization" :options="visualizationOptions" placeholder="default" label="Visualization:" />
 
     <div class="flex items-center gap-2">
       <label for="visualizationIntensity" class="w-32">Vis. Intensity:</label>
@@ -117,23 +88,12 @@ const visualizationOptions = [
       >
     </div>
 
-    <div class="flex items-center gap-2">
-      <label for="equalizerPreset" class="w-32">Equalizer Preset:</label>
-      <select
-        id="equalizerPreset"
-        v-model="selectedPreset"
-        class="px-2 py-1 border rounded"
-        @change="applyPreset(selectedPreset)"
-      >
-        <option
-          v-for="preset in equalizerPresets"
-          :key="preset.name"
-          :value="preset.name"
-        >
-          {{ preset.name }}
-        </option>
-      </select>
-    </div>
+    <BaseSelect
+      v-model="selectedPreset" :options="equalizerPresets.map((preset) => ({
+        label: preset.name,
+        value: preset.name,
+      }))" placeholder="default" label="Equalizer Preset:" @change="applyPreset(selectedPreset)"
+    />
 
     <div class="flex flex-col gap-2 pl-4">
       <div class="flex items-center gap-2">

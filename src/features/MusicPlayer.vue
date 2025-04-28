@@ -270,7 +270,7 @@ watch(
         ref="canvas"
         width="360"
         height="200"
-        class="pointer-events-none mx-auto my-2"
+        class="pointer-events-none mx-auto my-2 overflow-hidden rounded-2xl shadow-next dark:shadow-card"
       />
       <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4">
         <div class="max-w-[calc(100%-(48px))] overflow-hidden whitespace-nowrap">
