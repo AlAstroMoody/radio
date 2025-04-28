@@ -29,7 +29,6 @@ const visualizationOptions = [
   { label: 'Radial', value: 'radial' },
   { label: 'Waveform', value: 'waveform' },
   { label: 'Particle', value: 'particle' },
-  { label: 'TroisWave', value: 'troiswave' },
   { label: 'Spectrum', value: 'spectrum' },
   { label: 'CircleWave', value: 'circlewave' },
   { label: 'Nothing', value: '' },
