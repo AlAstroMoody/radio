@@ -29,3 +29,11 @@
   font-weight: 400;
   src: url('/fonts/Cyberpunk.woff2') format('woff2');
 }
+
+@font-face {
+  font-display: swap;
+  font-family: 'Blackcraft';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Blackcraft.woff2') format('woff2');
+}

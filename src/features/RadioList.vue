@@ -15,25 +15,27 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 </script>
 
 <template>
-  <div class="font-medium md:h-auto px-5">
+  <div class="font-medium md:h-auto px-5 max-w-full md:max-w-lg">
     <div
-      class="mb-4 text-center font-cyberpunk text-3xl text-black dark:text-white"
+      class="mb-4 font-blackcraft text-3xl text-black dark:text-white"
     >
       favorites
     </div>
-    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96 -scale-x-100">
-      <div class="-scale-x-100 pl-2">
+    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
+      <div class="pl-2 overflow-hidden flex flex-col gap-3">
         <template v-if="!playlist.length || isRadioMode">
           <BaseButton
             v-for="radio in radioWaves"
             :key="radio.id"
             :label="radio.name"
-            class="pb-3 pt-2 md:py-1"
+            class="truncate max-w-full"
             :class="{ 'font-bold': radio.id === activeRadio.id }"
             @click="changeActiveRadio(radio.id)"
           >
-            <iStation v-if="radio.id === activeRadio.id" class="mr-2" />
-            {{ radio.name }}
+            <div class="flex items-center">
+              <iStation v-if="radio.id === activeRadio.id" class="mr-2" />
+              {{ radio.name }}
+            </div>
           </BaseButton>
         </template>
         <template v-else>
@@ -41,7 +43,7 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
             v-for="(name, index) in playlist"
             :key="name"
             :label="name"
-            class="pb-3 pt-2 md:py-1"
+            class="truncate max-w-full"
             :class="{ 'font-bold': name === currentFileName }"
             @click="changeActiveFile(index)"
           >

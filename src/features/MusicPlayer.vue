@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useEventListener } from '@vueuse/core'
+import { ArrowDownTrayIcon, ArrowsUpDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
+import { useEventListener, useParallax } from '@vueuse/core'
 import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useFileList } from 'composables/useFileList'
 import { useVisualizer } from 'composables/useVisualizer'
 import { BaseButton } from 'shared/ui'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 interface Filters {
   bass: BiquadFilterNode
@@ -25,10 +26,10 @@ const pending = ref<boolean>(false)
 const isPlaying = ref<boolean>(false)
 const progress = ref<number>(0)
 
-const { activeFile, changeActiveFile, files, nextFile, prevFile } = useFileList()
+const { activeFile, changeActiveFile, files, isShuffle, nextFile, prevFile, shuffleFiles } = useFileList()
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
-const { applySettings, filterSettings, visualization } = useAudioSettings()
+const { applySettings, filterSettings } = useAudioSettings()
 const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, currentFileName)
 const { startVisualization } = useVisualizer(canvas, analyser)
 
@@ -170,9 +171,7 @@ async function play(): Promise<void> {
     await audio.value.play()
     isPlaying.value = true
     pending.value = false
-    if (visualization.value === 'bars') {
-      startVisualization()
-    }
+    startVisualization()
   }
   catch (error) {
     console.error('Ошибка воспроизведения:', error)
@@ -261,33 +260,23 @@ watch(
   },
   { deep: true, flush: 'post' },
 )
+
+const parallax = reactive(useParallax(canvas))
+const cardStyle = computed(() => ({
+  transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
+    parallax.tilt * 20 + 170
+  }deg)`,
+  transition: '.3s ease-out all',
+}))
 </script>
 
 <template>
   <div class="relative flex flex-col justify-between">
-    <div class="sm:max-w-96 m-auto max-w-full">
-      <canvas
-        ref="canvas"
-        width="360"
-        height="200"
-        class="pointer-events-none mx-auto my-2 overflow-hidden rounded-2xl shadow-next dark:shadow-card"
-      />
-      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4">
-        <div class="max-w-[calc(100%-(48px))] overflow-hidden whitespace-nowrap">
-          <div class="animate-marquee hover:animate-pause -translate-x-[90%]">
-            {{ currentFileName }}
-          </div>
-        </div>
-        <div class="flex items-center justify-center text-center min-w-[48px]">
-          {{ progress }}%
-        </div>
-      </div>
-    </div>
     <div class="z-10 mt-auto md:relative">
       <div
         ref="dropZone"
         :class="files?.length ? 'hidden' : 'flex'"
-        class="fixed left-0 z-10 right-0 bottom-80 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
+        class="z-10 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
       >
         <span class="absolute left-0 right-0 text-center">
           click or drag
@@ -310,37 +299,68 @@ watch(
         />
       </div>
     </div>
+    <div class="sm:max-w-96 m-auto max-w-full">
+      <canvas
+        ref="canvas"
+        :style="cardStyle"
+        width="360"
+        height="200"
+        class="pointer-events-none mx-auto my-2 overflow-hidden rounded-2xl shadow-next dark:shadow-card rotate-180"
+      />
+      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px]">
+        <div class="max-w-[calc(100%-48px)] overflow-hidden whitespace-nowrap font-blackcraft">
+          <div class="animate-marquee hover:animate-pause -translate-x-[90%]">
+            {{ currentFileName }}
+          </div>
+        </div>
+        <div class="flex items-center justify-center text-center min-w-[48px]">
+          {{ progress }}%
+        </div>
+      </div>
+    </div>
+
     <div v-if="activeFile" class="flex flex-col my-2">
-      <div class="mx-auto flex gap-2 font-semibold">
+      <div class="mx-auto flex gap-3 font-semibold">
         <BaseButton
+          variant="player"
           label="prev"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tr-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
+          class="group"
           @click="prevFile"
         >
-          Prev
+          <ChevronDoubleLeftIcon class="size-5 md:size-8 drop-shadow-sm" />
         </BaseButton>
+
         <BaseButton
+          variant="player"
           label="load"
-          class="w-fit rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="openFiles"
         >
-          Load
+          <ArrowDownTrayIcon class="size-5 md:size-8 drop-shadow-sm" />
         </BaseButton>
+
         <BaseButton
+          variant="player"
+          label="shuffle"
+          @click="shuffleFiles"
+        >
+          <ArrowsUpDownIcon class="size-5 md:size-8 drop-shadow-sm" />
+          <span v-if="isShuffle" class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+        </BaseButton>
+
+        <BaseButton
+          variant="player"
           label="play"
-          class="w-25 rounded-bl-xl rounded-br-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="isPlaying ? pause() : play()"
         >
-          <span v-show="!pending" class="m-auto">
-            {{ isPlaying ? 'Pause' : 'Play' }}
-          </span>
+          <PlayIcon v-show="!isPlaying" class="size-5 md:size-8 drop-shadow-sm" />
+          <PauseIcon v-show="isPlaying " class="size-5 md:size-8 drop-shadow-sm" />
         </BaseButton>
         <BaseButton
+          variant="player"
           label="next"
-          class="w-fit rounded-bl-xl rounded-br-xl rounded-tl-xl bg-light-200 px-1 md:px-3 pb-3 pt-2 font-cyberpunk dark:bg-dark-200"
           @click="nextFile"
         >
-          Next
+          <ChevronDoubleRightIcon class="size-5 md:size-8 drop-shadow-sm" />
         </BaseButton>
       </div>
     </div>

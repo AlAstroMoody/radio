@@ -4,7 +4,7 @@ import { useAudioSettings } from 'composables/useAudioSettings'
 import { usePlayer } from 'composables/usePlayer'
 import { useRadio } from 'composables/useRadio'
 import { BaseButton, iPlay, iSpin } from 'shared/ui'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -16,6 +16,8 @@ const {
   pending,
   play,
 } = usePlayer(canvas, activeRadio)
+
+const { autoplay } = useAudioSettings()
 
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
@@ -34,6 +36,10 @@ async function playRadio() {
   useAudioSettings().applySettings()
   await play()
 }
+onMounted(() => {
+  if (autoplay.value)
+    play()
+})
 </script>
 
 <template>
@@ -47,7 +53,7 @@ async function playRadio() {
     />
     <div class="z-10 mt-auto md:relative">
       <figure>
-        <div class="mx-auto flex w-[300px] justify-start font-cyberpunk">
+        <div class="mx-auto flex w-[300px] justify-start font-blackcraft">
           {{ activeRadio?.name }}
         </div>
         <audio
@@ -58,17 +64,17 @@ async function playRadio() {
           preload="metadata"
         />
       </figure>
-      <div class="relative z-10 flex text-3xl font-normal justify-center h-16">
+      <div class="relative z-10 flex text-3xl font-normal justify-center">
         <BaseButton
           class="rounded-l-full"
           variant="control"
           label="prev"
           @click="prevRadio"
         >
-          <span class="-mt-4">prev</span>
+          <span>prev</span>
         </BaseButton>
         <BaseButton
-          class="w-40 disabled:opacity-80"
+          class="disabled:opacity-80 w-32"
           :disabled="pending"
           variant="control"
           label="play"
@@ -76,7 +82,7 @@ async function playRadio() {
         >
           <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
-          <span class="-mt-4">{{ isPlaying ? 'pause' : 'play' }}</span>
+          <span>{{ isPlaying ? 'pause' : 'play' }}</span>
         </BaseButton>
         <BaseButton
           class="rounded-r-full"
@@ -84,28 +90,9 @@ async function playRadio() {
           label="next"
           @click="nextRadio"
         >
-          <span class="-mt-4">next</span>
+          <span>next</span>
         </BaseButton>
       </div>
     </div>
-    <!-- <Transition name="taylor">
-      <img
-        v-if="activeRadio?.id === 1 && isPlaying"
-        alt="taylor"
-        src="/images/taylor.webp"
-        class="pointer-events-none fixed right-2 object-cover bottom-0"
-        width="128"
-        height="96"
-      >
-    </Transition> -->
   </div>
 </template>
-
-<!-- <style>
-.taylor-enter-active {
-  animation: var(--animate-bounce-in);
-}
-.taylor-leave-active {
-  animation: var(--animate-bounce-in) reverse;
-}
-</style> -->

@@ -11,7 +11,7 @@ const {
   playbackRate,
   selectedPreset,
   visualization,
-  visualizationIntensity, // Новый параметр
+  visualizationIntensity,
   volume,
 } = useAudioSettings()
 
@@ -36,7 +36,10 @@ const visualizationOptions = [
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg w-fit m-auto">
+  <div class="flex flex-col gap-4 p-4 rounded-lg w-fit mx-auto">
+    <div class="text-center font-blackcraft text-3xl text-black dark:text-white">
+      Settings
+    </div>
     <div class="flex items-center gap-2">
       <label for="volume" class="w-32">Volume:</label>
       <input

@@ -30,12 +30,11 @@ const modalClasses = computed(() => [
 
 const contentClasses = computed(() => [
   'bg-menu',
-  'rounded-lg',
   'shadow-xl',
   'overflow-auto',
   'flex',
   {
-    'min-w-2xl max-h-[90vh]': !isMobile.value,
+    'min-w-2xl max-h-[90vh] rounded-lg': !isMobile.value,
     'w-full h-full': isMobile.value,
   },
 ])
@@ -49,7 +48,7 @@ const contentClasses = computed(() => [
       tabindex="-1"
       @click.self="emit('close')"
     >
-      <div :class="contentClasses" class="m-auto">
+      <div :class="contentClasses" class="m-auto pt-10 md:pt-0">
         <button
           class="absolute right-2 top-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           aria-label="Close modal"

@@ -6,12 +6,16 @@ interface UseFileListReturn {
   activeFile: Ref<Blob | MediaSource>
   changeActiveFile: (index: number) => void
   files: Ref<File[]>
+  isShuffle: Ref<boolean>
   nextFile: () => void
   prevFile: () => void
+  shuffleFiles: () => void
 }
 
 const files = ref<File[]>([])
 const activeIndex = ref(0)
+const isShuffle = ref(false)
+
 export function useFileList(): UseFileListReturn {
   const activeFile = computed(() => files.value[activeIndex.value] || null)
 
@@ -28,11 +32,18 @@ export function useFileList(): UseFileListReturn {
     }
   }
 
+  const shuffleFiles = (): void => {
+    isShuffle.value = !isShuffle.value
+    files.value.sort(() => Math.random() - 0.5)
+  }
+
   return {
     activeFile,
     changeActiveFile,
     files,
+    isShuffle,
     nextFile,
     prevFile,
+    shuffleFiles,
   }
 }
