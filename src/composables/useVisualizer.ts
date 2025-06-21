@@ -1,8 +1,20 @@
 import type { Ref } from 'vue'
 
-import { useDark } from '@vueuse/core'
 import { useAudioSettings } from 'composables/useAudioSettings'
+import { useTheme } from 'composables/useTheme'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import type { Particle } from './visualizer/animations'
+
+import {
+  drawBars,
+  drawCircleWave,
+  drawParticle,
+  drawRadial,
+  drawSpectrum,
+  drawWaveform,
+
+} from './visualizer/animations'
 
 const { visualization, visualizationIntensity } = useAudioSettings()
 
@@ -15,15 +27,6 @@ enum VisualizationType {
   Waveform = 'waveform',
 }
 
-interface Particle {
-  life: number
-  size: number
-  vx: number
-  vy: number
-  x: number
-  y: number
-}
-
 interface UseVisualizerReturn {
   drawText: (text: string) => void
   startVisualization: () => void
@@ -34,7 +37,7 @@ export function useVisualizer(
   canvas: Ref<HTMLCanvasElement | null>,
   analyser: Ref<AnalyserNode | null>,
 ): UseVisualizerReturn {
-  const isDarkTheme = useDark()
+  const { isDark } = useTheme()
   const text = ref('')
   const rafId = ref(0)
   const isAnimating = ref(false)
@@ -45,6 +48,11 @@ export function useVisualizer(
   const centerX = computed(() => width.value / 2)
   const centerY = computed(() => height.value / 2)
   const particles = ref<Particle[]>([])
+
+  const gradientCache = ref<{
+    dark: CanvasGradient | null
+    light: CanvasGradient | null
+  }>({ dark: null, light: null })
 
   function getContext(): CanvasRenderingContext2D | null {
     if (!canvas.value)
@@ -63,151 +71,12 @@ export function useVisualizer(
     dataArray.value = new Uint8Array(bufferLength.value)
   }
 
-  function drawBars(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value)
-      return
-    const barWidth = width.value * 1.1 / bufferLength.value
-    let x = 0
-
-    ctx.fillStyle = isDarkTheme.value ? 'rgb(100, 200, 255)' : 'rgb(50, 100, 150)'
-    dataArray.value.forEach((value) => {
-      const barHeight = (value / 255) * (height.value / 2) * visualizationIntensity.value
-      ctx.fillRect(
-        x,
-        (height.value - barHeight),
-        barWidth,
-        barHeight,
-      )
-      x += barWidth
-    })
-  }
-
-  function drawRadial(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value)
-      return
-    const radius = 20
-    const bars = 360
-    const rads = (Math.PI * 2) / bars
-
-    for (let i = 0; i < bars; i++) {
-      const barHeight = ((dataArray.value[i % bufferLength.value] || 0) * 0.4) * visualizationIntensity.value
-      const x = centerX.value + Math.cos(rads * i) * radius
-      const y = centerY.value + Math.sin(rads * i) * radius
-      const xEnd = centerX.value + Math.cos(rads * i) * (radius + barHeight)
-      const yEnd = centerY.value + Math.sin(rads * i) * (radius + barHeight)
-
-      ctx.strokeStyle = isDarkTheme.value ? `rgb(150, ${150 + barHeight}, 255)` : `rgb(50, ${50 + barHeight}, 150)`
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(x, y)
-      ctx.lineTo(xEnd, yEnd)
-      ctx.stroke()
-    }
-  }
-
-  function drawWaveform(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value || !analyser.value)
-      return
-    analyser.value.getByteTimeDomainData(dataArray.value)
-
-    ctx.beginPath()
-    ctx.strokeStyle = isDarkTheme.value ? 'rgb(200, 200, 255)' : 'rgb(0, 0, 100)'
-    ctx.lineWidth = 2
-
-    const sliceWidth = width.value / bufferLength.value
-    let x = 0
-
-    for (let i = 0; i < bufferLength.value; i++) {
-      const v = (dataArray.value[i] / 128.0) * visualizationIntensity.value
-      const y = (v * height.value) / 2
-
-      if (i === 0) {
-        ctx.moveTo(x, y)
-      }
-      else {
-        ctx.lineTo(x, y)
-      }
-
-      x += sliceWidth
-    }
-
-    ctx.stroke()
-  }
-
-  function drawParticle(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value)
-      return
-
-    const intensity = (dataArray.value.reduce((sum, val) => sum + val, 0) / bufferLength.value) * visualizationIntensity.value
-    if (Math.random() < intensity / 255) {
-      particles.value.push({
-        life: 1,
-        size: Math.random() * 3 + 2,
-        vx: (Math.random() - 0.5) * 4,
-        vy: (Math.random() - 0.5) * 4,
-        x: centerX.value,
-        y: centerY.value,
-      })
-    }
-
-    particles.value = particles.value.filter(p => p.life > 0)
-    ctx.fillStyle = isDarkTheme.value ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'
-    particles.value.forEach((p) => {
-      p.x += p.vx * 2
-      p.y += p.vy
-      p.life -= 0.02
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-      ctx.fill()
-    })
-  }
-
-  function drawSpectrum(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value)
-      return
-    const barWidth = width.value / bufferLength.value
-    let x = 0
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, height.value)
-    gradient.addColorStop(0, isDarkTheme.value ? 'rgb(255, 100, 100)' : 'rgb(150, 0, 0)')
-    gradient.addColorStop(1, isDarkTheme.value ? 'rgb(100, 255, 100)' : 'rgb(0, 150, 0)')
-
-    dataArray.value.forEach((value) => {
-      const barHeight = (value / 255) * (height.value / 2) * visualizationIntensity.value
-      ctx.fillStyle = gradient
-      ctx.fillRect(
-        x,
-        (height.value - barHeight),
-        barWidth,
-        barHeight,
-      )
-      ctx.shadowBlur = 10
-      ctx.shadowColor = isDarkTheme.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)'
-      x += barWidth
-    })
-  }
-
-  function drawCircleWave(ctx: CanvasRenderingContext2D): void {
-    if (!dataArray.value || !analyser.value)
-      return
-
-    analyser.value.getByteFrequencyData(dataArray.value)
-    const lowFreqData = dataArray.value.slice(0, 10)
-    const intensity = (lowFreqData.reduce((sum, val) => sum + val, 0) / lowFreqData.length) * visualizationIntensity.value
-
-    const baseRadius = 40
-    const maxRadius = baseRadius + intensity / 5
-    ctx.beginPath()
-    ctx.arc(
-      centerX.value,
-      centerY.value,
-      maxRadius,
-      0,
-      Math.PI * 2,
-    )
-    ctx.strokeStyle = isDarkTheme.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)'
-    ctx.lineWidth = 2
-    ctx.stroke()
+  function clearContext(ctx: CanvasRenderingContext2D): void {
+    ctx.shadowBlur = 0
+    ctx.shadowColor = 'transparent'
+    ctx.lineWidth = 1
+    ctx.strokeStyle = 'black'
+    ctx.fillStyle = 'black'
   }
 
   function draw(): void {
@@ -224,28 +93,31 @@ export function useVisualizer(
 
     switch (visualization.value) {
       case VisualizationType.Bars:
-        drawBars(ctx)
+        drawBars(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.CircleWave:
-        drawCircleWave(ctx)
+        drawCircleWave(ctx, dataArray.value, centerX.value, centerY.value, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.Particle:
-        drawParticle(ctx)
+        drawParticle(ctx, dataArray.value, bufferLength.value, centerX.value, centerY.value, isDark.value, visualizationIntensity.value, particles.value)
         break
       case VisualizationType.Radial:
-        drawRadial(ctx)
+        drawRadial(ctx, dataArray.value, centerX.value, centerY.value, bufferLength.value, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.Spectrum:
-        drawSpectrum(ctx)
+        drawSpectrum(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.Waveform:
-        drawWaveform(ctx)
+        analyser.value.getByteTimeDomainData(dataArray.value)
+        drawWaveform(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
         break
       default:
         stopVisualization()
         ctx.clearRect(0, 0, width.value, height.value)
         break
     }
+
+    clearContext(ctx)
 
     rafId.value = requestAnimationFrame(draw)
   }
@@ -266,6 +138,8 @@ export function useVisualizer(
       cancelAnimationFrame(rafId.value)
       rafId.value = 0
     }
+    particles.value = []
+    gradientCache.value = { dark: null, light: null }
   }
 
   function drawText(value?: string): void {
@@ -277,7 +151,7 @@ export function useVisualizer(
 
     stopVisualization()
     ctx.clearRect(0, 0, width.value, height.value)
-    ctx.fillStyle = isDarkTheme.value ? 'white' : 'black'
+    ctx.fillStyle = isDark.value ? 'white' : 'black'
     ctx.font = '20px Cyberpunk'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
@@ -299,13 +173,17 @@ export function useVisualizer(
     }
   })
 
-  watch(isDarkTheme, () => {
+  watch(isDark, () => {
+    gradientCache.value = { dark: null, light: null }
     if (text.value)
       drawText()
   })
 
   onUnmounted(() => {
     stopVisualization()
+    particles.value = []
+    gradientCache.value = { dark: null, light: null }
+    dataArray.value = null
   })
 
   return {

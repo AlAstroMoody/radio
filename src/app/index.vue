@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon } from '@heroicons/vue/24/solid'
-import { useDark, useToggle } from '@vueuse/core'
 import { useModal } from 'composables/useModal'
+import { useTheme } from 'composables/useTheme'
 import { AudioSettings, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal, ButtonWithIcon, iLamp, iStation } from 'shared/ui'
 import { onMounted, ref } from 'vue'
 
-const isDarkTheme = useDark()
-
-const toggleDark = useToggle(isDarkTheme)
+const { toggleDark } = useTheme()
 const { closeModal, isOpen, modalContent, modalProps, openModal } = useModal()
 
 const isRadioMode = ref(true)
