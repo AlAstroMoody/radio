@@ -21,4 +21,4 @@ export function drawBars(
     )
     x += barWidth
   })
-} 
+}

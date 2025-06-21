@@ -2,7 +2,24 @@ import type { Component } from 'vue'
 
 import { ref } from 'vue'
 
+// Глобальный экземпляр модалки
+let modalInstance: null | ReturnType<typeof createModalInstance> = null
+
 export function useModal(): {
+  closeModal: () => void
+  isOpen: ReturnType<typeof ref<boolean>>
+  modalContent: ReturnType<typeof ref<Component | null>>
+  modalProps: ReturnType<typeof ref<null | Record<string, unknown>>>
+  openModal: (component: Component, props?: Record<string, unknown>) => void
+} {
+  if (!modalInstance) {
+    modalInstance = createModalInstance()
+  }
+
+  return modalInstance
+}
+
+function createModalInstance(): {
   closeModal: () => void
   isOpen: ReturnType<typeof ref<boolean>>
   modalContent: ReturnType<typeof ref<Component | null>>

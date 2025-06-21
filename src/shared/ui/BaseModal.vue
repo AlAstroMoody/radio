@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { useEventListener, useWindowSize } from '@vueuse/core'
+import { useModal } from 'composables/useModal'
 import { iClose } from 'shared/ui/icons'
 import { computed } from 'vue'
 
-const { isOpen } = defineProps<{
-  isOpen: boolean
-}>()
-const emit = defineEmits(['close'])
+const { closeModal, isOpen, modalContent, modalProps } = useModal()
 
 useEventListener(window, 'keydown', handleKeydown)
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOpen) {
-    emit('close')
+  if (event.key === 'Escape' && isOpen.value) {
+    closeModal()
   }
 }
 
@@ -46,17 +44,19 @@ const contentClasses = computed(() => [
       v-if="isOpen"
       :class="modalClasses"
       tabindex="-1"
-      @click.self="emit('close')"
+      @click.self="closeModal"
     >
-      <div :class="contentClasses" class="m-auto pt-10 md:pt-0">
-        <button
-          class="absolute right-2 top-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label="Close modal"
-          @click="emit('close')"
-        >
-          <iClose class="w-6 h-6" />
-        </button>
-        <slot />
+      <div :class="contentClasses" class="m-auto">
+        <div class="p-4 relative w-full">
+          <button
+            class="absolute right-2 top-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Close modal"
+            @click="closeModal"
+          >
+            <iClose class="w-6 h-6" />
+          </button>
+          <component :is="modalContent" v-if="modalContent" v-bind="modalProps || {}" />
+        </div>
       </div>
     </div>
   </Transition>

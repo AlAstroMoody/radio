@@ -36,7 +36,7 @@ const visualizationOptions = [
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-4 rounded-lg w-fit mx-auto">
+  <div class="flex flex-col gap-4 p-4 w-fit">
     <div class="text-center font-blackcraft text-3xl text-black dark:text-white">
       Settings
     </div>
