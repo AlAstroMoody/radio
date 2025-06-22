@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal } from 'shared/ui'
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 
-const isRadioMode = ref(true)
+const { isRadioMode } = useRadio()
 
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)
@@ -16,7 +17,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="flex min-h-svh w-full flex-col md:flex-row gap-4"
+    class="flex min-h-svh w-full flex-col md:flex-row gap-4 relative"
   >
     <aside
       class="flex flex-col z-1 w-full overflow-hidden md:h-screen md:w-96 md:min-w-[24rem]"
@@ -28,14 +29,14 @@ onMounted(() => {
           {{ isRadioMode ? 'radio' : 'music' }}
         </div>
       </div>
-      <RadioList class="hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode />
-      <ControlPanel v-model:is-radio-mode="isRadioMode" class="fixed bottom-0" />
+      <RadioList class="hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
+      <ControlPanel class="fixed bottom-0" />
     </aside>
 
     <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1]">
-      <RadioPlayer v-if="isRadioMode" class="m-auto w-max mb-5 mt-auto" />
-      <MusicPlayer v-else class="m-auto w-full md:w-max mb-3 mt-auto" />
-      <AudioSettings class="mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" />
+      <MusicPlayer v-if="!isRadioMode" class="m-auto w-full md:w-max mb-3 mt-auto" />
+      <RadioPlayer v-else class="m-auto w-full md:w-max mb-3 mt-auto" />
+      <AudioSettings class="mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
     </div>
 
     <iLovePwa />

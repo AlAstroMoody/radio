@@ -7,11 +7,15 @@ import { ref } from 'vue'
 interface UseRadioReturn {
   activeRadio: Ref<Wave>
   changeActiveRadio: (id: number) => void
+  isRadioMode: Ref<boolean>
   nextRadio: () => void
   prevRadio: () => void
+  toggleMode: () => void
 }
 
 const activeRadio = ref<Wave>(radioWaves[0])
+const isRadioMode = ref<boolean>(true)
+
 export function useRadio(): UseRadioReturn {
   const findNeighbour = (number: number): void => {
     const index = radioWaves.findIndex(
@@ -32,10 +36,16 @@ export function useRadio(): UseRadioReturn {
       activeRadio.value = wave
   }
 
+  const toggleMode = (): void => {
+    isRadioMode.value = !isRadioMode.value
+  }
+
   return {
     activeRadio,
     changeActiveRadio,
+    isRadioMode,
     nextRadio,
     prevRadio,
+    toggleMode,
   }
 }

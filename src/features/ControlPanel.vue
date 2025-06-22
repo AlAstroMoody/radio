@@ -1,24 +1,15 @@
 <script setup lang="ts">
 import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon } from '@heroicons/vue/24/solid'
 import { useModal } from 'composables/useModal'
+import { useRadio } from 'composables/useRadio'
 import { useTheme } from 'composables/useTheme'
 import { AudioSettings, RadioList } from 'features'
 import { ButtonWithIcon, iLamp, iStation } from 'shared/ui'
 
-const props = defineProps<{
-  isRadioMode: boolean
-}>()
-
-const emit = defineEmits<{
-  'update:isRadioMode': [value: boolean]
-}>()
+const { isRadioMode, toggleMode } = useRadio()
 
 const { toggleDark } = useTheme()
 const { openModal } = useModal()
-
-function toggleMode() {
-  emit('update:isRadioMode', !props.isRadioMode)
-}
 </script>
 
 <template>

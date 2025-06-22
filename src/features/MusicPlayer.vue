@@ -268,6 +268,26 @@ const cardStyle = computed(() => ({
   }deg)`,
   transition: '.3s ease-out all',
 }))
+
+function formatTime(seconds: number) {
+  seconds = Math.trunc(seconds)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+function handleProgressClick(event: MouseEvent) {
+  if (!audio.value || !audio.value.duration)
+    return
+
+  const progressBar = event.currentTarget as HTMLElement
+  const rect = progressBar.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const progressBarWidth = rect.width
+  const clickPercent = clickX / progressBarWidth
+
+  audio.value.currentTime = clickPercent * audio.value.duration
+}
 </script>
 
 <template>
@@ -319,70 +339,80 @@ const cardStyle = computed(() => ({
       </div>
     </div>
 
-    <div v-if="activeFile" class="flex flex-col my-2">
-      <div class="mx-auto flex gap-3 font-semibold">
+    <div v-if="activeFile" class="flex flex-col my-2 gap-4 items-center">
+      <!-- Основные кнопки управления -->
+      <div class="flex items-center gap-4">
         <BaseButton
           variant="player"
-          label="prev"
-          class="group"
           @click="prevFile"
         >
-          <ChevronDoubleLeftIcon class="size-5 md:size-8 drop-shadow-sm" />
+          <ChevronDoubleLeftIcon class="h-6 w-6" />
         </BaseButton>
-
         <BaseButton
           variant="player"
-          label="load"
-          @click="openFiles"
-        >
-          <ArrowDownTrayIcon class="size-5 md:size-8 drop-shadow-sm" />
-        </BaseButton>
-
-        <div class="relative">
-          <BaseButton
-            variant="player"
-            label="shuffle"
-            :class="isShuffle ? 'bg-purple-500/20 border-purple-400/50 shadow-purple-500/25' : ''"
-            @click="shuffleFiles"
-          >
-            <ArrowsUpDownIcon
-              :class="isShuffle ? 'text-purple-400 drop-shadow-purple' : 'drop-shadow-sm'"
-              class="size-5 md:size-8 transition-all duration-300"
-            />
-          </BaseButton>
-          <span v-if="isShuffle" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-purple-400 animate-pulse z-10 shadow-lg" />
-        </div>
-
-        <div class="relative">
-          <BaseButton
-            variant="player"
-            label="repeat"
-            :class="isRepeat ? 'bg-purple-500/20 border-purple-400/50 shadow-purple-500/25' : ''"
-            @click="toggleRepeat"
-          >
-            <ArrowPathIcon
-              :class="isRepeat ? 'text-purple-400 drop-shadow-purple' : 'drop-shadow-sm'"
-              class="size-5 md:size-8 transition-all duration-300"
-            />
-          </BaseButton>
-          <span v-if="isRepeat" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-purple-400 animate-pulse z-10 shadow-lg" />
-        </div>
-
-        <BaseButton
-          variant="player"
-          label="play"
+          class="!size-14"
           @click="isPlaying ? pause() : play()"
         >
-          <PlayIcon v-show="!isPlaying" class="size-5 md:size-8 drop-shadow-sm" />
-          <PauseIcon v-show="isPlaying " class="size-5 md:size-8 drop-shadow-sm" />
+          <PlayIcon v-if="!isPlaying" class="h-10 w-10" />
+          <PauseIcon v-else class="h-10 w-10" />
         </BaseButton>
         <BaseButton
           variant="player"
-          label="next"
           @click="nextFile"
         >
-          <ChevronDoubleRightIcon class="size-5 md:size-8 drop-shadow-sm" />
+          <ChevronDoubleRightIcon class="h-6 w-6" />
         </BaseButton>
+      </div>
+
+      <!-- Дополнительные кнопки -->
+      <div class="flex items-center gap-4">
+        <BaseButton
+          variant="player"
+          :class="{ 'text-purple-500': isShuffle }"
+          @click="shuffleFiles"
+        >
+          <div class="relative">
+            <ArrowsUpDownIcon class="h-5 w-5" />
+            <div
+              v-if="isShuffle"
+              class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
+            />
+          </div>
+        </BaseButton>
+        <BaseButton
+          variant="player"
+          @click="openFiles"
+        >
+          <ArrowDownTrayIcon class="h-5 w-5" />
+        </BaseButton>
+        <BaseButton
+          variant="player"
+          :class="{ 'text-purple-500': isRepeat }"
+          @click="toggleRepeat"
+        >
+          <div class="relative">
+            <ArrowPathIcon class="h-5 w-5" />
+            <div
+              v-if="isRepeat"
+              class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
+            />
+          </div>
+        </BaseButton>
+      </div>
+      <div class="w-full">
+        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+          <span>{{ formatTime(audio.currentTime || 0) }}</span>
+          <span>{{ formatTime(audio.duration || 0) }}</span>
+        </div>
+        <div
+          class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 cursor-pointer"
+          @click="handleProgressClick"
+        >
+          <div
+            class="bg-purple-500 h-2 rounded-full transition-all duration-300"
+            :style="{ width: `${progress}%` }"
+          />
+        </div>
       </div>
     </div>
   </div>
