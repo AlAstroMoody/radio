@@ -46,12 +46,9 @@
   --animate-second-wave: opacitySecond 2s ease-out infinite;
   --animate-third-wave: opacityThird 2s ease-out infinite;
   --animate-marquee: marquee 10s linear infinite;
-  --animate-bounce-in: bounce-in 0.5s ease;
-  --animate-bounce-tooltip: bounce-tooltip 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  --animate-step-rotate: step-rotate 5s linear infinite;
-  --animate-slide-up: slideUp 1s ease-out forwards;
   --animate-neon-pulse: neon-pulse 2s infinite;
-  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --animate-step-rotate: step-rotate 5s linear infinite;
+  --animate-bounce-tooltip: bounce-tooltip 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
   @keyframes opacity {
     0% {
@@ -91,46 +88,6 @@
       transform: translateX(-200%)
      }
   }
-  @keyframes bounce-in {
-    0% {
-      transform: translateY(80px);
-    }
-    50% {
-      /* Пустой этап */
-    }
-    100% {
-      transform: translateY(0);
-    }
-  }
-  @keyframes bounce-tooltip {
-    0% {
-      transform: translateY(10px);
-    }
-    30% {
-      transform: translateY(-20px);
-    }
-    100% {
-      transform: translateY(-10px);
-    }
-  }
-  @keyframes step-rotate {
-    0%, 90% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(60deg);
-    }
-  }
-  @keyframes slideUp {
-    0% {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
   @keyframes neon-pulse {
     0%, 100% {
       box-shadow:
@@ -147,12 +104,12 @@
         inset 0 0 10px rgba(147, 51, 234, 0.2);
     }
   }
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
+  @keyframes step-rotate {
+    0%, 90% {
+      transform: rotate(0deg);
     }
     100% {
-      transform: translateX(100%);
+      transform: rotate(60deg);
     }
   }
 }
@@ -189,5 +146,9 @@
   
   .dark .shimmer::before {
     background: linear-gradient(90deg, transparent, var(--color-glass-purple-border), transparent);
+  }
+  
+  .drop-shadow-purple {
+    filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.6));
   }
 }

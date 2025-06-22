@@ -7,24 +7,28 @@ export function drawSpectrum(
   isDark: boolean,
   visualizationIntensity: number,
 ): void {
-  const barWidth = width / bufferLength
-  let x = 0
+  const barHeight = height / bufferLength
+  let y = 0
 
-  const gradient = ctx.createLinearGradient(0, 0, 0, height)
-  gradient.addColorStop(0, isDark ? 'rgb(255, 100, 100)' : 'rgb(150, 0, 0)')
-  gradient.addColorStop(1, isDark ? 'rgb(100, 255, 100)' : 'rgb(0, 150, 0)')
+  dataArray.forEach((value, index) => {
+    const barWidth = (value / 255) * (width / 2) * visualizationIntensity
 
-  dataArray.forEach((value) => {
-    const barHeight = (value / 255) * (height / 2) * visualizationIntensity
+    // Создаем радужный градиент для каждой полоски
+    const gradient = ctx.createLinearGradient(0, y, width, y + barHeight)
+    const hue = (index / bufferLength) * 360
+    gradient.addColorStop(0, isDark ? `hsla(${hue}, 80%, 70%, 0.9)` : `hsla(${hue}, 80%, 50%, 0.9)`)
+    gradient.addColorStop(0.5, isDark ? `hsla(${hue}, 80%, 50%, 0.7)` : `hsla(${hue}, 80%, 70%, 0.7)`)
+    gradient.addColorStop(1, isDark ? `hsla(${hue}, 80%, 30%, 0.5)` : `hsla(${hue}, 80%, 90%, 0.5)`)
+
     ctx.fillStyle = gradient
     ctx.fillRect(
-      x,
-      (height - barHeight),
-      barWidth,
-      barHeight,
+      (width / 2) - barWidth,
+      y,
+      barWidth * 2,
+      barHeight - 1,
     )
-    ctx.shadowBlur = 10
-    ctx.shadowColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)'
-    x += barWidth
+    ctx.shadowBlur = 8
+    ctx.shadowColor = isDark ? `hsla(${hue}, 80%, 90%, 0.6)` : `hsla(${hue}, 80%, 30%, 0.6)`
+    y += barHeight
   })
 }

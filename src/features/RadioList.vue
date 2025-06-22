@@ -21,15 +21,16 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
     >
       favorites
     </div>
-    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
-      <div class="pl-2 overflow-hidden flex flex-col gap-3">
+    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96 pr-2">
+      <div class="pl-2 pr-4 overflow-visible flex flex-col gap-3">
         <template v-if="!playlist.length || isRadioMode">
           <BaseButton
             v-for="radio in radioWaves"
             :key="radio.id"
             :label="radio.name"
+            variant="list"
             class="truncate max-w-full"
-            :class="{ 'font-bold': radio.id === activeRadio.id }"
+            :class="{ 'font-bold bg-purple-500/20 border-purple-400/50 shadow-purple-500/25': radio.id === activeRadio.id }"
             @click="changeActiveRadio(radio.id)"
           >
             <div class="flex items-center">
@@ -43,8 +44,9 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
             v-for="(name, index) in playlist"
             :key="name"
             :label="name"
+            variant="list"
             class="truncate max-w-full"
-            :class="{ 'font-bold': name === currentFileName }"
+            :class="{ 'font-bold bg-purple-500/20 border-purple-400/50 shadow-purple-500/25': name === currentFileName }"
             @click="changeActiveFile(index)"
           >
             {{ name }}

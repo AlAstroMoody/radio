@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownTrayIcon, ArrowsUpDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
+import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
 import { useEventListener, useParallax } from '@vueuse/core'
 import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
@@ -26,7 +26,7 @@ const pending = ref<boolean>(false)
 const isPlaying = ref<boolean>(false)
 const progress = ref<number>(0)
 
-const { activeFile, changeActiveFile, files, isShuffle, nextFile, prevFile, shuffleFiles } = useFileList()
+const { activeFile, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles } = useFileList()
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
 const { applySettings, filterSettings } = useAudioSettings()
@@ -43,7 +43,7 @@ function changeFiles(event: Event) {
   }
   if (filesArray.length) {
     pause()
-    files.value = filesArray
+    updateFiles(filesArray)
     changeActiveFile(0)
     initializeAudio()
   }
@@ -140,7 +140,7 @@ async function openFiles() {
       const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
       if (newFiles.length) {
         pause()
-        files.value = newFiles
+        updateFiles(newFiles)
         changeActiveFile(0)
         initializeAudio()
       }
@@ -205,7 +205,7 @@ onMounted(() => {
       if (fileHandles.length > 0) {
         try {
           const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
-          files.value = newFiles
+          updateFiles(newFiles)
         }
         catch (error) {
           console.error('Error processing launchQueue files:', error)
@@ -231,7 +231,7 @@ onMounted(() => {
         .filter((file): file is File => !!file)
       if (newFiles.length) {
         pause()
-        files.value.push(...newFiles)
+        updateFiles(newFiles)
         changeActiveFile(0)
         initializeAudio()
       }
@@ -338,14 +338,35 @@ const cardStyle = computed(() => ({
           <ArrowDownTrayIcon class="size-5 md:size-8 drop-shadow-sm" />
         </BaseButton>
 
-        <BaseButton
-          variant="player"
-          label="shuffle"
-          @click="shuffleFiles"
-        >
-          <ArrowsUpDownIcon class="size-5 md:size-8 drop-shadow-sm" />
-          <span v-if="isShuffle" class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-        </BaseButton>
+        <div class="relative">
+          <BaseButton
+            variant="player"
+            label="shuffle"
+            :class="isShuffle ? 'bg-purple-500/20 border-purple-400/50 shadow-purple-500/25' : ''"
+            @click="shuffleFiles"
+          >
+            <ArrowsUpDownIcon
+              :class="isShuffle ? 'text-purple-400 drop-shadow-purple' : 'drop-shadow-sm'"
+              class="size-5 md:size-8 transition-all duration-300"
+            />
+          </BaseButton>
+          <span v-if="isShuffle" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-purple-400 animate-pulse z-10 shadow-lg" />
+        </div>
+
+        <div class="relative">
+          <BaseButton
+            variant="player"
+            label="repeat"
+            :class="isRepeat ? 'bg-purple-500/20 border-purple-400/50 shadow-purple-500/25' : ''"
+            @click="toggleRepeat"
+          >
+            <ArrowPathIcon
+              :class="isRepeat ? 'text-purple-400 drop-shadow-purple' : 'drop-shadow-sm'"
+              class="size-5 md:size-8 transition-all duration-300"
+            />
+          </BaseButton>
+          <span v-if="isRepeat" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-purple-400 animate-pulse z-10 shadow-lg" />
+        </div>
 
         <BaseButton
           variant="player"

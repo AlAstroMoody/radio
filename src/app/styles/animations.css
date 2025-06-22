@@ -1,0 +1,84 @@
+/* Анимации для радиоволн (iStation) */
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes opacitySecond {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+}
+
+@keyframes opacityThird {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Анимация для бегущего текста (MusicPlayer) */
+@keyframes marquee {
+  0% { 
+    transform: translateX(100%)
+  }
+  100% { 
+    transform: translateX(-200%)
+  }
+}
+
+/* Анимация для неонового пульса (BaseButton) */
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px rgba(147, 51, 234, 0.3),
+      0 0 10px rgba(147, 51, 234, 0.2),
+      0 0 15px rgba(147, 51, 234, 0.1),
+      inset 0 0 5px rgba(147, 51, 234, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(147, 51, 234, 0.5),
+      0 0 20px rgba(147, 51, 234, 0.3),
+      0 0 30px rgba(147, 51, 234, 0.2),
+      inset 0 0 10px rgba(147, 51, 234, 0.2);
+  }
+}
+
+/* Анимация для пошагового вращения (iSettings) */
+@keyframes step-rotate {
+  0%, 90% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(60deg);
+  }
+}
+
+/* Анимация для тултипов (ControlPanel) */
+@keyframes bounce-tooltip {
+  0% {
+    transform: translateY(10px);
+  }
+  30% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(-2px);
+  }
+} 
