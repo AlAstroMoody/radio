@@ -25,7 +25,6 @@ export function drawParticle(
 ): void {
   const intensity = (dataArray.reduce((sum, val) => sum + val, 0) / bufferLength) * visualizationIntensity
 
-  // Ограничиваем количество частиц
   if (particles.length < MAX_PARTICLES && Math.random() < intensity / 255) {
     const shapes: Array<'circle' | 'square' | 'star' | 'triangle'> = ['circle', 'square', 'triangle', 'star']
     const colors = isDark
@@ -46,7 +45,6 @@ export function drawParticle(
     })
   }
 
-  // Удаляем мертвые частицы и ограничиваем массив
   const activeParticles = particles
     .filter(p => p.life > 0)
     .slice(0, MAX_PARTICLES)
@@ -108,7 +106,6 @@ export function drawParticle(
     ctx.restore()
   })
 
-  // Обновляем исходный массив
   particles.length = 0
   particles.push(...activeParticles)
 }
