@@ -12,8 +12,8 @@ export const radioWaves: Wave[] = [
   },
   {
     id: 2,
-    name: 'Exclusively Dua Lipa',
-    src: 'https://streaming.exclusive.radio/er/dualipa/icecast.audio',
+    name: 'Sabrina Carpenter',
+    src: 'https://nl4.mystreaming.net/er/sabrinacarperpenter/icecast.audio',
   },
   {
     id: 3,
@@ -50,5 +50,9 @@ export const radioWaves: Wave[] = [
     name: 'Relax FM',
     src: 'https://srv21.gpmradio.ru:8443/stream/trust/mp3/128/266',
   },
-
+  {
+    id: 10,
+    name: 'Exclusively Dua Lipa',
+    src: 'https://streaming.exclusive.radio/er/dualipa/icecast.audio',
+  },
 ]
