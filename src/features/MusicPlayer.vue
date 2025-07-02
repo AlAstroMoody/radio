@@ -5,6 +5,7 @@ import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useFileList } from 'composables/useFileList'
 import { useVisualizer } from 'composables/useVisualizer'
+import { openDB } from 'idb'
 import { BaseButton } from 'shared/ui'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
@@ -33,7 +34,10 @@ const { applySettings, filterSettings } = useAudioSettings()
 const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, currentFileName)
 const { startVisualization } = useVisualizer(canvas, analyser)
 
-function changeFiles(event: Event) {
+const DB_NAME = 'radio-files-db'
+const DB_STORE = 'files'
+
+async function changeFiles(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files)
     return
@@ -46,6 +50,8 @@ function changeFiles(event: Event) {
     updateFiles(filesArray)
     changeActiveFile(0)
     initializeAudio()
+    await clearFilesFromIndexedDB()
+    await saveFilesToIndexedDB(filesArray)
   }
 }
 
@@ -74,6 +80,11 @@ function cleanup() {
   }
 }
 
+async function clearFilesFromIndexedDB() {
+  const db = await getDb()
+  await db.clear(DB_STORE)
+}
+
 function connectFilters(audioContext: AudioContext): Filters | null {
   if (!audioContext)
     return null
@@ -87,6 +98,16 @@ function connectFilters(audioContext: AudioContext): Filters | null {
   filters.treble.type = 'highshelf'
   updateFilterSettings(filters)
   return filters
+}
+
+async function getDb() {
+  return openDB(DB_NAME, 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'name' })
+      }
+    },
+  })
 }
 
 async function initializeAudio() {
@@ -130,6 +151,25 @@ async function initializeAudio() {
   }
 }
 
+function initPlayerOnMount() {
+  // Восстанавливаем файлы из IndexedDB, если они есть и файлов сейчас нет
+  if (!files.value.length) {
+    loadFilesFromIndexedDB().then((dbFiles) => {
+      if (dbFiles.length) {
+        updateFiles(dbFiles)
+        changeActiveFile(0)
+        initializeAudio()
+      }
+    })
+  }
+}
+
+async function loadFilesFromIndexedDB(): Promise<File[]> {
+  const db = await getDb()
+  const all = await db.getAll(DB_STORE)
+  return all.map((item: any) => new File([item.data], item.name, { lastModified: item.lastModified, type: item.type }))
+}
+
 async function openFiles() {
   try {
     if ('showOpenFilePicker' in window) {
@@ -143,6 +183,8 @@ async function openFiles() {
         updateFiles(newFiles)
         changeActiveFile(0)
         initializeAudio()
+        await clearFilesFromIndexedDB()
+        await saveFilesToIndexedDB(newFiles)
       }
     }
     else {
@@ -179,6 +221,25 @@ async function play(): Promise<void> {
   finally {
     pending.value = false
   }
+}
+
+async function saveFilesToIndexedDB(files: File[]) {
+  const db = await getDb()
+  // Сначала читаем все arrayBuffer'ы
+  const fileDatas = await Promise.all(
+    files.map(async file => ({
+      data: await file.arrayBuffer(),
+      lastModified: file.lastModified,
+      name: file.name,
+      type: file.type,
+    })),
+  )
+  // Теперь одной транзакцией кладём всё в базу
+  const tx = db.transaction(DB_STORE, 'readwrite')
+  for (const fileData of fileDatas) {
+    await tx.store.put(fileData)
+  }
+  await tx.done
 }
 
 function setListeners() {
@@ -240,6 +301,8 @@ onMounted(() => {
 
   dropZone.value.ondragover = e => e.preventDefault()
   setListeners()
+
+  initPlayerOnMount()
 })
 
 onUnmounted(() => {
