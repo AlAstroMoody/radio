@@ -7,10 +7,35 @@ import { computed } from 'vue'
 const { closeModal, isOpen, modalContent, modalProps } = useModal()
 
 useEventListener(window, 'keydown', handleKeydown)
+useEventListener(window, 'touchstart', handleTouchStart)
+useEventListener(window, 'touchend', handleTouchEnd)
+
+let touchStartX = 0
+let touchStartY = 0
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && isOpen.value) {
     closeModal()
   }
+}
+
+function handleTouchEnd(event: TouchEvent) {
+  if (!isOpen.value)
+    return
+  const touch = event.changedTouches[0]
+  const dx = Math.abs(touch.clientX - touchStartX)
+  const dy = Math.abs(touch.clientY - touchStartY)
+  // Любой свайп (больше 30px по любой оси)
+  if (dx > 30 || dy > 30) {
+    closeModal()
+  }
+}
+
+function handleTouchStart(event: TouchEvent) {
+  if (!isOpen.value)
+    return
+  const touch = event.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
 }
 
 const { width: windowWidth } = useWindowSize()

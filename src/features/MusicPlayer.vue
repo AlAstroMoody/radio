@@ -242,6 +242,18 @@ async function saveFilesToIndexedDB(files: File[]) {
   await tx.done
 }
 
+function seekBackward() {
+  if (audio.value) {
+    audio.value.currentTime = Math.max(0, audio.value.currentTime - 10)
+  }
+}
+
+function seekForward() {
+  if (audio.value && audio.value.duration) {
+    audio.value.currentTime = Math.min(audio.value.duration, audio.value.currentTime + 10)
+  }
+}
+
 function setListeners() {
   useEventListener(audio.value, 'timeupdate', changeProgress)
   useEventListener(audio.value, 'ended', () => {
@@ -407,6 +419,12 @@ function handleProgressClick(event: MouseEvent) {
       <div class="flex items-center gap-4">
         <BaseButton
           variant="player"
+          @click="seekBackward"
+        >
+          <span class="font-bold">-10</span>
+        </BaseButton>
+        <BaseButton
+          variant="player"
           @click="prevFile"
         >
           <ChevronDoubleLeftIcon class="h-6 w-6" />
@@ -424,6 +442,12 @@ function handleProgressClick(event: MouseEvent) {
           @click="nextFile"
         >
           <ChevronDoubleRightIcon class="h-6 w-6" />
+        </BaseButton>
+        <BaseButton
+          variant="player"
+          @click="seekForward"
+        >
+          <span class="font-bold">+10</span>
         </BaseButton>
       </div>
 
@@ -462,7 +486,7 @@ function handleProgressClick(event: MouseEvent) {
           </div>
         </BaseButton>
       </div>
-      <div class="w-full">
+      <div class="w-full px-4">
         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
           <span>{{ formatTime(audio.currentTime || 0) }}</span>
           <span>{{ formatTime(audio.duration || 0) }}</span>
