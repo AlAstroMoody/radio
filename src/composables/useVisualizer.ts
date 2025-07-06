@@ -7,16 +7,17 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { Particle } from './visualizer/animations'
 
 import {
+  clearCircleWaveGradientCache,
+  clearSpectrumGradientCache,
   drawBars,
   drawCircleWave,
   drawParticle,
   drawRadial,
   drawSpectrum,
   drawWaveform,
-
 } from './visualizer/animations'
 
-const { visualization, visualizationIntensity } = useAudioSettings()
+const { visualization, visualizationFPS, visualizationIntensity } = useAudioSettings()
 
 enum VisualizationType {
   Bars = 'bars',
@@ -43,6 +44,11 @@ export function useVisualizer(
   const isAnimating = ref(false)
   const width = ref(360)
   const height = ref(200)
+
+  // FPS контроль
+  const lastFrameTime = ref(0)
+  const frameInterval = computed(() => 1000 / visualizationFPS.value)
+
   const bufferLength = ref(0)
   const dataArray = ref<null | Uint8Array>(null)
   const centerX = computed(() => width.value / 2)
@@ -82,14 +88,33 @@ export function useVisualizer(
   function draw(): void {
     if (!isAnimating.value)
       return
+
+    const currentTime = performance.now()
+    const timeSinceLastFrame = currentTime - lastFrameTime.value
+
+    // Пропускаем кадр, если не прошло достаточно времени
+    if (timeSinceLastFrame < frameInterval.value) {
+      rafId.value = requestAnimationFrame(draw)
+      return
+    }
+
+    lastFrameTime.value = currentTime
+
     const ctx = getContext()
     if (!ctx || !dataArray.value || !analyser.value) {
       stopVisualization()
       return
     }
 
-    analyser.value.getByteFrequencyData(dataArray.value)
-    ctx.clearRect(0, 0, width.value, height.value)
+    try {
+      analyser.value.getByteFrequencyData(dataArray.value)
+      ctx.clearRect(0, 0, width.value, height.value)
+    }
+    catch (error) {
+      console.warn('Ошибка получения данных анализатора:', error)
+      stopVisualization()
+      return
+    }
 
     switch (visualization.value) {
       case VisualizationType.Bars:
@@ -175,6 +200,8 @@ export function useVisualizer(
 
   watch(isDark, () => {
     gradientCache.value = { dark: null, light: null }
+    clearSpectrumGradientCache()
+    clearCircleWaveGradientCache()
     if (text.value)
       drawText()
   })

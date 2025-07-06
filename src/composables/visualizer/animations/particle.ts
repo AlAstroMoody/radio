@@ -49,6 +49,11 @@ export function drawParticle(
     .filter(p => p.life > 0)
     .slice(0, MAX_PARTICLES)
 
+  // Ограничиваем количество частиц для производительности
+  if (activeParticles.length > MAX_PARTICLES) {
+    activeParticles.splice(MAX_PARTICLES)
+  }
+
   activeParticles.forEach((p) => {
     p.x += p.vx * 2
     p.y += p.vy

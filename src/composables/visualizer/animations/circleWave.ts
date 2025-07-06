@@ -1,3 +1,11 @@
+// Кэш градиентов для circleWave анимации
+const circleWaveGradientCache = new Map<string, CanvasGradient>()
+
+// Функция для очистки кэша при смене темы
+export function clearCircleWaveGradientCache(): void {
+  circleWaveGradientCache.clear()
+}
+
 export function drawCircleWave(
   ctx: CanvasRenderingContext2D,
   dataArray: Uint8Array,
@@ -22,18 +30,35 @@ export function drawCircleWave(
   ctx.beginPath()
   ctx.arc(centerX, centerY, mainRadius, 0, Math.PI * 2)
 
-  // Градиент для основного круга
-  const mainGradient = ctx.createRadialGradient(
-    centerX,
-    centerY,
-    0,
-    centerX,
-    centerY,
-    mainRadius,
-  )
-  mainGradient.addColorStop(0, isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)')
-  mainGradient.addColorStop(0.7, isDark ? 'rgba(100, 150, 255, 0.4)' : 'rgba(50, 100, 150, 0.4)')
-  mainGradient.addColorStop(1, 'transparent')
+  // Кэшируем градиент для основного круга
+  const radiusKey = Math.round(mainRadius)
+  const cacheKey = `${radiusKey}-${isDark}-${centerX}-${centerY}`
+
+  let mainGradient = circleWaveGradientCache.get(cacheKey)
+
+  if (!mainGradient) {
+    mainGradient = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      mainRadius,
+    )
+    mainGradient.addColorStop(0, isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)')
+    mainGradient.addColorStop(0.7, isDark ? 'rgba(100, 150, 255, 0.4)' : 'rgba(50, 100, 150, 0.4)')
+    mainGradient.addColorStop(1, 'transparent')
+
+    // Ограничиваем размер кэша
+    if (circleWaveGradientCache.size > 50) {
+      const firstKey = circleWaveGradientCache.keys().next().value
+      if (firstKey) {
+        circleWaveGradientCache.delete(firstKey)
+      }
+    }
+
+    circleWaveGradientCache.set(cacheKey, mainGradient)
+  }
 
   ctx.fillStyle = mainGradient
   ctx.fill()
@@ -63,6 +88,7 @@ export function drawCircleWave(
       ctx.lineTo(x, y)
     }
   }
+
   ctx.closePath()
   ctx.strokeStyle = isDark ? 'rgba(255, 100, 255, 0.6)' : 'rgba(150, 50, 150, 0.6)'
   ctx.lineWidth = 1.5
@@ -122,4 +148,3 @@ export function drawCircleWave(
     ctx.stroke()
   }
 }
- 

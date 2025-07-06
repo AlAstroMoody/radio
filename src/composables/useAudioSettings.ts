@@ -24,6 +24,7 @@ export interface useAudioSettingsReturn {
   playbackRate: Ref<number>
   selectedPreset: Ref<string>
   visualization: Ref<string>
+  visualizationFPS: Ref<number>
   visualizationIntensity: Ref<number>
   volume: Ref<number>
 }
@@ -34,7 +35,8 @@ export function useAudioSettings(): useAudioSettingsReturn {
   const loop = useStorage('audio-loop', false)
   const autoplay = useStorage('audio-autoplay', false)
   const visualization = useStorage('audio-visualization', '')
-  const visualizationIntensity = useStorage('visualization-intensity', 1) // Новый параметр
+  const visualizationIntensity = useStorage('visualization-intensity', 1)
+  const visualizationFPS = useStorage('visualization-fps', 60)
   const selectedPreset = useStorage('audio-equalizer-preset', 'default')
   const filterSettings = useStorage<FilterSettings>('audio-filter-settings', {
     bass: { frequency: 100, gain: 0 },
@@ -88,6 +90,7 @@ export function useAudioSettings(): useAudioSettingsReturn {
     playbackRate,
     selectedPreset,
     visualization,
+    visualizationFPS,
     visualizationIntensity,
     volume,
   }

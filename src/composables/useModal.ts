@@ -1,6 +1,6 @@
 import type { Component } from 'vue'
 
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 // Глобальный экземпляр модалки
 let modalInstance: null | ReturnType<typeof createModalInstance> = null
@@ -8,7 +8,7 @@ let modalInstance: null | ReturnType<typeof createModalInstance> = null
 export function useModal(): {
   closeModal: () => void
   isOpen: ReturnType<typeof ref<boolean>>
-  modalContent: ReturnType<typeof ref<Component | null>>
+  modalContent: ReturnType<typeof shallowRef<Component | null>>
   modalProps: ReturnType<typeof ref<null | Record<string, unknown>>>
   openModal: (component: Component, props?: Record<string, unknown>) => void
 } {
@@ -22,12 +22,12 @@ export function useModal(): {
 function createModalInstance(): {
   closeModal: () => void
   isOpen: ReturnType<typeof ref<boolean>>
-  modalContent: ReturnType<typeof ref<Component | null>>
+  modalContent: ReturnType<typeof shallowRef<Component | null>>
   modalProps: ReturnType<typeof ref<null | Record<string, unknown>>>
   openModal: (component: Component, props?: Record<string, unknown>) => void
 } {
   const isOpen = ref(false)
-  const modalContent = ref<Component | null>(null)
+  const modalContent = shallowRef<Component | null>(null)
   const modalProps = ref<null | Record<string, unknown>>(null)
 
   const openModal = (component: Component, props?: Record<string, unknown>): void => {

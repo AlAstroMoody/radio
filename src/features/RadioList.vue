@@ -30,7 +30,7 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
             :label="radio.name"
             variant="list"
             class="truncate max-w-full"
-            :class="{ 'font-bold bg-purple-500/20 border-purple-400/50 shadow-purple-500/25': radio.id === activeRadio.id }"
+            :active="radio.id === activeRadio.id"
             @click="changeActiveRadio(radio.id)"
           >
             <div class="flex items-center">
@@ -46,7 +46,7 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
             :label="name"
             variant="list"
             class="truncate max-w-full"
-            :class="{ 'font-bold bg-purple-500/20 border-purple-400/50 shadow-purple-500/25': name === currentFileName }"
+            :active="name === currentFileName"
             @click="changeActiveFile(index)"
           >
             {{ name }}

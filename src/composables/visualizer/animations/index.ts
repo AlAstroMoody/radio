@@ -1,6 +1,6 @@
 export { drawBars } from './bars'
-export { drawCircleWave } from './circleWave'
+export { clearCircleWaveGradientCache, drawCircleWave } from './circleWave'
 export { drawParticle, type Particle } from './particle'
 export { drawRadial } from './radial'
-export { drawSpectrum } from './spectrum'
+export { clearSpectrumGradientCache, drawSpectrum } from './spectrum'
 export { drawWaveform } from './waveform'

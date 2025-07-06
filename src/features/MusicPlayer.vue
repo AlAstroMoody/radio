@@ -114,15 +114,18 @@ async function initializeAudio() {
       analyser.value.fftSize = 2048
 
       sourceNode.value = audioContext.value.createMediaElementSource(audio.value)
-      sourceNode.value.connect(analyser.value)
-      analyser.value.connect(audioContext.value.destination)
 
       filters.value = connectFilters(audioContext.value)
       if (filters.value) {
-        sourceNode.value.connect(filters.value.bass)
+        sourceNode.value.connect(analyser.value)
+        analyser.value.connect(filters.value.bass)
         filters.value.bass.connect(filters.value.mid)
         filters.value.mid.connect(filters.value.treble)
         filters.value.treble.connect(audioContext.value.destination)
+      }
+      else {
+        sourceNode.value.connect(analyser.value)
+        analyser.value.connect(audioContext.value.destination)
       }
     }
 
@@ -459,7 +462,7 @@ function handleProgressClick(event: MouseEvent) {
         </BaseButton>
       </div>
       <div class="w-full px-4">
-        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <div class="flex justify-between text-sm text-gray-600 dark:text-white mb-1">
           <span>{{ formatTime(audio.currentTime || 0) }}</span>
           <span>{{ formatTime(audio.duration || 0) }}</span>
         </div>
