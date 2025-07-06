@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 
 interface UseFileListReturn {
   activeFile: Ref<Blob | MediaSource>
+  activeIndex: Ref<number>
   changeActiveFile: (index: number) => void
   files: Ref<File[]>
   isRepeat: Ref<boolean>
@@ -30,8 +31,10 @@ export function useFileList(): UseFileListReturn {
   }
 
   const nextFile = (): void => {
-    if (activeIndex.value === files.value.length - 1 && isRepeat.value) {
-      activeIndex.value = 0
+    if (activeIndex.value === files.value.length - 1) {
+      if (isRepeat.value) {
+        activeIndex.value = 0
+      }
     }
     else {
       findNeighbour(1)
@@ -80,6 +83,7 @@ export function useFileList(): UseFileListReturn {
 
   return {
     activeFile,
+    activeIndex,
     changeActiveFile,
     files,
     isRepeat,

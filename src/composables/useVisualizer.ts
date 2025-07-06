@@ -55,6 +55,11 @@ export function useVisualizer(
   const centerY = computed(() => height.value / 2)
   const particles = ref<Particle[]>([])
 
+  // Для автоматической остановки при затухании
+  const lowSignalFrameCount = ref(0)
+  const LOW_SIGNAL_THRESHOLD = 5 // Порог для определения низкого сигнала
+  const MAX_LOW_SIGNAL_FRAMES = 60 // Максимальное количество кадров с низким сигналом (1 секунда при 60 FPS)
+
   const gradientCache = ref<{
     dark: CanvasGradient | null
     light: CanvasGradient | null
@@ -83,6 +88,12 @@ export function useVisualizer(
     ctx.lineWidth = 1
     ctx.strokeStyle = 'black'
     ctx.fillStyle = 'black'
+  }
+
+  function checkSignalLevel(dataArray: Uint8Array): boolean {
+    // Проверяем средний уровень сигнала
+    const average = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length
+    return average > LOW_SIGNAL_THRESHOLD
   }
 
   function draw(): void {
@@ -114,6 +125,22 @@ export function useVisualizer(
       console.warn('Ошибка получения данных анализатора:', error)
       stopVisualization()
       return
+    }
+
+    // Проверяем уровень сигнала для автоматической остановки
+    const hasSignal = checkSignalLevel(dataArray.value)
+
+    if (hasSignal) {
+      lowSignalFrameCount.value = 0
+    }
+    else {
+      lowSignalFrameCount.value++
+
+      // Если сигнал слишком долго низкий, останавливаем анимацию
+      if (lowSignalFrameCount.value > MAX_LOW_SIGNAL_FRAMES) {
+        stopVisualization()
+        return
+      }
     }
 
     switch (visualization.value) {
@@ -151,6 +178,7 @@ export function useVisualizer(
     if (isAnimating.value || !analyser.value || !canvas.value)
       return
     isAnimating.value = true
+    lowSignalFrameCount.value = 0 // Сбрасываем счетчик при запуске
     initAnalyser()
     draw()
   }
@@ -165,6 +193,7 @@ export function useVisualizer(
     }
     particles.value = []
     gradientCache.value = { dark: null, light: null }
+    lowSignalFrameCount.value = 0 // Сбрасываем счетчик при остановке
   }
 
   function drawText(value?: string): void {

@@ -1,138 +1,60 @@
 <script setup lang="ts">
-import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
-import { useEventListener, useParallax } from '@vueuse/core'
-import { useAudioPosition } from 'composables/useAudioPosition'
-import { useAudioSettings } from 'composables/useAudioSettings'
+import { useAudioService } from 'composables/useAudioService'
 import { useFileList } from 'composables/useFileList'
 import { useIndexedDB } from 'composables/useIndexedDB'
-import { useVisualizer } from 'composables/useVisualizer'
-import { BaseButton } from 'shared/ui'
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { AudioControls, AudioVisualizer, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
+import { computed, onMounted, ref, watch } from 'vue'
 
-interface Filters {
-  bass: BiquadFilterNode
-  mid: BiquadFilterNode
-  treble: BiquadFilterNode
-}
-
-const dropZone = ref<HTMLDivElement | null>(null)
-const input = ref<HTMLInputElement | null>(null)
+const fileDropZone = ref<InstanceType<typeof FileDropZone> | null>(null)
 const audio = ref<HTMLAudioElement>(new Audio())
-const canvas = ref<HTMLCanvasElement | null>(null)
-const audioContext = ref<AudioContext | null>(null)
-const analyser = ref<AnalyserNode | null>(null)
-const sourceNode = ref<MediaElementAudioSourceNode | null>(null)
-const filters = ref<Filters | null>(null)
+const visualizer = ref(null)
 const pending = ref<boolean>(false)
-const isPlaying = ref<boolean>(false)
-const progress = ref<number>(0)
+const wasPlayingBeforeSwitch = ref<boolean>(false)
 
-const { activeFile, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
+const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
-const { applySettings, autoplay, filterSettings } = useAudioSettings()
-const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, currentFileName)
-const { startVisualization } = useVisualizer(canvas, analyser)
+const {
+  getAnalyser,
+  handleProgressSeek,
+  initializeAudio,
+  initializeAudioService,
+  isMetadataLoading,
+  isPlaying,
+  pause,
+  play,
+  progress,
+  seekBackward,
+  seekForward,
+  togglePlayPause,
+} = useAudioService(audio, currentFileName)
+
 const { clearFilesFromIndexedDB, loadActiveFileIndex, loadFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
 
-async function changeFiles(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.files)
-    return
-  const filesArray = [...input.files]
-  if (files.value?.map(file => file.name).join() === filesArray.map(file => file.name).join()) {
+async function handleFilesSelected(newFiles: File[]) {
+  if (files.value?.map(file => file.name).join() === newFiles.map(file => file.name).join()) {
     return
   }
-  if (filesArray.length) {
+  if (newFiles.length) {
+    // Запоминаем, была ли музыка в процессе воспроизведения
+    const wasPlaying = isPlaying.value
     pause()
-    updateFiles(filesArray)
+    updateFiles(newFiles)
     changeActiveFile(0)
-    initializeAudio()
+    await initializeAudioWithSettings(wasPlaying)
     await clearFilesFromIndexedDB()
-    await saveFilesToIndexedDB(filesArray)
+    await saveFilesToIndexedDB(newFiles)
     await saveActiveFileIndex(0)
   }
 }
 
-function changeProgress() {
-  const duration = Number.isNaN(audio.value.duration) ? 0 : audio.value.duration
-  const currentTime = audio.value.currentTime
-  progress.value = duration ? Math.trunc((currentTime / duration) * 100) : 0
-  savePosition()
-}
+async function initializeAudioWithSettings(shouldAutoPlay = false) {
+  if (!activeFile.value)
+    return
 
-function cleanup() {
-  if (audio.value) {
-    audio.value.pause()
-    audio.value.src = ''
-  }
-  if (sourceNode.value) {
-    sourceNode.value.disconnect()
-    sourceNode.value = null
-  }
-  if (audioContext.value) {
-    audioContext.value.close()
-    audioContext.value = null
-  }
-  if (audio.value?.src) {
-    URL.revokeObjectURL(audio.value.src)
-  }
-}
-
-function connectFilters(audioContext: AudioContext): Filters | null {
-  if (!audioContext)
-    return null
-  const filters = {
-    bass: audioContext.createBiquadFilter(),
-    mid: audioContext.createBiquadFilter(),
-    treble: audioContext.createBiquadFilter(),
-  }
-  filters.bass.type = 'lowshelf'
-  filters.mid.type = 'peaking'
-  filters.treble.type = 'highshelf'
-  updateFilterSettings(filters)
-  return filters
-}
-
-async function initializeAudio() {
   try {
-    if (!activeFile.value) {
-      throw new Error('Аудиофайл не выбран')
-    }
-    if (!window.AudioContext) {
-      throw new Error('Web Audio API не поддерживается')
-    }
-
-    if (!audioContext.value) {
-      audioContext.value = new AudioContext()
-    }
-
-    audio.value.src = URL.createObjectURL(activeFile.value)
-
-    if (!sourceNode.value) {
-      analyser.value = audioContext.value.createAnalyser()
-      analyser.value.fftSize = 2048
-
-      sourceNode.value = audioContext.value.createMediaElementSource(audio.value)
-
-      filters.value = connectFilters(audioContext.value)
-      if (filters.value) {
-        sourceNode.value.connect(analyser.value)
-        analyser.value.connect(filters.value.bass)
-        filters.value.bass.connect(filters.value.mid)
-        filters.value.mid.connect(filters.value.treble)
-        filters.value.treble.connect(audioContext.value.destination)
-      }
-      else {
-        sourceNode.value.connect(analyser.value)
-        analyser.value.connect(audioContext.value.destination)
-      }
-    }
-
-    applySettings()
-    restorePosition()
-
-    if (autoplay.value) {
+    await initializeAudio(activeFile.value as File)
+    if (shouldAutoPlay) {
       await play()
     }
   }
@@ -147,10 +69,10 @@ function initPlayerOnMount() {
     Promise.all([loadFilesFromIndexedDB(), loadActiveFileIndex()]).then(([dbFiles, activeIndex]) => {
       if (dbFiles.length) {
         updateFilesWithoutReset(dbFiles)
-        // Устанавливаем активный файл после обновления списка файлов
         const validIndex = Math.min(activeIndex, dbFiles.length - 1)
         changeActiveFile(validIndex)
-        initializeAudio()
+        // При восстановлении из IndexedDB не запускаем автоматически
+        initializeAudioWithSettings(false)
       }
     }).catch((error) => {
       console.error('❌ Ошибка при восстановлении файлов:', error)
@@ -158,234 +80,76 @@ function initPlayerOnMount() {
   }
 }
 
-async function openFiles() {
-  try {
-    if ('showOpenFilePicker' in window) {
-      const fileHandles = await window.showOpenFilePicker({
-        multiple: true,
-        types: [{ accept: { 'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'] }, description: 'Audio Files' }],
-      })
-      const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
-      if (newFiles.length) {
-        pause()
-        updateFiles(newFiles)
-        changeActiveFile(0)
-        initializeAudio()
-        await clearFilesFromIndexedDB()
-        await saveFilesToIndexedDB(newFiles)
-        await saveActiveFileIndex(0)
-      }
-    }
-    else {
-      input.value?.click()
-    }
-  }
-  catch (error) {
-    if ((error as Error).name !== 'AbortError') {
-      console.error('Ошибка выбора файлов:', error)
-    }
-  }
-}
-
-function pause() {
-  audio.value?.pause()
-  isPlaying.value = false
-  pending.value = false
-}
-
-async function play(): Promise<void> {
-  try {
-    if (audioContext.value?.state === 'suspended') {
-      await audioContext.value.resume()
-    }
-    pending.value = true
-    await audio.value.play()
-    isPlaying.value = true
-    pending.value = false
-    startVisualization()
-  }
-  catch (error) {
-    console.error('Ошибка воспроизведения:', error)
-  }
-  finally {
-    pending.value = false
-  }
-}
-
-function seekBackward() {
-  if (audio.value) {
-    audio.value.currentTime = Math.max(0, audio.value.currentTime - 10)
-  }
-}
-
-function seekForward() {
-  if (audio.value && audio.value.duration) {
-    audio.value.currentTime = Math.min(audio.value.duration, audio.value.currentTime + 10)
-  }
-}
-
-function setListeners() {
-  useEventListener(audio.value, 'timeupdate', changeProgress)
-  useEventListener(audio.value, 'ended', () => {
-    clearPosition()
-    nextFile()
-  })
-}
-
-function updateFilterSettings(filters: Filters) {
-  filters.bass.gain.value = filterSettings.value.bass.gain
-  filters.bass.frequency.value = filterSettings.value.bass.frequency
-  filters.mid.gain.value = filterSettings.value.mid.gain
-  filters.mid.frequency.value = filterSettings.value.mid.frequency
-  filters.treble.gain.value = filterSettings.value.treble.gain
-  filters.treble.frequency.value = filterSettings.value.treble.frequency
+function openFiles() {
+  fileDropZone.value?.openFiles()
 }
 
 onMounted(() => {
-  if (window.launchQueue) {
-    window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
-      const fileHandles = launchParams.files
-      if (fileHandles.length > 0) {
-        try {
-          const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
-          updateFiles(newFiles)
-        }
-        catch (error) {
-          console.error('Error processing launchQueue files:', error)
-        }
-      }
-    })
-  }
+  // Инициализируем AudioService
+  initializeAudioService()
+
+  // Добавляем обработчик события ended для перехода к следующему файлу
+  audio.value.addEventListener('ended', () => {
+    // Если включен repeat или есть следующие файлы, продолжаем воспроизведение
+    if (isRepeat.value || activeIndex.value < files.value.length - 1) {
+      // Запоминаем, что песня должна продолжиться
+      wasPlayingBeforeSwitch.value = true
+      nextFile()
+    }
+  })
 
   if (files.value.length) {
-    initializeAudio()
-    setListeners()
+    initializeAudioWithSettings()
     return
   }
-  if (!dropZone.value)
-    return
-
-  dropZone.value.ondrop = async (e) => {
-    e.preventDefault()
-    if (e.dataTransfer?.items) {
-      const newFiles = [...e.dataTransfer.items]
-        .filter(item => item.kind === 'file')
-        .map(item => item.getAsFile())
-        .filter((file): file is File => !!file)
-      if (newFiles.length) {
-        pause()
-        updateFiles(newFiles)
-        changeActiveFile(0)
-        initializeAudio()
-        await saveActiveFileIndex(0)
-      }
-    }
-  }
-
-  dropZone.value.ondragover = e => e.preventDefault()
-  setListeners()
 
   initPlayerOnMount()
 })
 
-onUnmounted(() => {
-  cleanup()
-})
-
 watch(activeFile, () => {
+  // Запоминаем состояние воспроизведения ДО остановки
+  const shouldContinuePlaying = wasPlayingBeforeSwitch.value || isPlaying.value
   pause()
-  initializeAudio()
+  setTimeout(() => {
+    initializeAudioWithSettings(shouldContinuePlaying)
+  }, 50)
 })
 
-// Сохраняем активный индекс при изменении активного файла
 watch(() => files.value.findIndex(file => file === activeFile.value), async (newIndex) => {
   if (newIndex !== -1) {
     await saveActiveFileIndex(newIndex)
   }
 })
-
-watch(
-  () => filterSettings.value,
-  () => {
-    if (filters.value) {
-      updateFilterSettings(filters.value)
-    }
-  },
-  { deep: true, flush: 'post' },
-)
-
-const parallax = reactive(useParallax(canvas))
-const cardStyle = computed(() => ({
-  transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
-    parallax.tilt * 20 + 170
-  }deg)`,
-  transition: '.3s ease-out all',
-}))
-
-function formatTime(seconds: number) {
-  seconds = Math.trunc(seconds)
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-}
-
-function handleProgressClick(event: MouseEvent) {
-  if (!audio.value || !audio.value.duration)
-    return
-
-  const progressBar = event.currentTarget as HTMLElement
-  const rect = progressBar.getBoundingClientRect()
-  const clickX = event.clientX - rect.left
-  const progressBarWidth = rect.width
-  const clickPercent = clickX / progressBarWidth
-
-  audio.value.currentTime = clickPercent * audio.value.duration
-}
 </script>
 
 <template>
   <div class="relative flex flex-col justify-between">
     <div class="z-10 mt-auto md:relative">
-      <div
-        ref="dropZone"
-        :class="files?.length ? 'hidden' : 'flex'"
-        class="z-10 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
-      >
-        <span class="absolute left-0 right-0 text-center">
-          click or drag
-          <br>
-          for add files
-        </span>
-        <input
-          ref="input"
-          type="file"
-          accept="audio/*"
-          multiple
-          class="h-full w-full cursor-pointer opacity-0"
-          @change.stop="changeFiles"
-        >
-        <audio
-          ref="audio"
-          class="hidden"
-          crossorigin="anonymous"
-          preload="metadata"
-        />
-      </div>
+      <FileDropZone
+        ref="fileDropZone"
+        :has-files="!!files?.length"
+        @files-selected="handleFilesSelected"
+      />
+      <audio
+        ref="audio"
+        class="hidden"
+        crossorigin="anonymous"
+        preload="metadata"
+      />
     </div>
     <div class="sm:max-w-96 m-auto max-w-full">
-      <canvas
-        ref="canvas"
-        :style="cardStyle"
-        width="360"
-        height="200"
-        class="pointer-events-none mx-auto my-2 overflow-hidden rounded-2xl shadow-next dark:shadow-card rotate-180"
+      <AudioVisualizer
+        ref="visualizer"
+        :analyser="getAnalyser()"
+        :is-playing="isPlaying"
       />
       <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px]">
-        <div class="max-w-[calc(100%-48px)] overflow-hidden whitespace-nowrap font-blackcraft">
-          <div class="animate-marquee hover:animate-pause -translate-x-[90%]">
-            {{ currentFileName }}
-          </div>
-        </div>
+        <MarqueeText
+          :text="currentFileName"
+          class-name="max-w-[calc(100%-48px)] font-blackcraft"
+          :speed="30"
+          :min-duration="8"
+        />
         <div class="flex items-center justify-center text-center min-w-[48px]">
           {{ progress }}%
         </div>
@@ -393,92 +157,28 @@ function handleProgressClick(event: MouseEvent) {
     </div>
 
     <div v-if="activeFile" class="flex flex-col my-2 gap-4 items-center">
-      <!-- Основные кнопки управления -->
-      <div class="flex items-center gap-4">
-        <BaseButton
-          variant="player"
-          @click="seekBackward"
-        >
-          <span class="font-bold">-10</span>
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          @click="prevFile"
-        >
-          <ChevronDoubleLeftIcon class="h-6 w-6" />
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          class="!size-14"
-          @click="isPlaying ? pause() : play()"
-        >
-          <PlayIcon v-if="!isPlaying" class="h-10 w-10" />
-          <PauseIcon v-else class="h-10 w-10" />
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          @click="nextFile"
-        >
-          <ChevronDoubleRightIcon class="h-6 w-6" />
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          @click="seekForward"
-        >
-          <span class="font-bold">+10</span>
-        </BaseButton>
-      </div>
+      <AudioControls
+        :is-playing="isPlaying"
+        :is-shuffle="isShuffle"
+        :is-repeat="isRepeat"
+        :pending="pending"
+        @seek-backward="seekBackward"
+        @prev-file="prevFile"
+        @toggle-play-pause="togglePlayPause"
+        @next-file="nextFile"
+        @seek-forward="seekForward"
+        @shuffle-files="shuffleFiles"
+        @open-files="openFiles"
+        @toggle-repeat="toggleRepeat"
+      />
 
-      <!-- Дополнительные кнопки -->
-      <div class="flex items-center gap-4">
-        <BaseButton
-          variant="player"
-          :class="{ 'text-purple-500': isShuffle }"
-          @click="shuffleFiles"
-        >
-          <div class="relative">
-            <ArrowsUpDownIcon class="h-5 w-5" />
-            <div
-              v-if="isShuffle"
-              class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
-            />
-          </div>
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          @click="openFiles"
-        >
-          <ArrowDownTrayIcon class="h-5 w-5" />
-        </BaseButton>
-        <BaseButton
-          variant="player"
-          :class="{ 'text-purple-500': isRepeat }"
-          @click="toggleRepeat"
-        >
-          <div class="relative">
-            <ArrowPathIcon class="h-5 w-5" />
-            <div
-              v-if="isRepeat"
-              class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
-            />
-          </div>
-        </BaseButton>
-      </div>
-      <div class="w-full px-4">
-        <div class="flex justify-between text-sm text-gray-600 dark:text-white mb-1">
-          <span>{{ formatTime(audio.currentTime || 0) }}</span>
-          <span>{{ formatTime(audio.duration || 0) }}</span>
-        </div>
-        <div
-          class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 cursor-pointer"
-          @click="handleProgressClick"
-        >
-          <div
-            class="bg-purple-500 h-2 rounded-full transition-all duration-300"
-            :style="{ width: `${progress}%` }"
-          />
-        </div>
-      </div>
+      <ProgressBar
+        :current-time="audio.currentTime || 0"
+        :duration="audio.duration || 0"
+        :progress="progress"
+        :is-loading="isMetadataLoading"
+        @seek="handleProgressSeek"
+      />
     </div>
   </div>
 </template>

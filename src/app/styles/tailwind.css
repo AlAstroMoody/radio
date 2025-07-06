@@ -45,7 +45,7 @@
   --animate-first-wave: opacity 2s ease-out infinite;
   --animate-second-wave: opacitySecond 2s ease-out infinite;
   --animate-third-wave: opacityThird 2s ease-out infinite;
-  --animate-marquee: marquee 10s linear infinite;
+  --animate-smart-marquee: smart-marquee var(--marquee-duration, 5s) linear infinite;
   --animate-neon-pulse: neon-pulse 2s infinite;
   --animate-step-rotate: step-rotate 5s linear infinite;
   --animate-bounce-tooltip: bounce-tooltip 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -80,13 +80,14 @@
       opacity: 1;
     }
   }
-  @keyframes marquee {
+  
+  @keyframes smart-marquee {
     0% { 
-      transform: translateX(100%)
-     },
+      transform: translateX(0)
+    }
     100% { 
-      transform: translateX(-200%)
-     }
+      transform: translateX(calc(-50% - 1rem))
+    }
   }
   @keyframes neon-pulse {
     0%, 100% {
