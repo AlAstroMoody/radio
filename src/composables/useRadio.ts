@@ -1,6 +1,7 @@
 import type { Wave } from 'music'
 import type { Ref } from 'vue'
 
+import { useStorage } from '@vueuse/core'
 import { radioWaves } from 'music'
 import { ref } from 'vue'
 
@@ -14,7 +15,7 @@ interface UseRadioReturn {
 }
 
 const activeRadio = ref<Wave>(radioWaves[0])
-const isRadioMode = ref<boolean>(true)
+const isRadioMode = useStorage('radio-mode', true)
 
 export function useRadio(): UseRadioReturn {
   const findNeighbour = (number: number): void => {

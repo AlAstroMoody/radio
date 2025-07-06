@@ -1,16 +1,38 @@
 <script setup lang="ts">
+import { useFileList } from 'composables/useFileList'
+import { useIndexedDB } from 'composables/useIndexedDB'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal } from 'shared/ui'
 import { onMounted } from 'vue'
 
 const { isRadioMode } = useRadio()
+const { updateFiles } = useFileList()
+const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
 
 onMounted(() => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const action = urlParams.get('action')
-  if (action === 'open-audio-file') {
-    isRadioMode.value = false
+  if (window.launchQueue) {
+    window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
+      const fileHandles = launchParams.files
+      if (fileHandles && fileHandles.length > 0) {
+        try {
+          // Переключаемся в режим музыки при открытии файлов
+          isRadioMode.value = false
+
+          const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
+          if (newFiles.length) {
+            updateFiles(newFiles)
+            // Сохраняем файлы в IndexedDB для восстановления
+            await clearFilesFromIndexedDB()
+            await saveFilesToIndexedDB(newFiles)
+            await saveActiveFileIndex(0)
+          }
+        }
+        catch (error) {
+          console.error('Error processing launchQueue files:', error)
+        }
+      }
+    })
   }
 })
 </script>

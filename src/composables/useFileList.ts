@@ -13,6 +13,7 @@ interface UseFileListReturn {
   shuffleFiles: () => void
   toggleRepeat: () => void
   updateFiles: (newFiles: File[]) => void
+  updateFilesWithoutReset: (newFiles: File[]) => void
 }
 
 const files = ref<File[]>([])
@@ -53,6 +54,14 @@ export function useFileList(): UseFileListReturn {
     isRepeat.value = false
   }
 
+  const updateFilesWithoutReset = (newFiles: File[]): void => {
+    files.value = newFiles
+    originalFiles.value = [...newFiles]
+    // Не сбрасываем activeIndex, чтобы сохранить восстановленный индекс
+    isShuffle.value = false
+    isRepeat.value = false
+  }
+
   const shuffleFiles = (): void => {
     if (!isShuffle.value) {
       originalFiles.value = [...files.value]
@@ -80,5 +89,6 @@ export function useFileList(): UseFileListReturn {
     shuffleFiles,
     toggleRepeat,
     updateFiles,
+    updateFilesWithoutReset,
   }
 }
