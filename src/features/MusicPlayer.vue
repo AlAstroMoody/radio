@@ -30,7 +30,7 @@ const progress = ref<number>(0)
 const { activeFile, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
-const { applySettings, filterSettings } = useAudioSettings()
+const { applySettings, autoplay, filterSettings } = useAudioSettings()
 const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, currentFileName)
 const { startVisualization } = useVisualizer(canvas, analyser)
 const { clearFilesFromIndexedDB, loadActiveFileIndex, loadFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
@@ -131,7 +131,10 @@ async function initializeAudio() {
 
     applySettings()
     restorePosition()
-    await play()
+
+    if (autoplay.value) {
+      await play()
+    }
   }
   catch (error) {
     console.error('Ошибка инициализации аудио:', error)

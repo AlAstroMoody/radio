@@ -80,6 +80,12 @@ onMounted(async () => {
   hasInitializedFPS.value = true
 })
 
+function handlePresetChange(presetName: string) {
+  if (presetName) {
+    applyPreset(presetName)
+  }
+}
+
 const playbackRateOptions = [
   { label: '0.5x', value: 0.5 },
   { label: '0.75x', value: 0.75 },
@@ -125,13 +131,13 @@ const visualizationOptions = [
       v-model="selectedPreset" :options="equalizerPresets.map((preset) => ({
         label: preset.name,
         value: preset.name,
-      }))" placeholder="default" label="Equalizer Preset:" @change="applyPreset(selectedPreset)"
+      }))" placeholder="default" label="Equalizer Preset:" @change="handlePresetChange"
     />
 
-    <div class="flex flex-col gap-2 pl-4">
+    <div class="flex flex-col gap-2 pl-4 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg dark:bg-purple-500/10 dark:border-purple-500/30">
       <div
         v-for="(filter, key) in filterSettings"
-        :key="key"
+        :key="`${key}-${selectedPreset}`"
         class="flex items-center gap-2"
       >
         <label :for="`${key}Gain`" class="w-28">{{ key.charAt(0).toUpperCase() + key.slice(1) }} Gain:</label>
