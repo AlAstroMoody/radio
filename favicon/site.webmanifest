@@ -7,6 +7,7 @@
   "theme_color": "#0e1a2c",
   "background_color": "#bc430e",
   "display": "standalone",
+  "scope": "https://alastromoody.github.io/radio/",
   "launch_handler": {
     "client_mode": "focus-existing"
   },
@@ -58,12 +59,20 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ], 
+  ],
   "file_handlers": [
     {
-      "action": "/?action=open-audio-file",
+      "action": "/",
       "accept": {
-        "audio/*": [".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"]
+        "audio/wav": [".wav"],
+        "audio/x-wav": [".wav"],
+        "audio/mpeg": [".mp3"],
+        "audio/mp4": [".m4a", ".mp4"],
+        "audio/aac": [".aac", ".adts"],
+        "audio/ogg": [".ogg"],
+        "application/ogg": [".ogg"],
+        "audio/webm": [".webm"],
+        "audio/flac": [".flac"]
       }
     }
   ]
