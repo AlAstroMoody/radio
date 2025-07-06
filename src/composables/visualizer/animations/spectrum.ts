@@ -37,7 +37,9 @@ export function drawSpectrum(
       // Ограничиваем размер кэша
       if (spectrumGradientCache.size > 100) {
         const firstKey = spectrumGradientCache.keys().next().value
-        spectrumGradientCache.delete(firstKey)
+        if (firstKey) {
+          spectrumGradientCache.delete(firstKey)
+        }
       }
 
       spectrumGradientCache.set(cacheKey, gradient)
