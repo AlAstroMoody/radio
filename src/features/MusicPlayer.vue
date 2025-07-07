@@ -15,6 +15,8 @@ const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, n
 const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 
 const {
+  currentTime,
+  duration,
   getAnalyser,
   handleProgressSeek,
   initializeAudio,
@@ -173,8 +175,8 @@ watch(() => files.value.findIndex(file => file === activeFile.value), async (new
       />
 
       <ProgressBar
-        :current-time="audio.currentTime || 0"
-        :duration="audio.duration || 0"
+        :current-time="currentTime"
+        :duration="duration"
         :progress="progress"
         :is-loading="isMetadataLoading"
         @seek="handleProgressSeek"

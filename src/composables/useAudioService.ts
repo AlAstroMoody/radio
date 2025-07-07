@@ -7,6 +7,8 @@ import { onUnmounted, readonly, ref, watch } from 'vue'
 
 export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<string>): {
   cleanup: () => void
+  currentTime: Ref<number>
+  duration: Ref<number>
   getAnalyser: () => AnalyserNode | null
   handleProgressSeek: (percent: number) => void
   initializeAudio: (file: File) => Promise<void>
@@ -23,21 +25,51 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
   const audioService = ref<AudioService | null>(null)
   const isPlaying = ref(false)
   const progress = ref(0)
+  const currentTime = ref(0)
+  const duration = ref(0)
   const isMetadataLoading = ref(false)
 
   // Сохраняем ссылки на обработчики для правильной очистки
   const playHandler = (): void => {
     isPlaying.value = true
+    startProgressUpdate()
   }
   const pauseHandler = (): void => {
     isPlaying.value = false
+    stopProgressUpdate()
   }
   const endedHandler = (): void => {
     isPlaying.value = false
+    stopProgressUpdate()
   }
 
   const { applySettings, autoplay, filterSettings, loop, playbackRate, volume } = useAudioSettings()
   const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, fileName || ref(''))
+
+  let animationFrameId: null | number = null
+
+  function updateProgress(): void {
+    if (audioService.value && isPlaying.value) {
+      progress.value = audioService.value.getProgress()
+      currentTime.value = audioService.value.getCurrentTime()
+      duration.value = audioService.value.getDuration()
+      savePosition()
+      animationFrameId = requestAnimationFrame(updateProgress)
+    }
+  }
+
+  function startProgressUpdate(): void {
+    if (!animationFrameId) {
+      updateProgress()
+    }
+  }
+
+  function stopProgressUpdate(): void {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+    }
+  }
 
   function initializeAudioService(): void {
     if (!audio.value)
@@ -50,17 +82,26 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
 
     // Устанавливаем обработчики событий
     audioService.value.onTimeUpdate(() => {
-      progress.value = audioService.value?.getProgress() || 0
-      savePosition()
+      if (audioService.value) {
+        progress.value = audioService.value.getProgress()
+        currentTime.value = audioService.value.getCurrentTime()
+        duration.value = audioService.value.getDuration()
+        savePosition()
+      }
     })
 
     audioService.value.onEnded(() => {
       clearPosition()
       isPlaying.value = false
+      stopProgressUpdate()
     })
 
     audioService.value.onLoadedMetadata(() => {
       isMetadataLoading.value = false
+      // Обновляем duration при загрузке метаданных
+      if (audioService.value) {
+        duration.value = audioService.value.getDuration()
+      }
     })
 
     // Синхронизируем состояние воспроизведения с реальным состоянием аудио
@@ -78,6 +119,10 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
       await audioService.value.initializeAudio(file)
       applySettings()
       restorePosition()
+      // Обновляем duration после инициализации
+      if (audioService.value) {
+        duration.value = audioService.value.getDuration()
+      }
     }
     catch (error) {
       console.error('Ошибка инициализации аудио:', error)
@@ -152,6 +197,7 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
       audio.value.removeEventListener('ended', endedHandler)
     }
 
+    stopProgressUpdate()
     audioService.value?.cleanup()
     audioService.value = null
   }
@@ -179,6 +225,8 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
 
   return {
     cleanup,
+    currentTime: readonly(currentTime),
+    duration: readonly(duration),
     getAnalyser,
     handleProgressSeek,
 
