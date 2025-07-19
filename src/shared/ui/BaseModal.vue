@@ -21,6 +21,23 @@ function handleKeydown(event: KeyboardEvent) {
 function handleTouchEnd(event: TouchEvent) {
   if (!isOpen.value)
     return
+
+  const target = event.target as HTMLElement
+  if (target && (
+    target.tagName === 'BUTTON'
+    || target.tagName === 'INPUT'
+    || target.tagName === 'SELECT'
+    || target.tagName === 'TEXTAREA'
+    || target.closest('button')
+    || target.closest('input')
+    || target.closest('select')
+    || target.closest('textarea')
+    || target.closest('[role="button"]')
+    || target.closest('[role="slider"]')
+  )) {
+    return
+  }
+
   const touch = event.changedTouches[0]
   const dx = Math.abs(touch.clientX - touchStartX)
   const dy = Math.abs(touch.clientY - touchStartY)

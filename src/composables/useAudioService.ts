@@ -3,59 +3,61 @@ import type { Ref } from 'vue'
 import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { AudioService } from 'services'
-import { onUnmounted, readonly, ref, watch } from 'vue'
+import { computed, onUnmounted, readonly, ref, watch } from 'vue'
 
-export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<string>): {
-  cleanup: () => void
-  currentTime: Ref<number>
-  duration: Ref<number>
-  getAnalyser: () => AnalyserNode | null
-  handleProgressSeek: (percent: number) => void
-  initializeAudio: (file: File) => Promise<void>
-  initializeAudioService: () => void
-  isMetadataLoading: Ref<boolean>
-  isPlaying: Ref<boolean>
-  pause: () => void
-  play: () => Promise<void>
-  progress: Ref<number>
-  seekBackward: () => void
-  seekForward: () => void
-  togglePlayPause: () => void
-} {
+// Константы
+const SEEK_STEP = 10 // секунд для перемотки
+const AUDIO_CONFIG = {
+  fftSize: 2048,
+  smoothingTimeConstant: 0.8,
+} as const
+
+export function useAudioService(
+  audio: Ref<HTMLAudioElement>,
+  fileName?: Ref<string>,
+): {
+    cleanup: () => void
+    currentTime: Ref<number>
+    duration: Ref<number>
+    getAnalyser: () => AnalyserNode | null
+    handleProgressSeek: (percent: number) => void
+    initializeAudio: (file: File) => Promise<void>
+    initializeAudioService: () => void
+    isMetadataLoading: Ref<boolean>
+    isPlaying: Ref<boolean>
+    pause: () => void
+    play: () => Promise<void>
+    progress: Ref<number>
+    seekBackward: () => void
+    seekForward: () => void
+    togglePlayPause: () => void
+  } {
+  // Состояние
   const audioService = ref<AudioService | null>(null)
-  const isPlaying = ref(false)
-  const progress = ref(0)
-  const currentTime = ref(0)
-  const duration = ref(0)
-  const isMetadataLoading = ref(false)
+  const state = ref({
+    currentTime: 0,
+    duration: 0,
+    isMetadataLoading: false,
+    isPlaying: false,
+    progress: 0,
+  })
 
-  // Сохраняем ссылки на обработчики для правильной очистки
-  const playHandler = (): void => {
-    isPlaying.value = true
-    startProgressUpdate()
-  }
-  const pauseHandler = (): void => {
-    isPlaying.value = false
-    stopProgressUpdate()
-  }
-  const endedHandler = (): void => {
-    isPlaying.value = false
-    stopProgressUpdate()
-  }
-
+  // Композаблы
   const { applySettings, autoplay, filterSettings, loop, playbackRate, volume } = useAudioSettings()
   const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, fileName || ref(''))
 
+  // Анимация
   let animationFrameId: null | number = null
 
-  function updateProgress(): void {
-    if (audioService.value && isPlaying.value) {
-      progress.value = audioService.value.getProgress()
-      currentTime.value = audioService.value.getCurrentTime()
-      duration.value = audioService.value.getDuration()
-      savePosition()
-      animationFrameId = requestAnimationFrame(updateProgress)
-    }
+  // Вспомогательные функции
+  function updateAudioState(): void {
+    if (!audioService.value)
+      return
+
+    state.value.progress = audioService.value.getProgress()
+    state.value.currentTime = audioService.value.getCurrentTime()
+    state.value.duration = audioService.value.getDuration()
+    savePosition()
   }
 
   function startProgressUpdate(): void {
@@ -71,43 +73,55 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
     }
   }
 
+  function updateProgress(): void {
+    if (audioService.value && state.value.isPlaying) {
+      updateAudioState()
+      animationFrameId = requestAnimationFrame(updateProgress)
+    }
+  }
+
+  // Обработчики событий
+  const eventHandlers = {
+    ended: (): void => {
+      state.value.isPlaying = false
+      stopProgressUpdate()
+      clearPosition()
+    },
+    loadedMetadata: (): void => {
+      state.value.isMetadataLoading = false
+      if (audioService.value) {
+        state.value.duration = audioService.value.getDuration()
+      }
+    },
+    pause: (): void => {
+      state.value.isPlaying = false
+      stopProgressUpdate()
+    },
+    play: (): void => {
+      state.value.isPlaying = true
+      startProgressUpdate()
+    },
+    timeUpdate: (): void => {
+      updateAudioState()
+    },
+  }
+
+  // Инициализация
   function initializeAudioService(): void {
     if (!audio.value)
       return
 
-    audioService.value = new AudioService(audio.value, {
-      fftSize: 2048,
-      smoothingTimeConstant: 0.8,
-    })
+    audioService.value = new AudioService(audio.value, AUDIO_CONFIG)
 
-    // Устанавливаем обработчики событий
-    audioService.value.onTimeUpdate(() => {
-      if (audioService.value) {
-        progress.value = audioService.value.getProgress()
-        currentTime.value = audioService.value.getCurrentTime()
-        duration.value = audioService.value.getDuration()
-        savePosition()
-      }
-    })
-
-    audioService.value.onEnded(() => {
-      clearPosition()
-      isPlaying.value = false
-      stopProgressUpdate()
-    })
-
-    audioService.value.onLoadedMetadata(() => {
-      isMetadataLoading.value = false
-      // Обновляем duration при загрузке метаданных
-      if (audioService.value) {
-        duration.value = audioService.value.getDuration()
-      }
-    })
+    // Устанавливаем обработчики событий AudioService
+    audioService.value.onTimeUpdate(eventHandlers.timeUpdate)
+    audioService.value.onEnded(eventHandlers.ended)
+    audioService.value.onLoadedMetadata(eventHandlers.loadedMetadata)
 
     // Синхронизируем состояние воспроизведения с реальным состоянием аудио
-    audio.value.addEventListener('play', playHandler)
-    audio.value.addEventListener('pause', pauseHandler)
-    audio.value.addEventListener('ended', endedHandler)
+    audio.value.addEventListener('play', eventHandlers.play)
+    audio.value.addEventListener('pause', eventHandlers.pause)
+    audio.value.addEventListener('ended', eventHandlers.ended)
   }
 
   async function initializeAudio(file: File): Promise<void> {
@@ -115,22 +129,23 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
       return
 
     try {
-      isMetadataLoading.value = true
+      state.value.isMetadataLoading = true
       await audioService.value.initializeAudio(file)
       applySettings()
       restorePosition()
-      // Обновляем duration после инициализации
+
       if (audioService.value) {
-        duration.value = audioService.value.getDuration()
+        state.value.duration = audioService.value.getDuration()
       }
     }
     catch (error) {
       console.error('Ошибка инициализации аудио:', error)
-      isMetadataLoading.value = false
+      state.value.isMetadataLoading = false
       throw error
     }
   }
 
+  // Управление воспроизведением
   async function play(): Promise<void> {
     if (!audioService.value)
       return
@@ -141,20 +156,19 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
     }
     catch (error) {
       console.error('Ошибка воспроизведения:', error)
-      isPlaying.value = false
+      state.value.isPlaying = false
     }
   }
 
   function pause(): void {
     if (!audioService.value)
       return
-
     audioService.value.pause()
     // Состояние будет установлено обработчиком события 'pause'
   }
 
   function togglePlayPause(): void {
-    if (isPlaying.value) {
+    if (state.value.isPlaying) {
       pause()
     }
     else {
@@ -162,16 +176,17 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
     }
   }
 
+  // Управление перемоткой
   function seekBackward(): void {
     if (!audioService.value)
       return
-    audioService.value.seekBySeconds(-10)
+    audioService.value.seekBySeconds(-SEEK_STEP)
   }
 
   function seekForward(): void {
     if (!audioService.value)
       return
-    audioService.value.seekBySeconds(10)
+    audioService.value.seekBySeconds(SEEK_STEP)
   }
 
   function handleProgressSeek(percent: number): void {
@@ -185,6 +200,7 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
     audioService.value.seek(percent * duration)
   }
 
+  // Утилиты
   function getAnalyser(): AnalyserNode | null {
     return audioService.value?.getAnalyser() || null
   }
@@ -192,9 +208,9 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
   function cleanup(): void {
     // Удаляем обработчики событий
     if (audio.value) {
-      audio.value.removeEventListener('play', playHandler)
-      audio.value.removeEventListener('pause', pauseHandler)
-      audio.value.removeEventListener('ended', endedHandler)
+      audio.value.removeEventListener('play', eventHandlers.play)
+      audio.value.removeEventListener('pause', eventHandlers.pause)
+      audio.value.removeEventListener('ended', eventHandlers.ended)
     }
 
     stopProgressUpdate()
@@ -202,12 +218,11 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
     audioService.value = null
   }
 
-  // Следим за изменениями настроек фильтров
+  // Watchers
   watch(filterSettings, (newSettings) => {
     audioService.value?.updateFilterSettings(newSettings)
   }, { deep: true })
 
-  // Следим за изменениями аудио настроек
   watch([volume, playbackRate, loop, autoplay], () => {
     if (audioService.value) {
       audioService.value.applyAudioSettings({
@@ -225,20 +240,17 @@ export function useAudioService(audio: Ref<HTMLAudioElement>, fileName?: Ref<str
 
   return {
     cleanup,
-    currentTime: readonly(currentTime),
-    duration: readonly(duration),
+    currentTime: readonly(computed(() => state.value.currentTime)),
+    duration: readonly(computed(() => state.value.duration)),
     getAnalyser,
     handleProgressSeek,
-
     initializeAudio,
-    // Методы
     initializeAudioService,
-    isMetadataLoading: readonly(isMetadataLoading),
-    // Состояние
-    isPlaying: readonly(isPlaying),
+    isMetadataLoading: readonly(computed(() => state.value.isMetadataLoading)),
+    isPlaying: readonly(computed(() => state.value.isPlaying)),
     pause,
     play,
-    progress: readonly(progress),
+    progress: readonly(computed(() => state.value.progress)),
     seekBackward,
     seekForward,
     togglePlayPause,

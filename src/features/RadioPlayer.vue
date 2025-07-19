@@ -1,31 +1,22 @@
 <script setup lang="ts">
-import { useParallax } from '@vueuse/core'
 import { useAudioSettings } from 'composables/useAudioSettings'
-import { usePlayer } from 'composables/usePlayer'
 import { useRadio } from 'composables/useRadio'
-import { BaseButton, iPlay, iSpin } from 'shared/ui'
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRadioPlayer } from 'composables/useRadioPlayer'
+import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
+import { onMounted, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
-const canvas = ref<HTMLCanvasElement | null>(null)
 
 const {
+  analyser,
   audio,
   isPlaying,
   pause,
   pending,
   play,
-} = usePlayer(canvas, activeRadio)
+} = useRadioPlayer(activeRadio)
 
 const { autoplay } = useAudioSettings()
-
-const parallax = reactive(useParallax(canvas))
-const cardStyle = computed(() => ({
-  transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
-    parallax.tilt * 20 + 170
-  }deg)`,
-  transition: '.3s ease-out all',
-}))
 
 watch(activeRadio, async () => {
   pause()
@@ -36,6 +27,7 @@ async function playRadio() {
   useAudioSettings().applySettings()
   await play()
 }
+
 onMounted(() => {
   if (autoplay.value)
     play()
@@ -44,12 +36,9 @@ onMounted(() => {
 
 <template>
   <div class="relative flex flex-col justify-between">
-    <canvas
-      ref="canvas"
-      :style="cardStyle"
-      width="360"
-      height="200"
-      class="pointer-events-none mx-auto my-2 rotate-180 overflow-hidden rounded-2xl shadow-next dark:shadow-card"
+    <AudioVisualizer
+      :analyser="analyser"
+      :is-playing="isPlaying"
     />
     <div class="z-10 mt-auto md:relative">
       <figure>
