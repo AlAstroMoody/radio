@@ -45,7 +45,7 @@ onMounted(() => {
       class="flex flex-col z-1 w-full overflow-hidden md:h-screen md:w-96 md:min-w-[24rem]"
     >
       <div
-        class="my-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
+        class="h-10 my-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
       >
         Amazing <div class="w-20">
           {{ isRadioMode ? 'radio' : 'music' }}
@@ -62,16 +62,6 @@ onMounted(() => {
     </div>
 
     <iLovePwa />
-
-    <picture class="pointer-events-none fixed bottom-0 right-0 z-0">
-      <source srcset="/images/flame-right.webp" media="(min-width: 768px)">
-      <img src="/images/flame-right-mobile.webp" alt="flame">
-    </picture>
-
-    <picture class="pointer-events-none fixed left-0 top-0 z-0 h-full md:h-fit">
-      <source srcset="/images/flame-left.webp" media="(min-width: 768px)">
-      <img src="/images/flame-left-mobile.webp" alt="flame">
-    </picture>
 
     <BaseModal />
   </div>

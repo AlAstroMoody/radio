@@ -83,11 +83,18 @@
   
   @keyframes smart-marquee {
     0% { 
-      transform: translateX(0)
+      transform: translate3d(0, 0, 0)
     }
     100% { 
-      transform: translateX(calc(-50% - 1rem))
+      transform: translate3d(calc(-50% - 1rem), 0, 0)
     }
+  }
+}
+@layer utilities {
+  /* GPU-оптимизированные анимации */
+  .gpu-accelerated {
+    will-change: transform;
+    transform: translateZ(0);
   }
   @keyframes neon-pulse {
     0%, 100% {

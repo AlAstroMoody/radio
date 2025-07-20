@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useParallax } from '@vueuse/core'
+import { useRadio } from 'composables/useRadio'
 import { useVisualizer } from 'composables/useVisualizer'
 import { computed, reactive, ref, watch } from 'vue'
 
@@ -14,6 +15,9 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 
 const { startVisualization, stopVisualization } = useVisualizer(canvas, computed(() => props.analyser))
 
+// Получаем активную радиостанцию для отслеживания изменений
+const { activeRadio } = useRadio()
+
 // Parallax эффект для 3D визуализации
 const parallax = reactive(useParallax(canvas))
 const cardStyle = computed(() => ({
@@ -23,24 +27,27 @@ const cardStyle = computed(() => ({
   transition: '.3s ease-out all',
 }))
 
-// Отслеживаем изменения состояния воспроизведения
-// Запускаем визуализацию при воспроизведении, но НЕ останавливаем при паузе
-// Это позволяет анимации естественно затухать
-watch(() => props.isPlaying, (isPlaying) => {
-  if (isPlaying) {
-    startVisualization()
+// Отслеживаем изменения состояния воспроизведения и анализатора
+watch([() => props.isPlaying, () => props.analyser], ([isPlaying, analyser]) => {
+  if (isPlaying && analyser) {
+    // Добавляем небольшую задержку для стабилизации аудио потока
+    setTimeout(() => {
+      if (props.isPlaying && props.analyser) {
+        startVisualization()
+      }
+    }, 100)
   }
-  // НЕ останавливаем при паузе - пусть затухает естественно
+}, { immediate: true })
+
+// Останавливаем визуализацию при смене радиостанции
+watch(() => activeRadio.value, () => {
+  stopVisualization()
 })
 
-// Экспортируем методы управления визуализацией
-const methods = {
+defineExpose({
   startVisualization,
   stopVisualization,
-}
-
-// Эмитим методы управления после создания компонента
-defineExpose(methods)
+})
 </script>
 
 <template>

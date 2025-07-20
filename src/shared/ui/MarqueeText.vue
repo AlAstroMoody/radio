@@ -79,7 +79,7 @@ onUnmounted(() => {
 })
 
 const containerClasses = computed(() => [
-  'overflow-hidden whitespace-nowrap',
+  'overflow-hidden whitespace-nowrap gpu-accelerated',
   props.className,
 ])
 </script>

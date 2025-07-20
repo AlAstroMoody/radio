@@ -1,7 +1,7 @@
 import type { Wave } from 'music'
 import type { Ref } from 'vue'
 
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 export interface UseRadioPlayerReturn {
   analyser: Ref<AnalyserNode | null>
@@ -25,6 +25,13 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
   const repeatableAudio = computed(
     () => audioConstructor.value?.src === activeRadio.value?.src,
   )
+
+  // Сбрасываем состояние визуализации при смене станции
+  watch(() => activeRadio.value, () => {
+    isPlaying.value = false
+    pending.value = false
+    audioError.value = false
+  })
 
   async function play(): Promise<void> {
     if (!activeRadio.value || !audio.value)
@@ -62,6 +69,14 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
     audio.value.onloadedmetadata = async () => {
       handleAudioPlay()
     }
+
+    audio.value.oncanplay = async () => {
+      handleAudioPlay()
+    }
+
+    audio.value.oncanplaythrough = async () => {
+      handleAudioPlay()
+    }
   }
 
   function setFlags(): void {
@@ -81,6 +96,10 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
     if (!audioContext.value) {
       audioContext.value = new window.AudioContext()
       audioContext.value.resume()
+    }
+
+    // Строим аудио граф если его еще нет
+    if (!analyser.value) {
       buildAudioGraph()
     }
   }

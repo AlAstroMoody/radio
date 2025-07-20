@@ -8,7 +8,8 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "deploy": "npm run build && git add dist -f && git commit -m \"Deploy to production\" && git subtree push --prefix dist origin gh-pages"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
@@ -27,6 +28,7 @@
     "eslint-plugin-perfectionist": "^4.11.0",
     "eslint-plugin-vue": "^10.0.0",
     "postcss": "^8.5.3",
+    "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.2",

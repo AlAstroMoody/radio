@@ -30,6 +30,7 @@ enum VisualizationType {
 
 interface UseVisualizerReturn {
   drawText: (text: string) => void
+  resetVisualization: () => void
   startVisualization: () => void
   stopVisualization: () => void
 }
@@ -58,7 +59,7 @@ export function useVisualizer(
   // Для автоматической остановки при затухании
   const lowSignalFrameCount = ref(0)
   const LOW_SIGNAL_THRESHOLD = 5 // Порог для определения низкого сигнала
-  const MAX_LOW_SIGNAL_FRAMES = 60 // Максимальное количество кадров с низким сигналом (1 секунда при 60 FPS)
+  const MAX_LOW_SIGNAL_FRAMES = 120 // Максимальное количество кадров с низким сигналом (2 секунды при 60 FPS)
 
   const gradientCache = ref<{
     dark: CanvasGradient | null
@@ -96,9 +97,42 @@ export function useVisualizer(
     return average > LOW_SIGNAL_THRESHOLD
   }
 
+  function drawVisualization(ctx: CanvasRenderingContext2D, dataArray: Uint8Array, bufferLength: number): void {
+    switch (visualization.value) {
+      case VisualizationType.Bars:
+        drawBars(ctx, dataArray, width.value, height.value, bufferLength, isDark.value, visualizationIntensity.value)
+        break
+      case VisualizationType.CircleWave:
+        drawCircleWave(ctx, dataArray, centerX.value, centerY.value, isDark.value, visualizationIntensity.value)
+        break
+      case VisualizationType.Particle:
+        drawParticle(ctx, dataArray, bufferLength, centerX.value, centerY.value, isDark.value, visualizationIntensity.value, particles.value)
+        break
+      case VisualizationType.Radial:
+        drawRadial(ctx, dataArray, centerX.value, centerY.value, bufferLength, isDark.value, visualizationIntensity.value)
+        break
+      case VisualizationType.Spectrum:
+        drawSpectrum(ctx, dataArray, width.value, height.value, bufferLength, isDark.value, visualizationIntensity.value)
+        break
+      case VisualizationType.Waveform:
+        if (analyser.value) {
+          analyser.value.getByteTimeDomainData(dataArray)
+        }
+        drawWaveform(ctx, dataArray, width.value, height.value, bufferLength, isDark.value, visualizationIntensity.value)
+        break
+      default:
+        ctx.clearRect(0, 0, width.value, height.value)
+        break
+    }
+
+    clearContext(ctx)
+  }
+
   function draw(): void {
-    if (!isAnimating.value)
+    if (!isAnimating.value) {
+      rafId.value = 0
       return
+    }
 
     const currentTime = performance.now()
     const timeSinceLastFrame = currentTime - lastFrameTime.value
@@ -121,8 +155,7 @@ export function useVisualizer(
       analyser.value.getByteFrequencyData(dataArray.value)
       ctx.clearRect(0, 0, width.value, height.value)
     }
-    catch (error) {
-      console.warn('Ошибка получения данных анализатора:', error)
+    catch {
       stopVisualization()
       return
     }
@@ -143,33 +176,7 @@ export function useVisualizer(
       }
     }
 
-    switch (visualization.value) {
-      case VisualizationType.Bars:
-        drawBars(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
-        break
-      case VisualizationType.CircleWave:
-        drawCircleWave(ctx, dataArray.value, centerX.value, centerY.value, isDark.value, visualizationIntensity.value)
-        break
-      case VisualizationType.Particle:
-        drawParticle(ctx, dataArray.value, bufferLength.value, centerX.value, centerY.value, isDark.value, visualizationIntensity.value, particles.value)
-        break
-      case VisualizationType.Radial:
-        drawRadial(ctx, dataArray.value, centerX.value, centerY.value, bufferLength.value, isDark.value, visualizationIntensity.value)
-        break
-      case VisualizationType.Spectrum:
-        drawSpectrum(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
-        break
-      case VisualizationType.Waveform:
-        analyser.value.getByteTimeDomainData(dataArray.value)
-        drawWaveform(ctx, dataArray.value, width.value, height.value, bufferLength.value, isDark.value, visualizationIntensity.value)
-        break
-      default:
-        stopVisualization()
-        ctx.clearRect(0, 0, width.value, height.value)
-        break
-    }
-
-    clearContext(ctx)
+    drawVisualization(ctx, dataArray.value, bufferLength.value)
 
     rafId.value = requestAnimationFrame(draw)
   }
@@ -184,8 +191,6 @@ export function useVisualizer(
   }
 
   function stopVisualization(): void {
-    if (!isAnimating.value)
-      return
     isAnimating.value = false
     if (rafId.value) {
       cancelAnimationFrame(rafId.value)
@@ -194,6 +199,21 @@ export function useVisualizer(
     particles.value = []
     gradientCache.value = { dark: null, light: null }
     lowSignalFrameCount.value = 0 // Сбрасываем счетчик при остановке
+  }
+
+  function resetVisualization(): void {
+    isAnimating.value = false
+    if (rafId.value) {
+      cancelAnimationFrame(rafId.value)
+      rafId.value = 0
+    }
+    // Полный сброс для случаев, когда нужно очистить все
+    particles.value = []
+    gradientCache.value = { dark: null, light: null }
+    lowSignalFrameCount.value = 0
+    if (dataArray.value) {
+      dataArray.value.fill(0)
+    }
   }
 
   function drawText(value?: string): void {
@@ -244,6 +264,7 @@ export function useVisualizer(
 
   return {
     drawText,
+    resetVisualization,
     startVisualization,
     stopVisualization,
   }

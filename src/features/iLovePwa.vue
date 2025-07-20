@@ -35,12 +35,6 @@ function installPWA() {
 }
 onMounted(() => {
   hideComponent()
-  if (window.launchQueue) {
-    window.launchQueue.setConsumer((params) => {
-      // eslint-disable-next-line no-console
-      console.log(params)
-    })
-  }
 })
 
 useEventListener(
