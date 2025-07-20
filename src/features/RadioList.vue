@@ -15,14 +15,14 @@ const currentFileName = computed(() => (activeFile.value as File)?.name || '')
 </script>
 
 <template>
-  <div class="font-medium md:h-auto px-5 max-w-full md:max-w-lg">
+  <div class="font-medium md:h-auto px-5 max-w-full md:max-w-lg border border-gray-300/50 dark:border-gray-600/50 rounded-lg shadow-lg dark:shadow-xl shadow-right p-4">
     <div
       class="mb-4 font-blackcraft text-3xl text-black dark:text-white"
     >
       favorites
     </div>
-    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96 pr-2">
-      <div class="pl-2 pr-4 overflow-visible flex flex-col gap-3">
+    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96 pr-4">
+      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3">
         <template v-if="!playlist.length || isRadioMode">
           <BaseButton
             v-for="radio in radioWaves"

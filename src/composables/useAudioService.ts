@@ -16,22 +16,22 @@ export function useAudioService(
   audio: Ref<HTMLAudioElement>,
   fileName?: Ref<string>,
 ): {
-    cleanup: () => void
-    currentTime: Ref<number>
-    duration: Ref<number>
-    getAnalyser: () => AnalyserNode | null
-    handleProgressSeek: (percent: number) => void
-    initializeAudio: (file: File) => Promise<void>
-    initializeAudioService: () => void
-    isMetadataLoading: Ref<boolean>
-    isPlaying: Ref<boolean>
-    pause: () => void
-    play: () => Promise<void>
-    progress: Ref<number>
-    seekBackward: () => void
-    seekForward: () => void
-    togglePlayPause: () => void
-  } {
+  cleanup: () => void
+  currentTime: Ref<number>
+  duration: Ref<number>
+  getAnalyser: () => AnalyserNode | null
+  handleProgressSeek: (percent: number) => void
+  initializeAudio: (file: File) => Promise<void>
+  initializeAudioService: () => void
+  isMetadataLoading: Ref<boolean>
+  isPlaying: Ref<boolean>
+  pause: () => void
+  play: () => Promise<void>
+  progress: Ref<number>
+  seekBackward: () => void
+  seekForward: () => void
+  togglePlayPause: () => void
+} {
   // Состояние
   const audioService = ref<AudioService | null>(null)
   const state = ref({

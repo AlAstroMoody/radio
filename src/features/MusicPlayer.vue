@@ -145,12 +145,12 @@ watch(() => files.value.findIndex(file => file === activeFile.value), async (new
         :analyser="getAnalyser()"
         :is-playing="isPlaying"
       />
-      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px]">
+      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft ">
         <MarqueeText
           :text="currentFileName"
-          class-name="max-w-[calc(100%-48px)] font-blackcraft"
           :speed="30"
           :min-duration="8"
+          class="max-w-[calc(100%-48px)]"
         />
         <div class="flex items-center justify-center text-center min-w-[48px]">
           {{ progress }}%

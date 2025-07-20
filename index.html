@@ -65,7 +65,6 @@
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
     
-    <!-- Preload LCP images for better performance -->
     <link
       rel="preload"
       as="image"
@@ -98,30 +97,6 @@
       fetchpriority="low"
       type="image/webp"
     />
-    
-    <link
-      rel="preload"
-      as="font"
-      href="/fonts/ProximaNova-Regular.woff2"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="preload"
-      as="font"
-      href="/fonts/ProximaNova-Semibold.woff2"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="preload"
-      as="font"
-      href="/fonts/ProximaNova-Bold.woff2"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    
-
   </head>
   <body>
     <!-- Critical background images loaded before Vue -->
@@ -145,7 +120,7 @@
       />
     </picture>
 
-    <div id="app" class="bg-light-100 text-blue-100 transition-colors dark:bg-dark-100"></div>
+    <div id="app" class="bg-light-100 dark:text-blue-100 transition-colors dark:bg-dark-100"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

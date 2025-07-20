@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-interface Props {
-  className?: string
+const { minDuration = 8, speed = 30, text } = defineProps<{
   minDuration?: number
   speed?: number
   text: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  className: '',
-  minDuration: 8,
-  speed: 30,
-})
+}>()
 
 const textContainer = ref<HTMLDivElement | null>(null)
 const textElement = ref<HTMLDivElement | null>(null)
@@ -33,7 +26,7 @@ function checkTextOverflow() {
     shouldAnimate.value = true
 
     nextTick(() => {
-      const animationDuration = Math.max(props.minDuration, singleTextWidth / props.speed)
+      const animationDuration = Math.max(minDuration, singleTextWidth / speed)
 
       animationStyle.value = {
         '--marquee-duration': `${animationDuration}s`,
@@ -59,7 +52,7 @@ function setupResizeObserver() {
   }
 }
 
-watch(() => props.text, () => {
+watch(() => text, () => {
   nextTick(() => {
     checkTextOverflow()
   })
@@ -77,17 +70,12 @@ onUnmounted(() => {
     resizeObserver.disconnect()
   }
 })
-
-const containerClasses = computed(() => [
-  'overflow-hidden whitespace-nowrap gpu-accelerated',
-  props.className,
-])
 </script>
 
 <template>
   <div
     ref="textContainer"
-    :class="containerClasses"
+    class="overflow-hidden whitespace-nowrap gpu-accelerated"
   >
     <div
       ref="textElement"

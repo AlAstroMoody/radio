@@ -226,7 +226,7 @@ export function useVisualizer(
     stopVisualization()
     ctx.clearRect(0, 0, width.value, height.value)
     ctx.fillStyle = isDark.value ? 'white' : 'black'
-    ctx.font = '20px Cyberpunk'
+    ctx.font = '20px Blackcraft'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text.value, width.value / (2), height.value / (2))

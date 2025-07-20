@@ -1,114 +1,78 @@
 import vue from '@vitejs/plugin-vue'
-import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
-import { ViteMinifyPlugin } from 'vite-plugin-minify'
 import { VitePWA } from 'vite-plugin-pwa'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: '/radio',
   build: {
-    // Увеличиваем лимит предупреждений
-    chunkSizeWarningLimit: 1000,
-    // Оптимизация CSS
-    cssCodeSplit: true,
-    minify: 'terser',
-    // Разделение на чанки
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-        // Оптимизация имен файлов
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
         manualChunks: {
-          // Аудио библиотеки
-          audio: ['@vueuse/core'],
-          // Vue и его зависимости
+          utils: ['@vueuse/core'],
           vue: ['vue'],
         },
       },
     },
-    // Оптимизация размера
-    target: 'esnext',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-      },
-    },
   },
-  // Оптимизация зависимостей
-  optimizeDeps: {
-    exclude: ['@vite/client', '@vite/env'],
-    include: ['vue', '@vueuse/core'],
+  esbuild: {
+    drop: ['console', 'debugger'], // Убираем console и debugger
   },
+
   plugins: [
     vue(),
     tsconfigPaths(),
-    ViteMinifyPlugin({}),
-    VitePWA({
-      includeAssets: ['/icons/*.png', '*.html', '*.js'],
-      injectRegister: 'auto',
-      registerType: 'autoUpdate',
+    // PWA только для production
+    command === 'build' && VitePWA({
+      registerType: 'autoUpdate', // Автоматическое обновление
       workbox: {
+        // Кеш автоматически инвалидируется при изменении контента
         cleanupOutdatedCaches: true,
-        // Уменьшаем precache размер
-        globIgnores: [
-          '**/node_modules/**/*',
-          '**/sw.js',
-          '**/workbox-*.js',
-          '**/*.map',
-          '**/test/**/*',
-          '**/docs/**/*',
-        ],
         globPatterns: [
-          '**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2,webp}',
+          '**/*.{js,css,html,png,svg,json,woff2,webp}',
         ],
         runtimeCaching: [
+          // Главная страница - NetworkFirst с увеличенным TTL
           {
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pages',
               expiration: {
-                maxAgeSeconds: 30 * 24 * 60 * 60,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 1 неделя
                 maxEntries: 10,
               },
+              networkTimeoutSeconds: 3,
             },
-            urlPattern: ({ url }) => url.pathname === '/' || url.pathname === '/?action=open-audio-file',
+            urlPattern: ({ url }) => url.pathname === '/' || url.pathname === '/radio',
           },
+          // JS/CSS файлы - CacheFirst с долгим TTL
           {
             handler: 'CacheFirst',
             options: {
-              cacheName: 'audio-files',
+              cacheName: 'static-resources',
               expiration: {
-                maxAgeSeconds: 30 * 24 * 60 * 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 1 месяц
                 maxEntries: 50,
               },
             },
-            urlPattern: /\.(?:mp3|wav|ogg|m4a|flac|aac)$/,
+            urlPattern: /\.(?:js|css)$/,
           },
+          // Изображения - CacheFirst с увеличенным TTL
           {
             handler: 'CacheFirst',
             options: {
               cacheName: 'images',
               expiration: {
-                maxAgeSeconds: 30 * 24 * 60 * 60,
+                maxAgeSeconds: 14 * 24 * 60 * 60, // 2 недели
                 maxEntries: 100,
               },
             },
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /\.(?:png|svg|webp)$/,
           },
         ],
       },
     }),
-    // Анализ размера бандла
-    visualizer({
-      brotliSize: true,
-      filename: 'dist/stats.html',
-      gzipSize: true,
-      open: false,
-    }),
-  ],
-})
+  ].filter(Boolean),
+}))

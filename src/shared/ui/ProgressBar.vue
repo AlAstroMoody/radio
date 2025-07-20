@@ -5,26 +5,20 @@ interface Emits {
   (event: 'seek', percent: number): void
 }
 
-interface Props {
+const { currentTime, duration, isLoading = false } = defineProps<{
   currentTime: number
   duration: number
   isLoading?: boolean
   progress: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  isLoading: false,
-})
+}>()
 
 const emit = defineEmits<Emits>()
 
 const safeDuration = computed(() => {
-  const duration = props.duration
   return Number.isNaN(duration) || !Number.isFinite(duration) || duration <= 0 ? 0 : duration
 })
 
 const safeCurrentTime = computed(() => {
-  const currentTime = props.currentTime
   return Number.isNaN(currentTime) || !Number.isFinite(currentTime) || currentTime < 0 ? 0 : currentTime
 })
 
@@ -55,7 +49,7 @@ function handleProgressClick(event: MouseEvent) {
 
 <template>
   <div class="w-full px-4">
-    <div class="flex justify-between text-sm text-gray-600 dark:text-white mb-1">
+    <div class="flex justify-between text-lg text-gray-600 dark:text-white mb-1 font-blackcraft ">
       <span>{{ formatTime(safeCurrentTime) }}</span>
       <span v-if="safeDuration > 0">{{ formatTime(safeDuration) }}</span>
       <span v-else-if="isLoading" class="text-gray-400">Loading...</span>

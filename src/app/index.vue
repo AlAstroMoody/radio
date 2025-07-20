@@ -39,7 +39,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="flex min-h-svh w-full flex-col md:flex-row gap-4 relative"
+    class="flex min-h-mobile w-full flex-col md:flex-row gap-4 relative"
   >
     <aside
       class="flex flex-col z-1 w-full overflow-hidden md:h-screen md:w-96 md:min-w-[24rem]"

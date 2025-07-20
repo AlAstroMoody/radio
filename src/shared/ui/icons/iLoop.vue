@@ -11,7 +11,7 @@ defineProps({ isPlay: Boolean })
     viewBox="0 0 1001.000000 1280.000000"
     preserveAspectRatio="xMidYMid meet"
     :class="{ 'rotate-180': isPlay }"
-    class="fill-blue-100 transition duration-500"
+    class="fill-black dark:fill-blue-100 transition duration-500"
   >
     <g
       transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
