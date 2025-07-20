@@ -28,6 +28,7 @@ function handleInput(event: Event) {
       :min="min"
       :max="max"
       :step="step"
+      :aria-label="label"
       class="flex-1 max-w-32"
       @input="handleInput"
     >

@@ -105,6 +105,7 @@ onUnmounted(() => {
       <button
         ref="buttonRef"
         type="button"
+        :aria-label="label ? `${label}: ${selectedOption.label || placeholder}` : selectedOption.label || placeholder"
         class="w-full bg-white border border-light-100 rounded-md px-2 py-1 text-left flex justify-between items-center text-dark-100 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-100 outline-none"
         @click="toggleDropdown"
         @keydown.enter.prevent="toggleDropdown"
