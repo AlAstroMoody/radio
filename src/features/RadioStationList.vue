@@ -14,15 +14,12 @@ const dragDrop = useDragDrop(
   {
     enableMouse: true,
     enableTouch: true,
-    preventClickOnDrag: false,
-    touchThreshold: 15,
+    touchThreshold: 25,
   },
 )
 
 function handleRadioClick(radioId: string, _index: number): void {
-  if (!dragDrop.state.isDragging) {
-    changeActiveRadio(+radioId)
-  }
+  changeActiveRadio(+radioId)
 }
 </script>
 
@@ -47,7 +44,6 @@ function handleRadioClick(radioId: string, _index: number): void {
           v-bind="{
             ...dragDrop.createHandlers(index, radio).draggable,
             ...dragDrop.createHandlers(index, radio).dropTarget,
-            onClick: undefined,
           }"
           @click="handleRadioClick(radio.id.toString(), index)"
         >

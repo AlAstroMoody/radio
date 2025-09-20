@@ -16,7 +16,6 @@ export interface DragDropHandlers {
     'class': string[]
     'data-drag-index': number
     'draggable': boolean
-    'onClick': (event: Event) => void
     'onDragend': (event: DragEvent) => void
     'onDragstart': (event: DragEvent) => void
     'onTouchend': (event: TouchEvent) => void
@@ -35,8 +34,6 @@ export interface DragDropOptions {
   enableMouse?: boolean
   /** Включить поддержку touch событий */
   enableTouch?: boolean
-  /** Предотвращать клик во время перетаскивания */
-  preventClickOnDrag?: boolean
   /** Порог движения для активации перетаскивания на touch устройствах (в пикселях) */
   touchThreshold?: number
 }

@@ -90,6 +90,9 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
   }
 
   async function handleAudioPlay(): Promise<void> {
+    if (audio.value) {
+      audio.value.playbackRate = 1
+    }
     await audio.value?.play()
     setFlags()
 
@@ -107,6 +110,9 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
   async function handleAudioError(): Promise<void> {
     if (!repeatableAudio.value) {
       audioConstructor.value = new Audio(activeRadio.value.src)
+    }
+    if (audioConstructor.value) {
+      audioConstructor.value.playbackRate = 1
     }
     await audioConstructor.value?.play()
     setFlags()

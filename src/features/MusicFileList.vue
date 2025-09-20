@@ -16,16 +16,13 @@ const dragDrop = useDragDrop(
   {
     enableMouse: true,
     enableTouch: true,
-    preventClickOnDrag: false,
     touchThreshold: 15,
   },
 )
 const currentFileName = computed(() => activeFile.value?.name || '')
 
 function handleFileClick(index: number): void {
-  if (!dragDrop.state.isDragging) {
-    changeActiveFile(index)
-  }
+  changeActiveFile(index)
 }
 
 const fileDurations = ref<Record<string, string>>({})
@@ -82,7 +79,6 @@ watch(files, loadVisibleDurations, { immediate: true })
           v-bind="{
             ...dragDrop.createHandlers(index, file).draggable,
             ...dragDrop.createHandlers(index, file).dropTarget,
-            onClick: undefined,
           }"
           @click="handleFileClick(index)"
         >

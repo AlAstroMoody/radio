@@ -24,13 +24,25 @@ watch(activeRadio, async () => {
 })
 
 async function playRadio() {
-  useAudioSettings().applySettings()
+  const { applySettings } = useAudioSettings()
+
+  applySettings()
+  if (audio.value) {
+    audio.value.playbackRate = 1
+  }
+
   await play()
 }
 
 onMounted(() => {
-  if (autoplay.value)
+  if (autoplay.value) {
+    const { applySettings } = useAudioSettings()
+    applySettings()
+    if (audio.value) {
+      audio.value.playbackRate = 1
+    }
     play()
+  }
 })
 </script>
 

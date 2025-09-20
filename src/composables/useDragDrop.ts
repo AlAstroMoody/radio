@@ -13,7 +13,6 @@ export function useDragDrop<T = any>(
   const {
     enableMouse = true,
     enableTouch = true,
-    preventClickOnDrag = true,
     touchThreshold = 10,
   } = options
 
@@ -120,8 +119,6 @@ export function useDragDrop<T = any>(
     state.touchCurrentY = touch.clientY
     state.draggedIndex = index
     state.isDragging = false
-
-    event.preventDefault()
   }
 
   function handleTouchMove(event: TouchEvent, _index: number): void {
@@ -135,6 +132,7 @@ export function useDragDrop<T = any>(
 
     if (deltaY > touchThreshold * 1.5 && !state.isDragging) {
       state.isDragging = true
+      event.preventDefault()
     }
 
     if (state.isDragging) {
@@ -187,12 +185,6 @@ export function useDragDrop<T = any>(
         ],
         'data-drag-index': index,
         'draggable': enableMouse,
-        'onClick': (event: Event) => {
-          if (preventClickOnDrag && state.isDragging) {
-            event.preventDefault()
-            event.stopPropagation()
-          }
-        },
         'onDragend': (event: DragEvent) => handleDragEnd(event, index, item),
         'onDragstart': (event: DragEvent) => handleDragStart(event, index, item),
         'onTouchend': (event: TouchEvent) => handleTouchEnd(event, index, item),

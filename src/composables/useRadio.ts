@@ -41,12 +41,13 @@ export function useRadio(): UseRadioReturn {
   }
 
   const reorderRadios = (fromIndex: number, toIndex: number): void => {
-    if (fromIndex === toIndex) return
-    
+    if (fromIndex === toIndex)
+      return
+
     const radios = [...userRadios.value]
     const [movedRadio] = radios.splice(fromIndex, 1)
     radios.splice(toIndex, 0, movedRadio)
-    
+
     userRadios.value = radios
   }
 
