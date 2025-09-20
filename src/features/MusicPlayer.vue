@@ -12,7 +12,7 @@ const pending = ref<boolean>(false)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
 
 const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
-const currentFileName = computed(() => (activeFile.value as File)?.name || '')
+const currentFileName = computed(() => activeFile.value?.name || '')
 
 const {
   currentTime,
@@ -48,6 +48,10 @@ async function handleFilesSelected(newFiles: File[]) {
     await saveFilesToIndexedDB(newFiles)
     await saveActiveFileIndex(0)
   }
+  else {
+    updateFiles([])
+    await clearFilesFromIndexedDB()
+  }
 }
 
 async function initializeAudioWithSettings(shouldAutoPlay = false) {
@@ -55,7 +59,7 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
     return
 
   try {
-    await initializeAudio(activeFile.value as File)
+    await initializeAudio(activeFile.value)
     if (shouldAutoPlay) {
       await play()
     }

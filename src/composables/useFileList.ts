@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import { computed, ref } from 'vue'
 
 interface UseFileListReturn {
-  activeFile: Ref<Blob | MediaSource>
+  activeFile: Ref<File | null>
   activeIndex: Ref<number>
   changeActiveFile: (index: number) => void
   files: Ref<File[]>
