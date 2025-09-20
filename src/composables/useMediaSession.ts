@@ -52,8 +52,8 @@ export function useMediaSession(): {
     }
     else {
       mediaMetadata.artwork = [
-        { sizes: '192x192', src: '/favicon/android-chrome-192x192.png', type: 'image/png' },
-        { sizes: '512x512', src: '/favicon/android-chrome-512x512.png', type: 'image/png' },
+        { sizes: '192x192', src: '/radio/favicon/android-chrome-192x192.png', type: 'image/png' },
+        { sizes: '512x512', src: '/radio/favicon/android-chrome-512x512.png', type: 'image/png' },
       ]
     }
 
