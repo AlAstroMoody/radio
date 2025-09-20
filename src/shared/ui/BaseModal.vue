@@ -89,9 +89,9 @@ const contentClasses = computed(() => [
       @click.self="closeModal"
     >
       <div :class="contentClasses" class="m-auto">
-        <div class="p-4 relative w-full">
+        <div class="relative w-full">
           <button
-            class="absolute right-2 top-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Close modal"
             @click="closeModal"
           >
