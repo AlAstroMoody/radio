@@ -31,6 +31,7 @@ export function useAudioService(
   seekBackward: () => void
   seekForward: () => void
   togglePlayPause: () => void
+  undoLastSeek: () => void
 } {
   // Состояние
   const audioService = ref<AudioService | null>(null)
@@ -41,6 +42,9 @@ export function useAudioService(
     isPlaying: false,
     progress: 0,
   })
+
+  // История перемотки
+  const lastSeekPosition = ref<null | number>(null)
 
   // Композаблы
   const { applySettings, autoplay, filterSettings, loop, playbackRate, volume } = useAudioSettings()
@@ -130,6 +134,8 @@ export function useAudioService(
 
     try {
       state.value.isMetadataLoading = true
+      // Сбрасываем историю перемотки при смене файла
+      lastSeekPosition.value = null
       await audioService.value.initializeAudio(file)
       applySettings()
       restorePosition()
@@ -180,13 +186,26 @@ export function useAudioService(
   function seekBackward(): void {
     if (!audioService.value)
       return
+
+    lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seekBySeconds(-SEEK_STEP)
   }
 
   function seekForward(): void {
     if (!audioService.value)
       return
+
+    lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seekBySeconds(SEEK_STEP)
+  }
+
+  function undoLastSeek(): void {
+    if (!audioService.value || lastSeekPosition.value === null) {
+      return
+    }
+
+    audioService.value.seek(lastSeekPosition.value)
+    lastSeekPosition.value = null
   }
 
   function handleProgressSeek(percent: number): void {
@@ -197,6 +216,7 @@ export function useAudioService(
     if (duration <= 0)
       return
 
+    lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seek(percent * duration)
   }
 
@@ -254,5 +274,6 @@ export function useAudioService(
     seekBackward,
     seekForward,
     togglePlayPause,
+    undoLastSeek,
   }
 }

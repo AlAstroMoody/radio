@@ -29,6 +29,7 @@ const {
   seekBackward,
   seekForward,
   togglePlayPause,
+  undoLastSeek,
 } = useAudioService(audio, currentFileName)
 
 const { clearFilesFromIndexedDB, loadActiveFileIndex, loadFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
@@ -176,6 +177,7 @@ watch(() => files.value.findIndex(file => file === activeFile.value), async (new
         @shuffle-files="shuffleFiles"
         @open-files="openFiles"
         @toggle-repeat="toggleRepeat"
+        @undo-last-seek="undoLastSeek"
       />
 
       <ProgressBar

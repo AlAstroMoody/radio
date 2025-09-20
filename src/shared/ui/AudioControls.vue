@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
+import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
 import { BaseButton } from 'shared/ui'
 
 defineProps<{
@@ -18,6 +18,7 @@ const emit = defineEmits<{
   shuffleFiles: []
   togglePlayPause: []
   toggleRepeat: []
+  undoLastSeek: []
 }>()
 </script>
 
@@ -93,6 +94,12 @@ const emit = defineEmits<{
             class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
           />
         </div>
+      </BaseButton>
+      <BaseButton
+        variant="player"
+        @click="emit('undoLastSeek')"
+      >
+        <ArrowUturnLeftIcon class="h-5 w-5" />
       </BaseButton>
     </div>
   </div>
