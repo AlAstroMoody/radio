@@ -6,3 +6,39 @@
 html {
   font-family: system-ui, sans-serif;
 }
+
+/* Поддержка safe area для мобильных устройств */
+@supports (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Оптимизация производительности с content-visibility */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px; /* примерная высота для избежания layout shift */
+}
+
+/* Для списков и больших контейнеров */
+.list-optimized {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px;
+}
+
+/* Для модальных окон и скрытых элементов */
+.hidden-content {
+  content-visibility: hidden;
+}

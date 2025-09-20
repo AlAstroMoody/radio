@@ -67,7 +67,7 @@ watch(files, loadVisibleDurations, { immediate: true })
       drag to reorder
     </div>
     <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
-      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 max-w-2xl">
+      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 max-w-2xl list-optimized">
         <BaseButton
           v-for="(file, index) in files"
           :key="file.name"

@@ -3,7 +3,7 @@ import { useFileList } from 'composables/useFileList'
 import { useIndexedDB } from 'composables/useIndexedDB'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
-import { BaseModal } from 'shared/ui'
+import { BaseModal, HotkeysHint } from 'shared/ui'
 import { onMounted } from 'vue'
 
 const { isRadioMode } = useRadio()
@@ -42,7 +42,7 @@ onMounted(() => {
     class="flex min-h-mobile w-full flex-col md:flex-row gap-4 relative"
   >
     <ControlPanel class="fixed bottom-0" />
-    <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1]">
+    <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe">
       <RadioList class="z-1 w-full md:h-fit md:w-96 md:min-w-[24rem] hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
 
       <div class="flex-1 flex flex-col justify-between items-center gap:20">
@@ -58,10 +58,12 @@ onMounted(() => {
           <RadioPlayer v-else class="w-full md:w-max" />
         </div>
       </div>
-      <AudioSettings class="ml-auto mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
+      <AudioSettings class="ml-auto mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-0 border-t-0" />
     </div>
 
     <iLovePwa />
+
+    <HotkeysHint />
 
     <BaseModal />
   </div>

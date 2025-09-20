@@ -88,16 +88,21 @@ const contentClasses = computed(() => [
       tabindex="-1"
       @click.self="closeModal"
     >
-      <div :class="contentClasses" class="m-auto">
-        <div class="relative w-full">
+      <div :class="contentClasses" class="m-auto content-visibility-auto">
+        <div class="relative w-full flex flex-col">
           <button
-            class="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
             aria-label="Close modal"
             @click="closeModal"
           >
             <iClose class="w-6 h-6" />
           </button>
-          <component :is="modalContent" v-if="modalContent" v-bind="modalProps || {}" />
+          <div class="flex-1">
+            <component :is="modalContent" v-if="modalContent" v-bind="modalProps || {}" />
+          </div>
+          <div v-if="isMobile" class="text-xs text-gray-500 dark:text-gray-400 text-center py-2 px-4 border-t border-gray-200 dark:border-gray-700">
+            Swipe to close
+          </div>
         </div>
       </div>
     </div>
