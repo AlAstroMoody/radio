@@ -3,6 +3,7 @@ import { useAudioService } from 'composables/useAudioService'
 import { useFileList } from 'composables/useFileList'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useIndexedDB } from 'composables/useIndexedDB'
+import { useMediaSession } from 'composables/useMediaSession'
 import { AudioControls, AudioVisualizer, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -14,6 +15,9 @@ const wasPlayingBeforeSwitch = ref<boolean>(false)
 
 const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
 const currentFileName = computed(() => activeFile.value?.name || '')
+
+// Media Session API
+const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
 const {
   currentTime,
@@ -92,6 +96,48 @@ function openFiles() {
   fileDropZone.value?.openFiles()
 }
 
+// Media Session функции
+function setupMediaSessionHandlers(): void {
+  if (!isMediaSessionSupported.value)
+    return
+
+  setActionHandlers({
+    nexttrack: nextFile,
+    pause: togglePlayPause,
+    play: togglePlayPause,
+    previoustrack: prevFile,
+    seekbackward: (_details) => {
+      seekBackward()
+    },
+    seekforward: (_details) => {
+      seekForward()
+    },
+  })
+}
+
+function updateMediaSessionMetadata(): void {
+  if (!isMediaSessionSupported.value || !activeFile.value)
+    return
+
+  const fileName = activeFile.value.name
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '') // Убираем расширение
+
+  setMetadata({
+    title: nameWithoutExt,
+  })
+}
+
+function updateMediaSessionPosition(): void {
+  if (!isMediaSessionSupported.value)
+    return
+
+  setPositionState({
+    duration: duration.value,
+    playbackRate: 1,
+    position: currentTime.value,
+  })
+}
+
 // Горячие клавиши
 useHotkeys([
   { callback: togglePlayPause, key: ' ', preventDefault: true },
@@ -117,6 +163,9 @@ onMounted(() => {
   // Инициализируем AudioService
   initializeAudioService()
 
+  // Настраиваем Media Session
+  setupMediaSessionHandlers()
+
   // Добавляем обработчик события ended для перехода к следующему файлу
   audio.value.addEventListener('ended', () => {
     // Если включен repeat или есть следующие файлы, продолжаем воспроизведение
@@ -141,12 +190,27 @@ watch(activeFile, () => {
   pause()
   setTimeout(() => {
     initializeAudioWithSettings(shouldContinuePlaying)
+    // Обновляем метаданные Media Session при смене трека
+    updateMediaSessionMetadata()
   }, 50)
 })
 
 watch(() => files.value.findIndex(file => file === activeFile.value), async (newIndex) => {
   if (newIndex !== -1) {
     await saveActiveFileIndex(newIndex)
+  }
+})
+
+// Media Session watchers
+watch(isPlaying, (playing) => {
+  if (isMediaSessionSupported.value) {
+    setPlaybackState(playing ? 'playing' : 'paused')
+  }
+})
+
+watch([currentTime, duration], () => {
+  if (isMediaSessionSupported.value && duration.value > 0) {
+    updateMediaSessionPosition()
   }
 })
 </script>

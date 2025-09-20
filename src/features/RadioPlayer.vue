@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
+import { useMediaSession } from 'composables/useMediaSession'
 import { useRadio } from 'composables/useRadio'
 import { useRadioPlayer } from 'composables/useRadioPlayer'
 import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
 import { onMounted, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
+
+// Media Session API
+const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
 
 const {
   analyser,
@@ -35,6 +39,28 @@ async function playRadio() {
   await play()
 }
 
+// Media Session функции для радио
+function setupRadioMediaSessionHandlers(): void {
+  if (!isMediaSessionSupported.value)
+    return
+
+  setActionHandlers({
+    nexttrack: nextRadio,
+    pause: () => isPlaying.value ? pause() : playRadio(),
+    play: () => isPlaying.value ? pause() : playRadio(),
+    previoustrack: prevRadio,
+  })
+}
+
+function updateRadioMediaSessionMetadata(): void {
+  if (!isMediaSessionSupported.value || !activeRadio.value)
+    return
+
+  setMetadata({
+    title: activeRadio.value.name,
+  })
+}
+
 // Горячие клавиши для радио
 useHotkeys([
   { callback: () => isPlaying.value ? pause() : playRadio(), key: ' ', preventDefault: true },
@@ -51,6 +77,10 @@ useHotkeys([
 ])
 
 onMounted(() => {
+  // Настраиваем Media Session для радио
+  setupRadioMediaSessionHandlers()
+  updateRadioMediaSessionMetadata()
+
   if (autoplay.value) {
     const { applySettings } = useAudioSettings()
     applySettings()
@@ -58,6 +88,17 @@ onMounted(() => {
       audio.value.playbackRate = 1
     }
     play()
+  }
+})
+
+// Media Session watchers для радио
+watch(activeRadio, () => {
+  updateRadioMediaSessionMetadata()
+})
+
+watch(isPlaying, (playing) => {
+  if (isMediaSessionSupported.value) {
+    setPlaybackState(playing ? 'playing' : 'paused')
   }
 })
 </script>
