@@ -41,7 +41,7 @@ onMounted(() => {
   <div
     class="flex min-h-mobile w-full flex-col md:flex-row gap-4 relative"
   >
-    <ControlPanel class="fixed bottom-0 left-0 right-0" />
+    <ControlPanel class="fixed bottom-0 left-0 right-0 gesture-safe" />
     <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe">
       <RadioList class="z-1 w-full md:h-fit md:w-96 md:min-w-[24rem] hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
 
