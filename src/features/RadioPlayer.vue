@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
+import { useHotkeys } from 'composables/useHotkeys'
 import { useRadio } from 'composables/useRadio'
 import { useRadioPlayer } from 'composables/useRadioPlayer'
 import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
@@ -33,6 +34,21 @@ async function playRadio() {
 
   await play()
 }
+
+// Горячие клавиши для радио
+useHotkeys([
+  { callback: () => isPlaying.value ? pause() : playRadio(), key: ' ', preventDefault: true },
+  { callback: () => {
+    if (audio.value)
+      audio.value.volume = Math.min(1, audio.value.volume + 0.1)
+  }, key: 'ArrowUp', preventDefault: true },
+  { callback: () => {
+    if (audio.value)
+      audio.value.volume = Math.max(0, audio.value.volume - 0.1)
+  }, key: 'ArrowDown', preventDefault: true },
+  { callback: nextRadio, key: 'n', preventDefault: true },
+  { callback: prevRadio, key: 'p', preventDefault: true },
+])
 
 onMounted(() => {
   if (autoplay.value) {

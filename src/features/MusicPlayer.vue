@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAudioService } from 'composables/useAudioService'
 import { useFileList } from 'composables/useFileList'
+import { useHotkeys } from 'composables/useHotkeys'
 import { useIndexedDB } from 'composables/useIndexedDB'
 import { AudioControls, AudioVisualizer, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -90,6 +91,27 @@ function initPlayerOnMount() {
 function openFiles() {
   fileDropZone.value?.openFiles()
 }
+
+// Горячие клавиши
+useHotkeys([
+  { callback: togglePlayPause, key: ' ', preventDefault: true },
+  { callback: seekBackward, key: 'ArrowLeft', preventDefault: true },
+  { callback: seekForward, key: 'ArrowRight', preventDefault: true },
+  { callback: () => {
+    if (audio.value)
+      audio.value.volume = Math.min(1, audio.value.volume + 0.1)
+  }, key: 'ArrowUp', preventDefault: true },
+  { callback: () => {
+    if (audio.value)
+      audio.value.volume = Math.max(0, audio.value.volume - 0.1)
+  }, key: 'ArrowDown', preventDefault: true },
+  { callback: nextFile, key: 'n', preventDefault: true },
+  { callback: prevFile, key: 'p', preventDefault: true },
+  { callback: toggleRepeat, key: 'r', preventDefault: true },
+  { callback: shuffleFiles, key: 's', preventDefault: true },
+  { callback: undoLastSeek, key: 'u', preventDefault: true },
+  { callback: openFiles, key: 'o', preventDefault: true },
+])
 
 onMounted(() => {
   // Инициализируем AudioService
