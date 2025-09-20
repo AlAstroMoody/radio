@@ -3,3 +3,5 @@ export interface AudioFile {
   file: File
   formattedDuration?: string
 }
+
+export * from './drag-drop'

@@ -1,9 +1,29 @@
 <script setup lang="ts">
+import { useDragDrop } from 'composables/useDragDrop'
 import { useRadio } from 'composables/useRadio'
-import { radioWaves } from 'music'
 import { BaseButton, iStation } from 'shared'
 
-const { activeRadio, changeActiveRadio } = useRadio()
+const { activeRadio, changeActiveRadio, reorderRadios, userRadios } = useRadio()
+
+const dragDrop = useDragDrop(
+  {
+    onReorder: (fromIndex, toIndex) => {
+      reorderRadios(fromIndex, toIndex)
+    },
+  },
+  {
+    enableMouse: true,
+    enableTouch: true,
+    preventClickOnDrag: false,
+    touchThreshold: 15,
+  },
+)
+
+function handleRadioClick(radioId: string, _index: number): void {
+  if (!dragDrop.state.isDragging) {
+    changeActiveRadio(+radioId)
+  }
+}
 </script>
 
 <template>
@@ -11,16 +31,25 @@ const { activeRadio, changeActiveRadio } = useRadio()
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center">
       radio stations
     </div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
+      drag to reorder
+    </div>
     <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
       <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3">
         <BaseButton
-          v-for="radio in radioWaves"
+          v-for="(radio, index) in userRadios"
           :key="radio.id"
           :label="radio.name"
           variant="list"
-          class="truncate max-w-full"
+          class="truncate max-w-full cursor-move transition-all duration-200"
+          :class="dragDrop.createHandlers(index, radio).draggable.class"
           :active="radio.id === activeRadio.id"
-          @click="changeActiveRadio(radio.id)"
+          v-bind="{
+            ...dragDrop.createHandlers(index, radio).draggable,
+            ...dragDrop.createHandlers(index, radio).dropTarget,
+            onClick: undefined,
+          }"
+          @click="handleRadioClick(radio.id.toString(), index)"
         >
           <div class="flex items-center">
             <iStation v-if="radio.id === activeRadio.id" class="mr-2" />

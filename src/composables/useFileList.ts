@@ -11,6 +11,7 @@ interface UseFileListReturn {
   isShuffle: Ref<boolean>
   nextFile: () => void
   prevFile: () => void
+  reorderFiles: (fromIndex: number, toIndex: number) => void
   shuffleFiles: () => void
   toggleRepeat: () => void
   updateFiles: (newFiles: File[]) => void
@@ -46,6 +47,33 @@ export function useFileList(): UseFileListReturn {
   const changeActiveFile = (index: number): void => {
     if (index >= 0 && index < files.value.length) {
       activeIndex.value = index
+    }
+  }
+
+  const reorderFiles = (fromIndex: number, toIndex: number): void => {
+    if (fromIndex === toIndex)
+      return
+
+    const fileList = [...files.value]
+    const [movedFile] = fileList.splice(fromIndex, 1)
+    fileList.splice(toIndex, 0, movedFile)
+
+    files.value = fileList
+
+    // Обновляем originalFiles если не в режиме shuffle
+    if (!isShuffle.value) {
+      originalFiles.value = [...fileList]
+    }
+
+    // Корректируем activeIndex если нужно
+    if (activeIndex.value === fromIndex) {
+      activeIndex.value = toIndex
+    }
+    else if (fromIndex < activeIndex.value && toIndex >= activeIndex.value) {
+      activeIndex.value--
+    }
+    else if (fromIndex > activeIndex.value && toIndex <= activeIndex.value) {
+      activeIndex.value++
     }
   }
 
@@ -90,6 +118,7 @@ export function useFileList(): UseFileListReturn {
     isShuffle,
     nextFile,
     prevFile,
+    reorderFiles,
     shuffleFiles,
     toggleRepeat,
     updateFiles,

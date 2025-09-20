@@ -1,16 +1,34 @@
 <script setup lang="ts">
+import { useDragDrop } from 'composables/useDragDrop'
 import { useFileList } from 'composables/useFileList'
 import { BaseButton } from 'shared'
 import { formatTime, getAudioDuration, getCachedDuration } from 'shared/utils/time'
 import { computed, ref, watch } from 'vue'
 
-const { activeFile, changeActiveFile, files } = useFileList()
+const { activeFile, changeActiveFile, files, reorderFiles } = useFileList()
+
+const dragDrop = useDragDrop(
+  {
+    onReorder: (fromIndex, toIndex) => {
+      reorderFiles(fromIndex, toIndex)
+    },
+  },
+  {
+    enableMouse: true,
+    enableTouch: true,
+    preventClickOnDrag: false,
+    touchThreshold: 15,
+  },
+)
 const currentFileName = computed(() => activeFile.value?.name || '')
 
-// Ленивая загрузка метаданных
-const fileDurations = ref<Record<string, string>>({})
+function handleFileClick(index: number): void {
+  if (!dragDrop.state.isDragging) {
+    changeActiveFile(index)
+  }
+}
 
-// Загружаем длительность файла по требованию
+const fileDurations = ref<Record<string, string>>({})
 async function loadFileDuration(file: File) {
   const fileName = file.name
   if (!fileDurations.value[fileName]) {
@@ -48,6 +66,9 @@ watch(files, loadVisibleDurations, { immediate: true })
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center">
       Audio files
     </div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
+      drag to reorder
+    </div>
     <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
       <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 max-w-2xl">
         <BaseButton
@@ -55,9 +76,15 @@ watch(files, loadVisibleDurations, { immediate: true })
           :key="file.name"
           :label="file.name"
           variant="list"
-          class="max-w-full justify-between"
+          class="max-w-full justify-between cursor-move transition-all duration-200"
+          :class="dragDrop.createHandlers(index, file).draggable.class"
           :active="file.name === currentFileName"
-          @click="changeActiveFile(index)"
+          v-bind="{
+            ...dragDrop.createHandlers(index, file).draggable,
+            ...dragDrop.createHandlers(index, file).dropTarget,
+            onClick: undefined,
+          }"
+          @click="handleFileClick(index)"
         >
           <span class="truncate flex-1 min-w-0 mr-2 text-left">{{ file.name }}</span>
           <span class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">

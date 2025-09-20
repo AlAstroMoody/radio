@@ -41,24 +41,24 @@ onMounted(() => {
   <div
     class="flex min-h-mobile w-full flex-col md:flex-row gap-4 relative"
   >
-    <aside
-      class="flex flex-col z-1 w-full overflow-hidden md:h-screen md:w-96 md:min-w-[24rem]"
-    >
-      <div
-        class="h-10 my-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
-      >
-        Amazing <div class="w-20">
-          {{ isRadioMode ? 'radio' : 'music' }}
+    <ControlPanel class="fixed bottom-0" />
+    <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1]">
+      <RadioList class="z-1 w-full md:h-fit md:w-96 md:min-w-[24rem] hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
+
+      <div class="flex-1 flex flex-col justify-between items-center gap:20">
+        <div
+          class="h-10 mt-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
+        >
+          Amazing <div class="w-20">
+            {{ isRadioMode ? 'radio' : 'music' }}
+          </div>
+        </div>
+        <div class="mb-4">
+          <MusicPlayer v-if="!isRadioMode" class="w-full md:w-max" />
+          <RadioPlayer v-else class="w-full md:w-max" />
         </div>
       </div>
-      <RadioList class="hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
-      <ControlPanel class="fixed bottom-0" />
-    </aside>
-
-    <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1]">
-      <MusicPlayer v-if="!isRadioMode" class="m-auto w-full md:w-max mb-3 mt-auto" />
-      <RadioPlayer v-else class="m-auto w-full md:w-max mb-3 mt-auto" />
-      <AudioSettings class="mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
+      <AudioSettings class="ml-auto mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
     </div>
 
     <iLovePwa />
