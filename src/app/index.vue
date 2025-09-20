@@ -4,11 +4,13 @@ import { useIndexedDB } from 'composables/useIndexedDB'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal, HotkeysHint } from 'shared/ui'
-import { onMounted } from 'vue'
+import { inject, onMounted } from 'vue'
 
 const { isRadioMode } = useRadio()
 const { updateFiles } = useFileList()
 const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
+
+const pageStyle = inject('pageStyle', { height: '100dvh' })
 
 onMounted(() => {
   if (window.launchQueue) {
@@ -40,8 +42,9 @@ onMounted(() => {
 <template>
   <div
     class="flex min-h-mobile w-full flex-col md:flex-row gap-4 relative"
+    :style="pageStyle"
   >
-    <ControlPanel class="fixed bottom-0 left-0 right-0 gesture-safe" />
+    <ControlPanel />
     <div class="flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe">
       <RadioList class="z-1 w-full md:h-fit md:w-96 md:min-w-[24rem] hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
 
