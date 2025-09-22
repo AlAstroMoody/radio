@@ -8,6 +8,7 @@ import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
 import { onMounted, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
+const { volume } = useAudioSettings()
 
 // Media Session API
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
@@ -65,12 +66,10 @@ function updateRadioMediaSessionMetadata(): void {
 useHotkeys([
   { callback: () => isPlaying.value ? pause() : playRadio(), key: ' ', preventDefault: true },
   { callback: () => {
-    if (audio.value)
-      audio.value.volume = Math.min(1, audio.value.volume + 0.1)
+    volume.value = Math.min(100, volume.value + 10)
   }, key: 'ArrowUp', preventDefault: true },
   { callback: () => {
-    if (audio.value)
-      audio.value.volume = Math.max(0, audio.value.volume - 0.1)
+    volume.value = Math.max(0, volume.value - 10)
   }, key: 'ArrowDown', preventDefault: true },
   { callback: nextRadio, key: 'n', preventDefault: true },
   { callback: prevRadio, key: 'p', preventDefault: true },
