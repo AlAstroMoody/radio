@@ -129,8 +129,9 @@ export function useDragDrop<T = any>(
     state.touchCurrentY = touch.clientY
 
     const deltaY = Math.abs(state.touchCurrentY - state.touchStartY)
+    const touchDuration = Date.now() - clickStartTime
 
-    if (deltaY > touchThreshold * 1.5 && !state.isDragging) {
+    if (deltaY > touchThreshold && touchDuration > 500 && !state.isDragging) {
       state.isDragging = true
       event.preventDefault()
     }

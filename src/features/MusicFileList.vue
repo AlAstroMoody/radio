@@ -16,7 +16,7 @@ const dragDrop = useDragDrop(
   {
     enableMouse: true,
     enableTouch: true,
-    touchThreshold: 15,
+    touchThreshold: 40,
   },
 )
 const currentFileName = computed(() => activeFile.value?.name || '')
