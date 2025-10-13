@@ -57,7 +57,8 @@ onMounted(() => {
           <RadioPlayer v-else class="w-full md:w-max" />
         </div>
       </div>
-      <AudioSettings class="ml-auto mb-auto hidden xl:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-0 border-t-0" />
+
+      <AudioSettings class="ml-auto mb-auto hidden lg:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
     </div>
 
     <ControlPanel />

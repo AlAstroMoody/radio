@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useParallax } from '@vueuse/core'
+import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
 import { useVisualizer } from 'composables/useVisualizer'
 import { computed, reactive, ref, watch } from 'vue'
@@ -17,6 +18,7 @@ const { startVisualization, stopVisualization } = useVisualizer(canvas, computed
 
 // Получаем активную радиостанцию для отслеживания изменений
 const { activeRadio } = useRadio()
+const { electricEffects } = useAudioSettings()
 
 // Parallax эффект для 3D визуализации
 const parallax = reactive(useParallax(canvas))
@@ -52,7 +54,7 @@ defineExpose({
 
 <template>
   <div class="canvas-container" :style="cardStyle">
-    <svg class="absolute">
+    <svg v-if="electricEffects" class="absolute">
       <defs>
         <filter id="turbulent-displace" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
           <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1" />
@@ -85,14 +87,15 @@ defineExpose({
     </svg>
 
     <!-- Электрическая рамка с glow эффектами -->
-    <div class="electric-border-frame" />
-    <div class="glow-layer-1" />
-    <div class="glow-layer-2" />
+    <div v-if="electricEffects" class="electric-border-frame" />
+    <div v-if="electricEffects" class="glow-layer-1" />
+    <div v-if="electricEffects" class="glow-layer-2" />
     <canvas
       ref="canvas"
       width="360"
       height="200"
-      class="pointer-events-none mx-auto border-[#dd8448] border-2 rounded-lg rotate-180"
+      class="pointer-events-none mx-auto rounded-lg rotate-180"
+      :class="electricEffects ? 'border-[#dd8448] border-2' : ''"
     />
   </div>
 </template>

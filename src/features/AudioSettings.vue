@@ -5,6 +5,7 @@ import { BaseSelect, CheckboxInput, RangeInput } from 'shared'
 const {
   applyPreset,
   autoplay,
+  electricEffects,
   equalizerPresets,
   filterSettings,
   loop,
@@ -37,7 +38,7 @@ const visualizationOptions = [
   { label: 'Waveform', value: 'waveform' },
   { label: 'Particle', value: 'particle' },
   { label: 'Spectrum', value: 'spectrum' },
-  { label: 'CircleWave', value: 'circlewave' },
+  { label: 'HexagonGrid', value: 'hexagongrid' },
   { label: 'Nothing', value: '' },
 ]
 </script>
@@ -105,6 +106,11 @@ const visualizationOptions = [
     <CheckboxInput
       v-model="autoplay"
       label="Autoplay"
+    />
+
+    <CheckboxInput
+      v-model="electricEffects"
+      label="Electric Effects"
     />
   </div>
 </template>

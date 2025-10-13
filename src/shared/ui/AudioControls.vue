@@ -30,7 +30,7 @@ const emit = defineEmits<{
         variant="player"
         @click="emit('seekBackward')"
       >
-        <span class="font-bold">-10</span>
+        <span class="font-bold font-blackcraft">-10</span>
       </BaseButton>
       <BaseButton
         variant="player"
@@ -57,7 +57,7 @@ const emit = defineEmits<{
         variant="player"
         @click="emit('seekForward')"
       >
-        <span class="font-bold">+10</span>
+        <span class="font-bold font-blackcraft">+10</span>
       </BaseButton>
     </div>
 

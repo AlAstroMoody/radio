@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 
+import { useEventListener } from '@vueuse/core'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useTheme } from 'composables/useTheme'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -8,9 +9,11 @@ import type { Particle } from './visualizer/animations'
 
 import {
   clearCircleWaveGradientCache,
+  clearHexagonGradientCache,
   clearSpectrumGradientCache,
   drawBars,
   drawCircleWave,
+  drawHexagonGrid,
   drawParticle,
   drawRadial,
   drawSpectrum,
@@ -22,6 +25,7 @@ const { visualization, visualizationFPS, visualizationIntensity } = useAudioSett
 enum VisualizationType {
   Bars = 'bars',
   CircleWave = 'circlewave',
+  HexagonGrid = 'hexagongrid',
   Particle = 'particle',
   Radial = 'radial',
   Spectrum = 'spectrum',
@@ -43,6 +47,7 @@ export function useVisualizer(
   const text = ref('')
   const rafId = ref(0)
   const isAnimating = ref(false)
+  const isPageVisible = ref(!document.hidden)
   const width = ref(360)
   const height = ref(200)
 
@@ -51,7 +56,7 @@ export function useVisualizer(
   const frameInterval = computed(() => 1000 / visualizationFPS.value)
 
   const bufferLength = ref(0)
-  const dataArray = ref<null | Uint8Array>(null)
+  const dataArray = ref<null | Uint8Array<ArrayBuffer>>(null)
   const centerX = computed(() => width.value / 2)
   const centerY = computed(() => height.value / 2)
   const particles = ref<Particle[]>([])
@@ -97,13 +102,16 @@ export function useVisualizer(
     return average > LOW_SIGNAL_THRESHOLD
   }
 
-  function drawVisualization(ctx: CanvasRenderingContext2D, dataArray: Uint8Array, bufferLength: number): void {
+  function drawVisualization(ctx: CanvasRenderingContext2D, dataArray: Uint8Array<ArrayBuffer>, bufferLength: number): void {
     switch (visualization.value) {
       case VisualizationType.Bars:
         drawBars(ctx, dataArray, width.value, height.value, bufferLength, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.CircleWave:
         drawCircleWave(ctx, dataArray, centerX.value, centerY.value, isDark.value, visualizationIntensity.value)
+        break
+      case VisualizationType.HexagonGrid:
+        drawHexagonGrid(ctx, dataArray, width.value, height.value, bufferLength, isDark.value, visualizationIntensity.value)
         break
       case VisualizationType.Particle:
         drawParticle(ctx, dataArray, bufferLength, centerX.value, centerY.value, isDark.value, visualizationIntensity.value, particles.value)
@@ -129,7 +137,7 @@ export function useVisualizer(
   }
 
   function draw(): void {
-    if (!isAnimating.value) {
+    if (!isAnimating.value || !visualization.value || !isPageVisible.value) {
       rafId.value = 0
       return
     }
@@ -182,7 +190,7 @@ export function useVisualizer(
   }
 
   function startVisualization(): void {
-    if (isAnimating.value || !analyser.value || !canvas.value)
+    if (isAnimating.value || !analyser.value || !canvas.value || !visualization.value || !isPageVisible.value)
       return
     isAnimating.value = true
     lowSignalFrameCount.value = 0 // Сбрасываем счетчик при запуске
@@ -236,6 +244,13 @@ export function useVisualizer(
     nextTick(() => {
       initAnalyser()
     })
+
+    useEventListener(document, 'visibilitychange', () => {
+      isPageVisible.value = !document.hidden
+      if (!isPageVisible.value && isAnimating.value) {
+        stopVisualization()
+      }
+    })
   })
 
   watch(visualization, (newVal) => {
@@ -247,10 +262,17 @@ export function useVisualizer(
     }
   })
 
+  watch(isPageVisible, (isVisible) => {
+    if (isVisible && visualization.value && !isAnimating.value) {
+      startVisualization()
+    }
+  })
+
   watch(isDark, () => {
     gradientCache.value = { dark: null, light: null }
     clearSpectrumGradientCache()
     clearCircleWaveGradientCache()
+    clearHexagonGradientCache()
     if (text.value)
       drawText()
   })

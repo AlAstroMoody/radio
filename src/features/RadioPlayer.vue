@@ -9,8 +9,8 @@ import { onMounted, watch } from 'vue'
 
 const { activeRadio, nextRadio, prevRadio } = useRadio()
 const { volume } = useAudioSettings()
+const { visualization } = useAudioSettings()
 
-// Media Session API
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
 
 const {
@@ -90,7 +90,6 @@ onMounted(() => {
   }
 })
 
-// Media Session watchers для радио
 watch(activeRadio, () => {
   updateRadioMediaSessionMetadata()
 })
@@ -103,8 +102,9 @@ watch(isPlaying, (playing) => {
 </script>
 
 <template>
-  <div class="relative flex flex-col justify-between">
+  <div class="relative flex flex-col justify-between landscape-flex-row">
     <AudioVisualizer
+      v-if="visualization"
       :analyser="analyser"
       :is-playing="isPlaying"
     />

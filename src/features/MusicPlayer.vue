@@ -16,9 +16,10 @@ const wasPlayingBeforeSwitch = ref<boolean>(false)
 
 const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
 const { volume } = useAudioSettings()
+const { visualization } = useAudioSettings()
+
 const currentFileName = computed(() => activeFile.value?.name || '')
 
-// Media Session API
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
 const {
@@ -216,7 +217,7 @@ watch([currentTime, duration], () => {
 </script>
 
 <template>
-  <div class="relative flex flex-col justify-between">
+  <div class="relative flex flex-col justify-between landscape-flex-row">
     <div class="z-10 mt-auto md:relative">
       <FileDropZone
         ref="fileDropZone"
@@ -230,8 +231,9 @@ watch([currentTime, duration], () => {
         preload="metadata"
       />
     </div>
-    <div class="sm:max-w-96 m-auto max-w-full">
+    <div class="md:max-w-96 m-auto max-w-full">
       <AudioVisualizer
+        v-if="visualization"
         ref="visualizer"
         :analyser="getAnalyser()"
         :is-playing="isPlaying"
