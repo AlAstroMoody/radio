@@ -34,7 +34,7 @@ export function useAudioSettings(): useAudioSettingsReturn {
   const playbackRate = useStorage('audio-playback-rate', 1)
   const loop = useStorage('audio-loop', false)
   const autoplay = useStorage('audio-autoplay', false)
-  const visualization = useStorage('audio-visualization', '')
+  const visualization = useStorage('audio-visualization', 'bars')
   const visualizationIntensity = useStorage('visualization-intensity', 1)
   const visualizationFPS = useStorage('visualization-fps', 60)
   const selectedPreset = useStorage('audio-equalizer-preset', 'default')

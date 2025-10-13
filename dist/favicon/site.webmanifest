@@ -62,7 +62,7 @@
   ],
   "file_handlers": [
     {
-      "action": "/",
+      "action": "./",
       "accept": {
         "audio/wav": [".wav"],
         "audio/x-wav": [".wav"],

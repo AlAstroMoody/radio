@@ -7,13 +7,12 @@ import { AudioSettings, RadioList } from 'features'
 import { ButtonWithIcon, iLamp, iStation } from 'shared/ui'
 
 const { isRadioMode, toggleMode } = useRadio()
-
 const { toggleDark } = useTheme()
 const { openModal } = useModal()
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 right-0 w-fit overflow-visible z-50">
+  <div class="w-fit overflow-visible z-50 pb-safe mb-safe">
     <div class="flex gap-4 items-center p-1 rounded-tr-2xl border-r-0 border-b-0 bg-glass backdrop-blur-xl border border-glass shadow-lg shadow-top transition-all duration-300 dark:bg-glass-purple dark:border-glass-purple-border">
       <ButtonWithIcon label="theme" @click="toggleDark()">
         <iLamp />

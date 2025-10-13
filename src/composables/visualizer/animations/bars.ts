@@ -10,7 +10,7 @@ export function drawBars(
   const barWidth = width * 1.1 / bufferLength
   let x = 0
 
-  ctx.fillStyle = isDark ? 'rgb(100, 200, 255)' : 'rgb(50, 100, 150)'
+  ctx.fillStyle = isDark ? 'rgb(221, 132, 72)' : 'rgb(180, 100, 50)'
   dataArray.forEach((value) => {
     const barHeight = (value / 255) * (height / 2) * visualizationIntensity
     ctx.fillRect(

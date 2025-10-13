@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAudioService } from 'composables/useAudioService'
+import { useAudioSettings } from 'composables/useAudioSettings'
 import { useFileList } from 'composables/useFileList'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useIndexedDB } from 'composables/useIndexedDB'
@@ -14,6 +15,7 @@ const pending = ref<boolean>(false)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
 
 const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
+const { volume } = useAudioSettings()
 const currentFileName = computed(() => activeFile.value?.name || '')
 
 // Media Session API
@@ -144,12 +146,10 @@ useHotkeys([
   { callback: seekBackward, key: 'ArrowLeft', preventDefault: true },
   { callback: seekForward, key: 'ArrowRight', preventDefault: true },
   { callback: () => {
-    if (audio.value)
-      audio.value.volume = Math.min(1, audio.value.volume + 0.1)
+    volume.value = Math.min(100, volume.value + 10)
   }, key: 'ArrowUp', preventDefault: true },
   { callback: () => {
-    if (audio.value)
-      audio.value.volume = Math.max(0, audio.value.volume - 0.1)
+    volume.value = Math.max(0, volume.value - 10)
   }, key: 'ArrowDown', preventDefault: true },
   { callback: nextFile, key: 'n', preventDefault: true },
   { callback: prevFile, key: 'p', preventDefault: true },

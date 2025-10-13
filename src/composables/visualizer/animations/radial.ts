@@ -18,7 +18,13 @@ export function drawRadial(
     const xEnd = centerX + Math.cos(rads * i) * (radius + barHeight)
     const yEnd = centerY + Math.sin(rads * i) * (radius + barHeight)
 
-    ctx.strokeStyle = isDark ? `rgb(150, ${150 + barHeight}, 255)` : `rgb(50, ${50 + barHeight}, 150)`
+    // Создаем градиент на основе интенсивности и позиции
+    const intensity = Math.min(barHeight / 30, 1) // нормализуем интенсивность, ограничиваем до 1
+    const hue = isDark ? 25 + intensity * 20 : 30 + intensity * 30 // в темной теме ближе к оранжевому молний
+    const saturation = isDark ? 75 + intensity * 15 : 60 + intensity * 10 // больше насыщенности в темной теме
+    const lightness = isDark ? 45 + intensity * 25 : 25 + intensity * 15 // ярче в темной теме
+
+    ctx.strokeStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(x, y)

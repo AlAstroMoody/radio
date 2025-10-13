@@ -24,7 +24,7 @@ function handleRadioClick(radioId: string, _index: number): void {
 </script>
 
 <template>
-  <div class="font-medium h-full md:h-auto px-1 md:px-5 max-w-full border border-gray-300/50 dark:border-gray-600/50 rounded-lg shadow-lg dark:shadow-xl shadow-right p-4">
+  <div class="font-medium h-full md:h-auto px-1 md:px-5 max-w-full border-r border-b border-l-0 border-t-0 border-gray-300/50 dark:border-gray-600/50 shadow-lg dark:shadow-xl shadow-right p-4" style="border-radius: 0 0 0.5rem 0;">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center">
       radio stations
     </div>
@@ -32,7 +32,7 @@ function handleRadioClick(radioId: string, _index: number): void {
       drag to reorder
     </div>
     <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
-      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3">
+      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 list-optimized">
         <BaseButton
           v-for="(radio, index) in userRadios"
           :key="radio.id"
