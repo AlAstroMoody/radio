@@ -7,52 +7,11 @@ import { computed } from 'vue'
 const { closeModal, isOpen, modalContent, modalProps } = useModal()
 
 useEventListener(window, 'keydown', handleKeydown)
-useEventListener(window, 'touchstart', handleTouchStart)
-useEventListener(window, 'touchend', handleTouchEnd)
 
-let touchStartX = 0
-let touchStartY = 0
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && isOpen.value) {
     closeModal()
   }
-}
-
-function handleTouchEnd(event: TouchEvent) {
-  if (!isOpen.value)
-    return
-
-  const target = event.target as HTMLElement
-  if (target && (
-    target.tagName === 'BUTTON'
-    || target.tagName === 'INPUT'
-    || target.tagName === 'SELECT'
-    || target.tagName === 'TEXTAREA'
-    || target.closest('button')
-    || target.closest('input')
-    || target.closest('select')
-    || target.closest('textarea')
-    || target.closest('[role="button"]')
-    || target.closest('[role="slider"]')
-  )) {
-    return
-  }
-
-  const touch = event.changedTouches[0]
-  const dx = Math.abs(touch.clientX - touchStartX)
-  const dy = Math.abs(touch.clientY - touchStartY)
-  // Любой свайп (больше 30px по любой оси)
-  if (dx > 30 || dy > 30) {
-    closeModal()
-  }
-}
-
-function handleTouchStart(event: TouchEvent) {
-  if (!isOpen.value)
-    return
-  const touch = event.touches[0]
-  touchStartX = touch.clientX
-  touchStartY = touch.clientY
 }
 
 const { width: windowWidth } = useWindowSize()
@@ -99,9 +58,6 @@ const contentClasses = computed(() => [
           </button>
           <div class="flex-1">
             <component :is="modalContent" v-if="modalContent" v-bind="modalProps || {}" />
-          </div>
-          <div v-if="isMobile" class="text-xs text-gray-500 dark:text-gray-400 text-center py-2 px-4 border-t border-gray-200 dark:border-gray-700">
-            Swipe to close
           </div>
         </div>
       </div>

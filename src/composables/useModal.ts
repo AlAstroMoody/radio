@@ -34,12 +34,14 @@ function createModalInstance(): {
     modalContent.value = component
     modalProps.value = props || null
     isOpen.value = true
+    document.body.style.overflow = 'hidden'
   }
 
   const closeModal = (): void => {
     isOpen.value = false
     modalContent.value = null
     modalProps.value = null
+    document.body.style.overflow = ''
   }
 
   return {

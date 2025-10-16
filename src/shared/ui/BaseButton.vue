@@ -9,7 +9,7 @@ const classes: Record<string, string> = {
   base: 'text-left text-xl text-dark-200 dark:text-blue-100 flex-1 truncate block',
   control: 'text-2xl px-3 flex items-center py-3 px-1 font-blackcraft bg-glass backdrop-blur-md border border-gray-300/50 shadow-md transition-all duration-300 relative overflow-hidden hover:animate-neon-pulse dark:bg-glass-purple dark:border-glass-purple-border shimmer hover:font-bold transition-all duration-300',
   list: 'flex text-left text-sm md:text-lg text-dark-200 dark:text-blue-100 flex-1 truncate block bg-glass backdrop-blur-md border border-gray-300/50 shadow-md transition-all duration-300 relative overflow-hidden hover:animate-neon-pulse dark:bg-glass-purple dark:border-glass-purple-border rounded-lg px-4 py-3 hover:shadow-xl hover:bg-purple-500/10 hover:border-purple-400/50 dark:hover:bg-purple-500/20 dark:hover:border-purple-400/50',
-  player: 'flex items-center justify-center p-2 rounded-full text-dark-200 dark:text-blue-100 md:w-10 md:h-10 hover:scale-110 bg-glass backdrop-blur-md border border-gray-300/50 shadow-md transition-all duration-300 relative overflow-hidden hover:animate-neon-pulse dark:bg-glass-purple dark:border-glass-purple-border shimmer',
+  player: 'flex items-center justify-center p-2 rounded-full text-dark-200 dark:text-blue-100 w-10 h-10 hover:scale-110 bg-glass backdrop-blur-md border border-gray-300/50 shadow-md transition-all duration-300 relative overflow-hidden hover:animate-neon-pulse dark:bg-glass-purple dark:border-glass-purple-border shimmer',
 }
 </script>
 
