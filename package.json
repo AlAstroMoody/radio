@@ -1,7 +1,7 @@
 {
   "name": "radio",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "deploy": "npm run build && git add dist -f && git commit -m \"Deploy to production\" && git subtree push --prefix dist origin gh-pages"
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version",
+    "deploy": "npm run version:patch && npm run build && git add dist package.json -f && git commit -m \"Deploy v$(node -p \"require('./package.json').version\")\" && git subtree push --prefix dist origin gh-pages"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
