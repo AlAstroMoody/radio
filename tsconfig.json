@@ -25,6 +25,7 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue"
-, "src/music.ts"  ]
+    "src/**/*.vue",
+    "src/music.ts"
+  ]
 }
