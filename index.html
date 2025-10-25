@@ -11,8 +11,7 @@
     <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload" />
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
     <title>Amazing radio</title>
-    
-    <!-- Critical CSS for LCP images -->
+
     <style>
       .flame-left {
         width: 356px;
@@ -101,7 +100,6 @@
     />
   </head>
   <body>
-    <!-- Critical background images loaded before Vue -->
     <picture class="pointer-events-none fixed bottom-0 right-0 z-1" style="pointer-events: none; position: fixed; bottom: 0; right: 0; z-index: 1;">
       <source srcset="/images/flame-right.webp" media="(min-width: 768px)">
       <img src="/images/flame-right-mobile.webp" alt="flame" loading="lazy" fetchpriority="low" width="189" height="346" class="flame-right" decoding="async" style="opacity: 1; transition: opacity 0.3s ease-in-out; height: auto;">
@@ -123,27 +121,7 @@
     </picture>
 
     <div id="app" class="bg-light-100 dark:text-blue-100 transition-colors dark:bg-dark-100"></div>
-    
-    <script type="text/javascript">
-      (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104622432', 'ym');
 
-      ym(104622432, 'init', {
-        ssr: false,
-        clickmap: false,
-        ecommerce: false,
-        accurateTrackBounce: false,
-        trackLinks: false,
-        webvisor: false,
-        defer: true
-      });
-    </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/104622432" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-    
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
