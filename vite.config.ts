@@ -10,6 +10,9 @@ export default defineConfig(({ command }) => ({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
         manualChunks: {
           utils: ['@vueuse/core'],
           vue: ['vue'],
@@ -30,48 +33,37 @@ export default defineConfig(({ command }) => ({
       workbox: {
         // Кеш автоматически инвалидируется при изменении контента
         cleanupOutdatedCaches: true,
+        clientsClaim: true, // Немедленный контроль клиентов
         globPatterns: [
-          '**/*.{js,css,html,png,svg,json,woff2,webp}',
+          '**/*.{js,css,html,png,svg,json,woff2,webp,ico}',
         ],
         runtimeCaching: [
-          // Главная страница - NetworkFirst с увеличенным TTL
-          {
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pages',
-              expiration: {
-                maxAgeSeconds: 7 * 24 * 60 * 60, // 1 неделя
-                maxEntries: 10,
-              },
-              networkTimeoutSeconds: 3,
-            },
-            urlPattern: ({ url }) => url.pathname === '/' || url.pathname === '/radio',
-          },
-          // JS/CSS файлы - CacheFirst с долгим TTL
+          // JS/CSS файлы с хешем - CacheFirst (они не изменяются)
           {
             handler: 'CacheFirst',
             options: {
-              cacheName: 'static-resources',
+              cacheName: 'static-assets',
               expiration: {
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 1 месяц
-                maxEntries: 50,
+                maxAgeSeconds: 365 * 24 * 60 * 60, // 1 год
+                maxEntries: 100,
               },
             },
             urlPattern: /\.(?:js|css)$/,
           },
-          // Изображения - CacheFirst с увеличенным TTL
+          // Изображения и шрифты - CacheFirst
           {
             handler: 'CacheFirst',
             options: {
-              cacheName: 'images',
+              cacheName: 'media-assets',
               expiration: {
-                maxAgeSeconds: 14 * 24 * 60 * 60, // 2 недели
-                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 1 месяц
+                maxEntries: 200,
               },
             },
-            urlPattern: /\.(?:png|svg|webp)$/,
+            urlPattern: /\.(?:png|svg|webp|woff2|ico)$/,
           },
         ],
+        skipWaiting: true, // Принудительное обновление
       },
     }),
   ].filter(Boolean),
