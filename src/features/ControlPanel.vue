@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon } from '@heroicons/vue/24/solid'
-import { useModal } from 'composables/useModal'
 import { useRadio } from 'composables/useRadio'
 import { useTheme } from 'composables/useTheme'
-import { AudioSettings, RadioList } from 'features'
 import { ButtonWithIcon, iLamp, iStation } from 'shared/ui'
 
+const emit = defineEmits<{
+  openAudioSettings: []
+  openRadioList: [isRadioMode: boolean]
+}>()
 const { isRadioMode, toggleMode } = useRadio()
 const { toggleDark } = useTheme()
-const { openModal } = useModal()
 </script>
 
 <template>
@@ -17,14 +18,14 @@ const { openModal } = useModal()
       <ButtonWithIcon label="theme" @click="toggleDark()">
         <iLamp />
       </ButtonWithIcon>
-      <ButtonWithIcon label="playlist" @click="openModal(RadioList, { isRadioMode })">
+      <ButtonWithIcon label="playlist" @click="emit('openRadioList', isRadioMode)">
         <ListBulletIcon class="size-6" />
       </ButtonWithIcon>
       <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click="toggleMode">
         <MusicalNoteIcon v-if="isRadioMode" class="size-6" />
         <iStation v-else />
       </ButtonWithIcon>
-      <ButtonWithIcon label="settings" @click="openModal(AudioSettings)">
+      <ButtonWithIcon label="settings" @click="emit('openAudioSettings')">
         <AdjustmentsVerticalIcon class="size-6" />
       </ButtonWithIcon>
     </div>

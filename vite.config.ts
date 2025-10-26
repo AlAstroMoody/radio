@@ -20,14 +20,10 @@ export default defineConfig(({ command }) => ({
       },
     },
   },
-  esbuild: {
-    drop: ['console', 'debugger'], // Убираем console и debugger
-  },
 
   plugins: [
     vue(),
     tsconfigPaths(),
-    // PWA только для production
     command === 'build' && VitePWA({
       registerType: 'autoUpdate', // Автоматическое обновление
       workbox: {

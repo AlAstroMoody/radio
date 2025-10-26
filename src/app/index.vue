@@ -1,16 +1,33 @@
 <script setup lang="ts">
 import { useFileList } from 'composables/useFileList'
 import { useIndexedDB } from 'composables/useIndexedDB'
+import { useModal } from 'composables/useModal'
+import { useMusicStore } from 'composables/useMusicStore'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { BaseModal, HotkeysHint } from 'shared/ui'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const { isRadioMode } = useRadio()
+const { loadStations } = useMusicStore()
 const { updateFiles } = useFileList()
 const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
+const { openModal } = useModal()
+const currentModal = ref<'audio-settings' | 'radio-list' | null>(null)
+
+function handleOpenAudioSettings() {
+  currentModal.value = 'audio-settings'
+  openModal()
+}
+
+function handleOpenRadioList(_isRadioMode: boolean) {
+  currentModal.value = 'radio-list'
+  openModal()
+}
 
 onMounted(() => {
+  loadStations()
+
   if (window.launchQueue) {
     window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
       const fileHandles = launchParams.files
@@ -61,13 +78,19 @@ onMounted(() => {
       <AudioSettings class="ml-auto mb-auto hidden lg:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
     </div>
 
-    <ControlPanel />
+    <ControlPanel
+      @open-audio-settings="handleOpenAudioSettings"
+      @open-radio-list="handleOpenRadioList"
+    />
 
     <iLovePwa />
 
     <HotkeysHint />
 
-    <BaseModal />
+    <BaseModal>
+      <AudioSettings v-if="currentModal === 'audio-settings'" class="m-auto" />
+      <RadioList v-if="currentModal === 'radio-list'" :is-radio-mode="isRadioMode" />
+    </BaseModal>
   </div>
 </template>
 

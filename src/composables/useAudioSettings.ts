@@ -74,8 +74,6 @@ export function useAudioSettings(): useAudioSettingsReturn {
       audio.playbackRate = playbackRate.value
     if (audio.loop !== loop.value)
       audio.loop = loop.value
-    if (audio.autoplay !== autoplay.value)
-      audio.autoplay = autoplay.value
   }
 
   watch([volume, playbackRate, loop, autoplay, filterSettings], () => {

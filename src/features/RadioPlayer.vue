@@ -2,12 +2,14 @@
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
+import { useMusicStore } from 'composables/useMusicStore'
 import { useRadio } from 'composables/useRadio'
 import { useRadioPlayer } from 'composables/useRadioPlayer'
 import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
 import { onMounted, watch } from 'vue'
 
-const { activeRadio, nextRadio, prevRadio } = useRadio()
+const { activeRadio, changeActiveRadio, nextRadio, prevRadio } = useRadio()
+const { userRadios } = useMusicStore()
 const { volume } = useAudioSettings()
 const { visualization } = useAudioSettings()
 
@@ -24,9 +26,17 @@ const {
 
 const { autoplay } = useAudioSettings()
 
+watch(userRadios, (radios) => {
+  if (radios.length > 0 && !activeRadio.value) {
+    changeActiveRadio(radios[0].id)
+  }
+}, { immediate: true })
+
 watch(activeRadio, async () => {
   pause()
-  playRadio()
+  if (autoplay.value) {
+    playRadio()
+  }
 })
 
 async function playRadio() {

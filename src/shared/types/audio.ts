@@ -1,7 +1,13 @@
-export interface AudioFile {
-  duration?: number
-  file: File
-  formattedDuration?: string
+export interface Category {
+  description: string
+  id: string
+  name: string
 }
 
-export * from './drag-drop'
+export interface Wave {
+  category?: string
+  description?: string
+  id: number
+  name: string
+  src: string
+}

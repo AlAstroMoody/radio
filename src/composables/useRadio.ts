@@ -1,29 +1,30 @@
-import type { Wave } from 'music'
+import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
 
 import { useStorage } from '@vueuse/core'
-import { radioWaves } from 'music'
 import { ref } from 'vue'
 
+import { useMusicStore } from './useMusicStore'
+
 interface UseRadioReturn {
-  activeRadio: Ref<Wave>
+  activeRadio: Ref<undefined | Wave>
   changeActiveRadio: (id: number) => void
   isRadioMode: Ref<boolean>
   nextRadio: () => void
   prevRadio: () => void
   reorderRadios: (fromIndex: number, toIndex: number) => void
   toggleMode: () => void
-  userRadios: Ref<Wave[]>
 }
 
-const activeRadio = ref<Wave>(radioWaves[0])
+const activeRadio = ref<Wave>()
 const isRadioMode = useStorage('radio-mode', true)
-const userRadios = useStorage<Wave[]>('user-radios', radioWaves)
+
+const { userRadios } = useMusicStore()
 
 export function useRadio(): UseRadioReturn {
   const findNeighbour = (number: number): void => {
     const index = userRadios.value.findIndex(
-      radio => radio?.id === activeRadio.value.id,
+      radio => radio?.id === activeRadio.value?.id,
     )
     activeRadio.value
       = number > 0
@@ -63,6 +64,5 @@ export function useRadio(): UseRadioReturn {
     prevRadio,
     reorderRadios,
     toggleMode,
-    userRadios,
   }
 }

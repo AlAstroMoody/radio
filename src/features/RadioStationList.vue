@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import { useDragDrop } from 'composables/useDragDrop'
+import { useMusicStore } from 'composables/useMusicStore'
 import { useRadio } from 'composables/useRadio'
 import { BaseButton, iStation } from 'shared'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
-const { activeRadio, changeActiveRadio, reorderRadios, userRadios } = useRadio()
+let scrollTimeout: null | number = null
+
+const { activeRadio, changeActiveRadio, reorderRadios } = useRadio()
+const { categories, userRadios } = useMusicStore()
+
+const scrollContainer = ref<HTMLElement>()
+const buttonsContainer = ref<HTMLElement>()
+
+const categoriesMap = computed(() =>
+  new Map(categories.value.map(cat => [cat.id, cat.name])),
+)
+
+const dragHandlersCache = new Map()
 
 const dragDrop = useDragDrop(
   {
@@ -18,9 +32,79 @@ const dragDrop = useDragDrop(
   },
 )
 
+function debouncedScrollToActiveRadio(): void {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
+
+  scrollTimeout = setTimeout(() => {
+    scrollToActiveRadio(true)
+  }, 150)
+}
+
+function getDragHandlers(index: number, radio: any) {
+  const key = `${index}-${radio.id}`
+  if (!dragHandlersCache.has(key)) {
+    const handlers = dragDrop.createHandlers(index, radio)
+    dragHandlersCache.set(key, handlers)
+  }
+  return dragHandlersCache.get(key)
+}
+
 function handleRadioClick(radioId: string, _index: number): void {
   changeActiveRadio(+radioId)
 }
+
+function scrollToActiveRadio(immediate = false): void {
+  if (!scrollContainer.value || !activeRadio.value)
+    return
+
+  const activeIndex = userRadios.value.findIndex(radio => radio.id === activeRadio.value?.id)
+  if (activeIndex === -1)
+    return
+
+  const container = scrollContainer.value
+  if (!buttonsContainer.value)
+    return
+
+  const activeElement = buttonsContainer.value.children[activeIndex] as HTMLElement
+  if (!activeElement)
+    return
+
+  const containerRect = container.getBoundingClientRect()
+  const elementRect = activeElement.getBoundingClientRect()
+
+  const elementTop = elementRect.top - containerRect.top + container.scrollTop
+  const containerHeight = container.clientHeight
+  const elementHeight = activeElement.offsetHeight
+
+  const scrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2)
+
+  container.scrollTo({
+    behavior: immediate ? 'auto' : 'smooth',
+    top: Math.max(0, scrollTop),
+  })
+}
+
+watch(activeRadio, () => {
+  nextTick(() =>
+    scrollToActiveRadio(),
+  )
+})
+
+watch(userRadios, () => {
+  if (userRadios.value.length > 0 && activeRadio.value) {
+    nextTick(() =>
+      debouncedScrollToActiveRadio(),
+    )
+  }
+})
+
+onMounted(() => {
+  nextTick(() =>
+    scrollToActiveRadio(),
+  )
+})
 </script>
 
 <template>
@@ -31,25 +115,32 @@ function handleRadioClick(radioId: string, _index: number): void {
     <div class="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
       drag to reorder
     </div>
-    <div class="overflow-auto max-h-[calc(100dvh-190px)] md:h-96">
-      <div class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 list-optimized">
+
+    <div ref="scrollContainer" class="overflow-auto max-h-[calc(100dvh-250px)] md:h-80">
+      <div ref="buttonsContainer" class="pl-2 pr-2 overflow-visible flex flex-col gap-3 py-3 list-optimized">
         <BaseButton
           v-for="(radio, index) in userRadios"
           :key="radio.id"
+          v-memo="[radio.id, radio.name, radio.category, activeRadio?.id]"
           :label="radio.name"
           variant="list"
-          class="truncate max-w-full cursor-move transition-all duration-200"
-          :class="dragDrop.createHandlers(index, radio).draggable.class"
-          :active="radio.id === activeRadio.id"
+          class="truncate max-w-full cursor-move"
+          :class="getDragHandlers(index, radio).draggable.class"
+          :active="radio.id === activeRadio?.id"
           v-bind="{
-            ...dragDrop.createHandlers(index, radio).draggable,
-            ...dragDrop.createHandlers(index, radio).dropTarget,
+            ...getDragHandlers(index, radio).draggable,
+            ...getDragHandlers(index, radio).dropTarget,
           }"
           @click="handleRadioClick(radio.id.toString(), index)"
         >
-          <div class="flex items-center">
-            <iStation v-if="radio.id === activeRadio.id" class="mr-2" />
-            {{ radio.name }}
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center">
+              <iStation v-if="radio.id === activeRadio?.id" class="mr-2" />
+              {{ radio.name }}
+            </div>
+            <div v-if="radio.category" class="text-xs text-gray-400 dark:text-gray-500 mb-auto ml-2">
+              {{ categoriesMap.get(radio.category) }}
+            </div>
           </div>
         </BaseButton>
       </div>

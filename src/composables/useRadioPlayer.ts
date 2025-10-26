@@ -1,7 +1,7 @@
-import type { Wave } from 'music'
+import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
 
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 
 export interface UseRadioPlayerReturn {
   analyser: Ref<AnalyserNode | null>
@@ -12,25 +12,18 @@ export interface UseRadioPlayerReturn {
   play: () => Promise<void>
 }
 
-export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
+export function useRadioPlayer(activeRadio: Ref<undefined | Wave>): UseRadioPlayerReturn {
   const audio = ref<HTMLAudioElement | null>(null)
-  const audioConstructor = ref<HTMLAudioElement | null>(null)
   const audioContext = ref<AudioContext | null>(null)
   const analyser = ref<AnalyserNode | null>(null)
 
   const pending = ref<boolean>(false)
   const isPlaying = ref<boolean>(false)
-  const audioError = ref(true)
-
-  const repeatableAudio = computed(
-    () => audioConstructor.value?.src === activeRadio.value?.src,
-  )
 
   // Сбрасываем состояние визуализации при смене станции
   watch(() => activeRadio.value, () => {
     isPlaying.value = false
     pending.value = false
-    audioError.value = false
   })
 
   async function play(): Promise<void> {
@@ -38,33 +31,6 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
       return
 
     pending.value = true
-    audio.value.onerror = null
-    audio.value.onloadedmetadata = null
-
-    if (audio.value?.error && audioError.value) {
-      handleAudioError()
-    }
-    else if (audio.value.readyState) {
-      handleAudioPlay()
-    }
-    else if (audio.value?.error && !audioError.value) {
-      if (repeatableAudio.value) {
-        await audioConstructor.value?.play()
-        setFlags()
-      }
-      else {
-        if (!audio.value.HAVE_METADATA) {
-          handleAudioError()
-        }
-        else {
-          audioConstructor.value = null
-        }
-      }
-    }
-
-    audio.value.onerror = () => {
-      handleAudioError()
-    }
 
     audio.value.onloadedmetadata = async () => {
       handleAudioPlay()
@@ -77,11 +43,18 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
     audio.value.oncanplaythrough = async () => {
       handleAudioPlay()
     }
+
+    audio.value.onerror = () => {
+      pending.value = false
+    }
+
+    if (audio.value.readyState >= 2) {
+      await handleAudioPlay()
+    }
   }
 
   function setFlags(): void {
     isPlaying.value = true
-    audioError.value = false
     if (!audio.value)
       return
     if ([3, 4].includes(audio.value.readyState)) {
@@ -90,10 +63,11 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
   }
 
   async function handleAudioPlay(): Promise<void> {
-    if (audio.value) {
-      audio.value.playbackRate = 1
-    }
-    await audio.value?.play()
+    if (!audio.value)
+      return
+
+    audio.value.playbackRate = 1
+    await audio.value.play()
     setFlags()
 
     if (!audioContext.value) {
@@ -107,20 +81,8 @@ export function useRadioPlayer(activeRadio: Ref<Wave>): UseRadioPlayerReturn {
     }
   }
 
-  async function handleAudioError(): Promise<void> {
-    if (!repeatableAudio.value) {
-      audioConstructor.value = new Audio(activeRadio.value.src)
-    }
-    if (audioConstructor.value) {
-      audioConstructor.value.playbackRate = 1
-    }
-    await audioConstructor.value?.play()
-    setFlags()
-  }
-
   function pause(): void {
     audio.value?.pause()
-    audioConstructor.value?.pause()
     isPlaying.value = false
     pending.value = false
   }

@@ -4,7 +4,7 @@ import { useModal } from 'composables/useModal'
 import { iClose } from 'shared/ui/icons'
 import { computed } from 'vue'
 
-const { closeModal, isOpen, modalContent, modalProps } = useModal()
+const { closeModal, isOpen } = useModal()
 
 useEventListener(window, 'keydown', handleKeydown)
 
@@ -33,7 +33,7 @@ const contentClasses = computed(() => [
   'overflow-auto',
   'flex',
   {
-    'min-w-2xl max-h-[90vh] rounded-lg': !isMobile.value,
+    'max-w-2xl max-h-[90vh] rounded-lg w-auto': !isMobile.value,
     'w-full h-full': isMobile.value,
   },
 ])
@@ -57,7 +57,7 @@ const contentClasses = computed(() => [
             <iClose class="w-6 h-6" />
           </button>
           <div class="flex-1">
-            <component :is="modalContent" v-if="modalContent" v-bind="modalProps || {}" />
+            <slot />
           </div>
         </div>
       </div>
