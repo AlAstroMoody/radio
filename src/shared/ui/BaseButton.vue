@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { active = false, label = '', variant = 'base' } = defineProps<{
+const { active = false, label, variant = 'base' } = defineProps<{
   active?: boolean
   label?: string
   variant?: 'base' | 'control' | 'list' | 'player'
@@ -15,7 +15,7 @@ const classes: Record<string, string> = {
 
 <template>
   <button
-    :aria-label="label"
+    :aria-label="label || undefined"
     :class="[
       classes[variant],
       active && variant === 'list' && 'font-bold bg-purple-500/40 border-purple-400/80 shadow-purple-500/40 shadow-lg scale-[1.02] dark:bg-purple-500/50 dark:border-purple-400/80',

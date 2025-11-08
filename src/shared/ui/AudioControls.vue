@@ -28,12 +28,14 @@ const emit = defineEmits<{
     <div class="flex items-center gap-4">
       <BaseButton
         variant="player"
+        label="Перемотать назад на 10 секунд"
         @click="emit('seekBackward')"
       >
         <span class="font-bold font-blackcraft">-10</span>
       </BaseButton>
       <BaseButton
         variant="player"
+        label="Предыдущий трек"
         @click="emit('prevFile')"
       >
         <ChevronDoubleLeftIcon class="h-6 w-6" />
@@ -42,6 +44,7 @@ const emit = defineEmits<{
         variant="player"
         class="!size-14"
         :disabled="pending"
+        :label="isPlaying ? 'Пауза' : 'Воспроизвести'"
         @click="emit('togglePlayPause')"
       >
         <PlayIcon v-if="!isPlaying" class="h-10 w-10" />
@@ -49,12 +52,14 @@ const emit = defineEmits<{
       </BaseButton>
       <BaseButton
         variant="player"
+        label="Следующий трек"
         @click="emit('nextFile')"
       >
         <ChevronDoubleRightIcon class="h-6 w-6" />
       </BaseButton>
       <BaseButton
         variant="player"
+        label="Перемотать вперёд на 10 секунд"
         @click="emit('seekForward')"
       >
         <span class="font-bold font-blackcraft">+10</span>
@@ -66,6 +71,7 @@ const emit = defineEmits<{
       <BaseButton
         variant="player"
         :class="{ 'text-purple-500': isShuffle }"
+        :label="isShuffle ? 'Отключить случайный порядок' : 'Включить случайный порядок'"
         @click="emit('shuffleFiles')"
       >
         <div class="relative">
@@ -78,6 +84,7 @@ const emit = defineEmits<{
       </BaseButton>
       <BaseButton
         variant="player"
+        label="Открыть файлы"
         @click="emit('openFiles')"
       >
         <ArrowDownTrayIcon class="h-5 w-5" />
@@ -85,6 +92,7 @@ const emit = defineEmits<{
       <BaseButton
         variant="player"
         :class="{ 'text-purple-500': isRepeat }"
+        :label="isRepeat ? 'Отключить повтор' : 'Включить повтор'"
         @click="emit('toggleRepeat')"
       >
         <div class="relative">
@@ -97,6 +105,7 @@ const emit = defineEmits<{
       </BaseButton>
       <BaseButton
         variant="player"
+        label="Отменить последнюю перемотку"
         @click="emit('undoLastSeek')"
       >
         <ArrowUturnLeftIcon class="h-5 w-5" />
