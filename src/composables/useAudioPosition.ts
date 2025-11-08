@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 
 import { useStorage } from '@vueuse/core'
+import { ref } from 'vue'
 
 interface AudioPosition {
   name: string
@@ -15,14 +16,17 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileN
   clearPosition: () => void
   restorePosition: () => void
   savePosition: () => void
+  setTrackName: (name: string) => void
 } {
+  const currentTrackName = ref(fileName.value)
+
   function savePosition(): void {
-    if (!audio.value || !fileName.value)
+    if (!audio.value || !currentTrackName.value)
       return
 
-    const existingIndex = positions.value.findIndex(p => p.name === fileName.value)
+    const existingIndex = positions.value.findIndex(p => p.name === currentTrackName.value)
     const newPosition = {
-      name: fileName.value,
+      name: currentTrackName.value,
       position: audio.value.currentTime,
       timestamp: Date.now(),
     }
@@ -42,19 +46,33 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileN
   }
 
   function restorePosition(): void {
-    if (!audio.value)
+    if (!audio.value) {
       return
+    }
 
-    audio.value.currentTime = positions.value.find(p => p.name === fileName.value)?.position || 0
+    if (!currentTrackName.value) {
+      audio.value.currentTime = 0
+      return
+    }
+
+    audio.value.currentTime = positions.value.find(p => p.name === currentTrackName.value)?.position || 0
   }
 
   function clearPosition(): void {
-    positions.value = positions.value.filter(p => p.name !== fileName.value)
+    if (!currentTrackName.value)
+      return
+
+    positions.value = positions.value.filter(p => p.name !== currentTrackName.value)
+  }
+
+  function setTrackName(name: string): void {
+    currentTrackName.value = name
   }
 
   return {
     clearPosition,
     restorePosition,
     savePosition,
+    setTrackName,
   }
 }

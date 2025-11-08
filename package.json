@@ -16,9 +16,9 @@
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
-    "@vueuse/core": "^13.1.0",
+    "@vueuse/core": "^14.0.0",
     "idb": "^8.0.3",
-    "vue": "^3.5.13"
+    "vue": "^3.5.22"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.12.0",
@@ -26,16 +26,16 @@
     "@types/wicg-file-system-access": "^2023.10.6",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
-    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitejs/plugin-vue": "^6.0.1",
     "eslint": "^9.25.0",
     "eslint-plugin-perfectionist": "^4.11.0",
     "eslint-plugin-vue": "^10.0.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
-    "vite": "^6.3.2",
+    "vite": "^7.1.12",
     "vite-plugin-minify": "^2.1.0",
-    "vite-plugin-pwa": "^1.0.0",
+    "vite-plugin-pwa": "^1.1.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vue-tsc": "^2.2.8"
   }

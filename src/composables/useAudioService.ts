@@ -12,9 +12,11 @@ const AUDIO_CONFIG = {
   smoothingTimeConstant: 0.8,
 } as const
 
+const POSITION_SAVE_INTERVAL = 1000 // мс между автосохранениями
+
 export function useAudioService(
   audio: Ref<HTMLAudioElement>,
-  fileName?: Ref<string>,
+  fileName: Ref<string>,
 ): {
   cleanup: () => void
   currentTime: Ref<number>
@@ -46,9 +48,32 @@ export function useAudioService(
   // История перемотки
   const lastSeekPosition = ref<null | number>(null)
 
-  // Композаблы
   const { applySettings, autoplay, filterSettings, loop, playbackRate, volume } = useAudioSettings()
-  const { clearPosition, restorePosition, savePosition } = useAudioPosition(audio, fileName || ref(''))
+  const { clearPosition, restorePosition, savePosition, setTrackName } = useAudioPosition(
+    audio,
+    fileName,
+  )
+
+  let lastPositionSavedAt = 0
+
+  function savePositionThrottled(): void {
+    const now = Date.now()
+    if (now - lastPositionSavedAt < POSITION_SAVE_INTERVAL)
+      return
+
+    savePosition()
+    lastPositionSavedAt = now
+  }
+
+  function flushPositionSave(): void {
+    savePosition()
+    lastPositionSavedAt = Date.now()
+  }
+
+  function clearStoredPosition(): void {
+    clearPosition()
+    lastPositionSavedAt = 0
+  }
 
   // Анимация
   let animationFrameId: null | number = null
@@ -61,7 +86,7 @@ export function useAudioService(
     state.value.progress = audioService.value.getProgress()
     state.value.currentTime = audioService.value.getCurrentTime()
     state.value.duration = audioService.value.getDuration()
-    savePosition()
+    savePositionThrottled()
   }
 
   function startProgressUpdate(): void {
@@ -89,7 +114,7 @@ export function useAudioService(
     ended: (): void => {
       state.value.isPlaying = false
       stopProgressUpdate()
-      clearPosition()
+      clearStoredPosition()
     },
     loadedMetadata: (): void => {
       state.value.isMetadataLoading = false
@@ -100,6 +125,7 @@ export function useAudioService(
     pause: (): void => {
       state.value.isPlaying = false
       stopProgressUpdate()
+      flushPositionSave()
     },
     play: (): void => {
       state.value.isPlaying = true
@@ -137,8 +163,11 @@ export function useAudioService(
       // Сбрасываем историю перемотки при смене файла
       lastSeekPosition.value = null
       await audioService.value.initializeAudio(file)
+      setTrackName(file.name)
+      lastPositionSavedAt = 0
       applySettings()
       restorePosition()
+      flushPositionSave()
 
       if (audioService.value) {
         state.value.duration = audioService.value.getDuration()
@@ -189,6 +218,7 @@ export function useAudioService(
 
     lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seekBySeconds(-SEEK_STEP)
+    flushPositionSave()
   }
 
   function seekForward(): void {
@@ -197,6 +227,7 @@ export function useAudioService(
 
     lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seekBySeconds(SEEK_STEP)
+    flushPositionSave()
   }
 
   function undoLastSeek(): void {
@@ -218,6 +249,7 @@ export function useAudioService(
 
     lastSeekPosition.value = audioService.value.getCurrentTime()
     audioService.value.seek(percent * duration)
+    flushPositionSave()
   }
 
   // Утилиты
@@ -234,6 +266,7 @@ export function useAudioService(
     }
 
     stopProgressUpdate()
+    flushPositionSave()
     audioService.value?.cleanup()
     audioService.value = null
   }
