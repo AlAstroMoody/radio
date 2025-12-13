@@ -15,6 +15,8 @@ export interface DragDropHandlers {
   draggable: {
     'class': string[]
     'data-drag-index': number
+    'data-insert-after'?: null | string
+    'data-insert-before'?: null | string
     'draggable': boolean
     'onDragend': (event: DragEvent) => void
     'onDragstart': (event: DragEvent) => void
@@ -43,6 +45,8 @@ export interface DragDropState {
   draggedIndex: null | number
   /** Индекс элемента-цели */
   dragOverIndex: null | number
+  /** Позиция вставки относительно элемента-цели: 'before' | 'after' */
+  insertPosition: 'after' | 'before' | null
   /** Флаг активного перетаскивания на touch устройствах */
   isDragging: boolean
   /** Текущая Y координата для touch событий */

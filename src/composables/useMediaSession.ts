@@ -1,3 +1,6 @@
+// Интеграция с Media Session API: показывает информацию о треке в уведомлениях и на заблокированном экране,
+// обрабатывает действия из уведомлений (play, pause, next, prev, seek)
+
 import { ref } from 'vue'
 
 export interface MediaMetadata {
@@ -28,7 +31,6 @@ export function useMediaSession(): {
 } {
   const isSupported = ref(false)
 
-  // Проверяем поддержку Media Session API
   if ('mediaSession' in navigator) {
     isSupported.value = true
   }
@@ -90,7 +92,6 @@ export function useMediaSession(): {
     if (!isSupported.value)
       return
 
-    // Устанавливаем обработчики действий
     if (handlers.nexttrack) {
       navigator.mediaSession.setActionHandler('nexttrack', handlers.nexttrack)
     }
@@ -115,7 +116,6 @@ export function useMediaSession(): {
     if (!isSupported.value)
       return
 
-    // Очищаем все обработчики
     const actions: MediaSessionAction[] = [
       'play',
       'pause',

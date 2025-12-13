@@ -1,3 +1,6 @@
+// Обработка горячих клавиш: регистрирует обработчики на keydown события,
+// поддерживает комбинации с Ctrl, Shift, Alt. Автоматически очищает при размонтировании
+
 import { onMounted, onUnmounted } from 'vue'
 
 export interface HotkeyConfig {

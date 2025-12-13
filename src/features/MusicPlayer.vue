@@ -1,31 +1,51 @@
 <script setup lang="ts">
+import { useAudioController } from 'composables/useAudioController'
 import { useAudioService } from 'composables/useAudioService'
 import { useAudioSettings } from 'composables/useAudioSettings'
-import { useFileList } from 'composables/useFileList'
 import { useHotkeys } from 'composables/useHotkeys'
-import { useIndexedDB } from 'composables/useIndexedDB'
 import { useMediaSession } from 'composables/useMediaSession'
-import { AudioControls, AudioVisualizer, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { useRadio } from 'composables/useRadio'
+import { storeToRefs } from 'pinia'
+import { AudioControls, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
+import { useLibraryStore } from 'stores'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const fileDropZone = ref<InstanceType<typeof FileDropZone> | null>(null)
-const audio = ref<HTMLAudioElement>(new Audio())
-const visualizer = ref(null)
-const pending = ref<boolean>(false)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
+const { isRadioMode } = useRadio()
 
-const { activeFile, activeIndex, changeActiveFile, files, isRepeat, isShuffle, nextFile, prevFile, shuffleFiles, toggleRepeat, updateFiles, updateFilesWithoutReset } = useFileList()
-const { volume } = useAudioSettings()
-const { visualization } = useAudioSettings()
+const libraryStore = useLibraryStore()
+const {
+  activeFile,
+  activeIndex,
+  files,
+  isRepeat,
+  isShuffle,
+} = storeToRefs(libraryStore)
+const {
+  changeActiveFile,
+  clearFilesFromIndexedDB,
+  loadActiveFileIndex,
+  loadFilesFromIndexedDB,
+  nextFile,
+  prevFile,
+  saveActiveFileIndex,
+  saveFilesToIndexedDB,
+  shuffleFiles,
+  toggleRepeat,
+  updateFiles,
+  updateFilesWithoutReset,
+} = libraryStore
+const { autoplay, volume } = useAudioSettings()
 
 const currentFileName = computed(() => activeFile.value?.name || '')
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
+const audioController = useAudioController()
 
 const {
   currentTime,
   duration,
-  getAnalyser,
   handleProgressSeek,
   initializeAudio,
   initializeAudioService,
@@ -38,12 +58,11 @@ const {
   seekForward,
   togglePlayPause,
   undoLastSeek,
-} = useAudioService(audio, currentFileName)
+} = useAudioService(currentFileName)
+const pending = computed(() => isMetadataLoading.value)
 
-const { clearFilesFromIndexedDB, loadActiveFileIndex, loadFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
-
-async function handleFilesSelected(newFiles: File[]) {
-  if (files.value?.map(file => file.name).join() === newFiles.map(file => file.name).join()) {
+async function handleFilesSelected(newFiles: File[]): Promise<void> {
+  if (files.value?.map((file: File) => file.name).join() === newFiles.map((file: File) => file.name).join()) {
     return
   }
   if (newFiles.length) {
@@ -72,10 +91,12 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
     if (shouldAutoPlay) {
       await play()
     }
+    if (audioController) {
+      audioController.audio.value!.playbackRate = 1
+    }
+    wasPlayingBeforeSwitch.value = false
   }
-  catch (error) {
-    console.error('Ошибка инициализации аудио:', error)
-  }
+  catch { }
 }
 
 function initPlayerOnMount() {
@@ -89,9 +110,7 @@ function initPlayerOnMount() {
         // При восстановлении из IndexedDB не запускаем автоматически
         initializeAudioWithSettings(false)
       }
-    }).catch((error) => {
-      console.error('❌ Ошибка при восстановлении файлов:', error)
-    })
+    }).catch(() => { })
   }
 }
 
@@ -161,21 +180,8 @@ useHotkeys([
 ])
 
 onMounted(() => {
-  // Инициализируем AudioService
   initializeAudioService()
-
-  // Настраиваем Media Session
   setupMediaSessionHandlers()
-
-  // Добавляем обработчик события ended для перехода к следующему файлу
-  audio.value.addEventListener('ended', () => {
-    // Если включен repeat или есть следующие файлы, продолжаем воспроизведение
-    if (isRepeat.value || activeIndex.value < files.value.length - 1) {
-      // Запоминаем, что песня должна продолжиться
-      wasPlayingBeforeSwitch.value = true
-      nextFile()
-    }
-  })
 
   if (files.value.length) {
     initializeAudioWithSettings()
@@ -185,24 +191,34 @@ onMounted(() => {
   initPlayerOnMount()
 })
 
+watch(
+  () => audioController?.state.ended,
+  (ended) => {
+    if (!ended)
+      return
+
+    if (isRepeat.value || activeIndex.value < files.value.length - 1) {
+      wasPlayingBeforeSwitch.value = true
+      nextFile()
+    }
+  },
+)
+
 watch(activeFile, () => {
-  // Запоминаем состояние воспроизведения ДО остановки
   const shouldContinuePlaying = wasPlayingBeforeSwitch.value || isPlaying.value
   pause()
   setTimeout(() => {
     initializeAudioWithSettings(shouldContinuePlaying)
-    // Обновляем метаданные Media Session при смене трека
     updateMediaSessionMetadata()
   }, 50)
 })
 
-watch(() => files.value.findIndex(file => file === activeFile.value), async (newIndex) => {
+watch(() => files.value.findIndex((file: File) => file === activeFile.value), async (newIndex: number) => {
   if (newIndex !== -1) {
     await saveActiveFileIndex(newIndex)
   }
 })
 
-// Media Session watchers
 watch(isPlaying, (playing) => {
   if (isMediaSessionSupported.value) {
     setPlaybackState(playing ? 'playing' : 'paused')
@@ -214,6 +230,35 @@ watch([currentTime, duration], () => {
     updateMediaSessionPosition()
   }
 })
+
+watch(() => isRadioMode.value, (value) => {
+  if (value) {
+    wasPlayingBeforeSwitch.value = isPlaying.value
+    pause()
+    return
+  }
+
+  if (!activeFile.value || !files.value.length)
+    return
+
+  const shouldPlay = wasPlayingBeforeSwitch.value || autoplay.value
+
+  if (shouldPlay) {
+    nextTick(() => {
+      if (!isRadioMode.value && activeFile.value) {
+        initializeAudioWithSettings(shouldPlay)
+      }
+    })
+  }
+  else {
+    nextTick(() => {
+      if (!isRadioMode.value && activeFile.value) {
+        initializeAudioWithSettings(false)
+      }
+    })
+  }
+  wasPlayingBeforeSwitch.value = false
+})
 </script>
 
 <template>
@@ -224,21 +269,9 @@ watch([currentTime, duration], () => {
         :has-files="!!files?.length"
         @files-selected="handleFilesSelected"
       />
-      <audio
-        ref="audio"
-        class="hidden"
-        crossorigin="anonymous"
-        preload="metadata"
-      />
     </div>
     <div class="md:max-w-96 m-auto max-w-full">
-      <AudioVisualizer
-        v-if="visualization"
-        ref="visualizer"
-        :analyser="getAnalyser()"
-        :is-playing="isPlaying"
-      />
-      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft ">
+      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft text-black dark:text-white">
         <MarqueeText
           :text="currentFileName"
           :speed="30"
@@ -267,7 +300,6 @@ watch([currentTime, duration], () => {
         @toggle-repeat="toggleRepeat"
         @undo-last-seek="undoLastSeek"
       />
-
       <ProgressBar
         :current-time="currentTime"
         :duration="duration"

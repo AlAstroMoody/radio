@@ -1,7 +1,13 @@
+// Плеер для радиостанций: автоматически загружает станцию при изменении activeRadio,
+// отключает эффекты эквалайзера для радио. Используется в RadioPlayer
+
 import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
 
-import { onUnmounted, ref, watch } from 'vue'
+import { computed, readonly, watch } from 'vue'
+
+import { useAudioController } from './useAudioController'
+import { useAudioPlayer } from './useAudioPlayer'
 
 export interface UseRadioPlayerReturn {
   analyser: Ref<AnalyserNode | null>
@@ -13,102 +19,74 @@ export interface UseRadioPlayerReturn {
 }
 
 export function useRadioPlayer(activeRadio: Ref<undefined | Wave>): UseRadioPlayerReturn {
-  const audio = ref<HTMLAudioElement | null>(null)
-  const audioContext = ref<AudioContext | null>(null)
-  const analyser = ref<AnalyserNode | null>(null)
+  const controller = useAudioController()
 
-  const pending = ref<boolean>(false)
-  const isPlaying = ref<boolean>(false)
+  if (!controller)
+    throw new Error('Audio controller is required for useRadioPlayer')
 
-  // Сбрасываем состояние визуализации при смене станции
-  watch(() => activeRadio.value, () => {
-    isPlaying.value = false
-    pending.value = false
+  const activeSourceId = computed(() => (activeRadio.value ? `radio-${activeRadio.value.id}` : null))
+
+  const audioPlayer = useAudioPlayer({
+    getDescriptor: () => {
+      const station = activeRadio.value
+      if (!station)
+        return null
+
+      return {
+        id: activeSourceId.value ?? `radio-${station.id}`,
+        label: station.name,
+        src: station.src,
+        type: 'stream',
+      }
+    },
+    onLoaded: () => {
+      controller.setEffectChain(null)
+    },
   })
 
-  async function play(): Promise<void> {
-    if (!activeRadio.value || !audio.value)
-      return
+  const pending = computed(() => audioPlayer.isLoading.value && !audioPlayer.isPlaying.value)
 
-    pending.value = true
+  watch(
+    activeRadio,
+    async (station, _prev, onCleanup) => {
+      if (!station) {
+        audioPlayer.stop()
+        controller.setEffectChain(null)
+        return
+      }
 
-    audio.value.onloadedmetadata = async () => {
-      handleAudioPlay()
-    }
+      let cancelled = false
 
-    audio.value.oncanplay = async () => {
-      handleAudioPlay()
-    }
+      onCleanup(() => {
+        cancelled = true
+      })
 
-    audio.value.oncanplaythrough = async () => {
-      handleAudioPlay()
-    }
+      const descriptorId = activeSourceId.value ?? `radio-${station.id}`
 
-    audio.value.onerror = () => {
-      pending.value = false
-    }
+      if (controller.currentSource.value?.id === descriptorId)
+        return
 
-    if (audio.value.readyState >= 2) {
-      await handleAudioPlay()
-    }
-  }
+      if (!cancelled) {
+        try {
+          await audioPlayer.load(false)
+        }
+        catch {}
+      }
+    },
+    { immediate: true },
+  )
 
-  function setFlags(): void {
-    isPlaying.value = true
-    if (!audio.value)
-      return
-    if ([3, 4].includes(audio.value.readyState)) {
-      pending.value = false
-    }
-  }
-
-  async function handleAudioPlay(): Promise<void> {
-    if (!audio.value)
-      return
-
-    audio.value.playbackRate = 1
-    await audio.value.play()
-    setFlags()
-
-    if (!audioContext.value) {
-      audioContext.value = new window.AudioContext()
-      audioContext.value.resume()
-    }
-
-    // Строим аудио граф если его еще нет
-    if (!analyser.value) {
-      buildAudioGraph()
-    }
-  }
-
-  function pause(): void {
-    audio.value?.pause()
-    isPlaying.value = false
-    pending.value = false
-  }
-
-  function buildAudioGraph(): void {
-    if (audioContext.value && audio.value) {
-      const sourceNode = audioContext.value.createMediaElementSource(audio.value)
-      analyser.value = audioContext.value.createAnalyser()
-      analyser.value.fftSize = 1024
-      sourceNode.connect(analyser.value)
-      analyser.value.connect(audioContext.value.destination)
-    }
-  }
-
-  onUnmounted(() => {
-    if (!audioContext.value)
-      return
-    audioContext.value.close()
-  })
+  watch(
+    () => controller.state.isPlaying,
+    () => {},
+  )
 
   return {
-    analyser,
-    audio,
-    isPlaying,
-    pause,
-    pending,
-    play,
+    analyser: controller.analyser,
+    audio: controller.audio,
+    isPlaying: audioPlayer.isPlaying,
+    pause: audioPlayer.pause,
+    pending: readonly(pending),
+    play: audioPlayer.play,
   }
 }

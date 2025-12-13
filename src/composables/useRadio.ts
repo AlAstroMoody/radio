@@ -1,10 +1,11 @@
+// Singleton для работы с радиостанциями: переключение станций, навигация (next/prev),
+// переупорядочивание, переключение режима радио/музыка. Все методы проксируются из stores
+
 import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
 
-import { useStorage } from '@vueuse/core'
-import { ref } from 'vue'
-
-import { useMusicStore } from './useMusicStore'
+import { storeToRefs } from 'pinia'
+import { usePlaybackStore, useStationsStore } from 'stores'
 
 interface UseRadioReturn {
   activeRadio: Ref<undefined | Wave>
@@ -16,53 +17,27 @@ interface UseRadioReturn {
   toggleMode: () => void
 }
 
-const activeRadio = ref<Wave>()
-const isRadioMode = useStorage('radio-mode', true)
-
-const { userRadios } = useMusicStore()
+let radioInstance: null | UseRadioReturn = null
 
 export function useRadio(): UseRadioReturn {
-  const findNeighbour = (number: number): void => {
-    const index = userRadios.value.findIndex(
-      radio => radio?.id === activeRadio.value?.id,
-    )
-    activeRadio.value
-      = number > 0
-        ? userRadios.value[index + number] || userRadios.value[0]
-        : userRadios.value[index + number] || userRadios.value[userRadios.value.length - 1]
-  }
+  if (radioInstance)
+    return radioInstance
 
-  const nextRadio = (): void => findNeighbour(1)
-  const prevRadio = (): void => findNeighbour(-1)
+  const playbackStore = usePlaybackStore()
+  const stationsStore = useStationsStore()
 
-  const changeActiveRadio = (id: number): void => {
-    const wave = userRadios.value.find(radio => radio.id === id)
-    if (wave)
-      activeRadio.value = wave
-  }
+  const { activeRadio } = storeToRefs(stationsStore)
+  const { isRadioMode } = storeToRefs(playbackStore)
 
-  const reorderRadios = (fromIndex: number, toIndex: number): void => {
-    if (fromIndex === toIndex)
-      return
-
-    const radios = [...userRadios.value]
-    const [movedRadio] = radios.splice(fromIndex, 1)
-    radios.splice(toIndex, 0, movedRadio)
-
-    userRadios.value = radios
-  }
-
-  const toggleMode = (): void => {
-    isRadioMode.value = !isRadioMode.value
-  }
-
-  return {
+  radioInstance = {
     activeRadio,
-    changeActiveRadio,
+    changeActiveRadio: stationsStore.changeActiveRadio,
     isRadioMode,
-    nextRadio,
-    prevRadio,
-    reorderRadios,
-    toggleMode,
+    nextRadio: stationsStore.nextRadio,
+    prevRadio: stationsStore.prevRadio,
+    reorderRadios: stationsStore.reorderRadios,
+    toggleMode: playbackStore.toggleMode,
   }
+
+  return radioInstance
 }

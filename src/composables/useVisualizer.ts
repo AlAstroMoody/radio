@@ -1,3 +1,6 @@
+// Визуализация аудио на canvas: рисует различные типы визуализаций (bars, waveform, spectrum и т.д.),
+// плавное затухание при остановке, управление FPS и интенсивностью. Используется в AudioVisualizer
+
 import type { Ref } from 'vue'
 
 import { useEventListener } from '@vueuse/core'
@@ -34,6 +37,7 @@ enum VisualizationType {
 
 interface UseVisualizerReturn {
   drawText: (text: string) => void
+  fadeOutVisualization: () => void
   resetVisualization: () => void
   startVisualization: () => void
   stopVisualization: () => void
@@ -50,6 +54,8 @@ export function useVisualizer(
   const isPageVisible = ref(!document.hidden)
   const width = ref(360)
   const height = ref(200)
+  const isFadingOut = ref(false)
+  const fadeAlpha = ref(1.0)
 
   // FPS контроль
   const lastFrameTime = ref(0)
@@ -143,35 +149,79 @@ export function useVisualizer(
     lastFrameTime.value = currentTime
 
     const ctx = getContext()
-    if (!ctx || !dataArray.value || !analyser.value) {
+    if (!ctx || !dataArray.value) {
+      stopVisualization()
+      return
+    }
+
+    if (isFadingOut.value) {
+      fadeAlpha.value = Math.max(0, fadeAlpha.value - 0.05)
+      if (fadeAlpha.value <= 0) {
+        stopVisualization()
+        return
+      }
+    }
+    else if (fadeAlpha.value < 1.0) {
+      fadeAlpha.value = Math.min(1.0, fadeAlpha.value + 0.05)
+    }
+
+    if (!analyser.value && !isFadingOut.value) {
       stopVisualization()
       return
     }
 
     try {
-      analyser.value.getByteFrequencyData(dataArray.value)
+      if (analyser.value) {
+        analyser.value.getByteFrequencyData(dataArray.value)
+      }
+      else {
+        dataArray.value.fill(0)
+      }
       ctx.clearRect(0, 0, width.value, height.value)
+
+      ctx.save()
+      ctx.globalAlpha = fadeAlpha.value
+
+      if (analyser.value) {
+        drawVisualization(ctx, dataArray.value, bufferLength.value)
+      }
+
+      ctx.restore()
     }
     catch {
       stopVisualization()
       return
     }
 
-    drawVisualization(ctx, dataArray.value, bufferLength.value)
-
     rafId.value = requestAnimationFrame(draw)
   }
 
   function startVisualization(): void {
-    if (isAnimating.value || !analyser.value || !canvas.value || !visualization.value || !isPageVisible.value)
+    if (isAnimating.value && !isFadingOut.value)
       return
+    if (!analyser.value || !canvas.value || !visualization.value || !isPageVisible.value)
+      return
+    if (isFadingOut.value && rafId.value) {
+      cancelAnimationFrame(rafId.value)
+      rafId.value = 0
+    }
     isAnimating.value = true
+    isFadingOut.value = false
+    fadeAlpha.value = 0
     initAnalyser()
     draw()
   }
 
+  function fadeOutVisualization(): void {
+    if (!isAnimating.value || isFadingOut.value)
+      return
+    isFadingOut.value = true
+  }
+
   function stopVisualization(): void {
     isAnimating.value = false
+    isFadingOut.value = false
+    fadeAlpha.value = 1.0
     if (rafId.value) {
       cancelAnimationFrame(rafId.value)
       rafId.value = 0
@@ -256,6 +306,7 @@ export function useVisualizer(
 
   return {
     drawText,
+    fadeOutVisualization,
     resetVisualization,
     startVisualization,
     stopVisualization,

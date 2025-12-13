@@ -1,7 +1,9 @@
+// Хранит все настройки аудио (громкость, скорость, эквалайзер, визуализация) в localStorage
+// Предоставляет готовые пресеты эквалайзера и автоматически применяет настройки к аудио элементу
+
 import type { Ref } from 'vue'
 
 import { useStorage } from '@vueuse/core'
-import { watch } from 'vue'
 
 export interface EqualizerPreset {
   name: string
@@ -16,7 +18,6 @@ export interface FilterSettings {
 
 export interface useAudioSettingsReturn {
   applyPreset: (presetName: string) => void
-  applySettings: () => void
   autoplay: Ref<boolean>
   electricEffects: Ref<boolean>
   equalizerPresets: { name: string, settings: { bass: { frequency: number, gain: number }, mid: { frequency: number, gain: number }, treble: { frequency: number, gain: number } } }[]
@@ -63,26 +64,8 @@ export function useAudioSettings(): useAudioSettingsReturn {
     }
   }
 
-  function applySettings(): void {
-    const audio = document.querySelector('audio')
-    if (!audio)
-      return
-
-    if (audio.volume !== volume.value / 100)
-      audio.volume = volume.value / 100
-    if (audio.playbackRate !== playbackRate.value)
-      audio.playbackRate = playbackRate.value
-    if (audio.loop !== loop.value)
-      audio.loop = loop.value
-  }
-
-  watch([volume, playbackRate, loop, autoplay, filterSettings], () => {
-    applySettings()
-  }, { deep: true })
-
   return {
     applyPreset,
-    applySettings,
     autoplay,
     electricEffects,
     equalizerPresets,

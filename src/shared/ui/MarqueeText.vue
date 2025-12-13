@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
 const { minDuration = 8, speed = 30, text } = defineProps<{
   minDuration?: number
@@ -7,10 +7,10 @@ const { minDuration = 8, speed = 30, text } = defineProps<{
   text: string
 }>()
 
-const textContainer = ref<HTMLDivElement | null>(null)
-const textElement = ref<HTMLDivElement | null>(null)
 const shouldAnimate = ref(false)
 const animationStyle = ref({})
+const textContainer = useTemplateRef('textContainer')
+const textElement = useTemplateRef('textElement')
 
 let resizeObserver: null | ResizeObserver = null
 

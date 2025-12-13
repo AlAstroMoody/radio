@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, useTemplateRef } from 'vue'
 
 defineProps<{ hasFiles: boolean }>()
 
@@ -7,8 +7,8 @@ const emit = defineEmits<{
   filesSelected: [files: File[]]
 }>()
 
-const dropZone = ref<HTMLDivElement | null>(null)
-const input = ref<HTMLInputElement | null>(null)
+const dropZone = useTemplateRef('dropZone')
+const input = useTemplateRef('input')
 
 function changeFiles(event: Event) {
   const input = event.target as HTMLInputElement
@@ -26,23 +26,16 @@ function handleFileSelection(newFiles: File[]) {
 }
 
 async function openFiles() {
-  try {
-    if ('showOpenFilePicker' in window) {
-      const fileHandles = await window.showOpenFilePicker({
-        multiple: true,
-        types: [{ accept: { 'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'] }, description: 'Audio Files' }],
-      })
-      const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
-      handleFileSelection(newFiles)
-    }
-    else {
-      input.value?.click()
-    }
+  if ('showOpenFilePicker' in window) {
+    const fileHandles = await window.showOpenFilePicker({
+      multiple: true,
+      types: [{ accept: { 'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'] }, description: 'Audio Files' }],
+    })
+    const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
+    handleFileSelection(newFiles)
   }
-  catch (error) {
-    if ((error as Error).name !== 'AbortError') {
-      console.error('Ошибка выбора файлов:', error)
-    }
+  else {
+    input.value?.click()
   }
 }
 
@@ -69,13 +62,8 @@ function setupLaunchQueue() {
     window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
       const fileHandles = launchParams.files
       if (fileHandles.length > 0) {
-        try {
-          const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
-          handleFileSelection(newFiles)
-        }
-        catch (error) {
-          console.error('Error processing launchQueue files:', error)
-        }
+        const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
+        handleFileSelection(newFiles)
       }
     })
   }

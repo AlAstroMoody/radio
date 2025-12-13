@@ -95,7 +95,6 @@
   }
 }
 @layer utilities {
-  /* GPU-оптимизированные анимации */
   .gpu-accelerated {
     will-change: transform;
     transform: translateZ(0);
@@ -134,82 +133,7 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
-  /* Стили для range инпутов */
-  input[type="range"] {
-    appearance: none;
-    cursor: pointer;
-    height: 8px;
-    background: var(--color-gray-200);
-    border-radius: var(--radius-max);
-    border: 1px solid var(--color-gray-600);
-  }
 
-  .dark input[type="range"] {
-    background: var(--color-gray-700);
-    border: 1px solid var(--color-gray-600);
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--color-purple-500);
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    border: 2px solid var(--color-white);
-  }
-
-  .dark input[type="range"]::-webkit-slider-thumb {
-    background: var(--color-purple-400);
-    border: 2px solid var(--color-dark-100);
-  }
-
-  input[type="range"]::-moz-range-track {
-    background: var(--color-gray-200);
-    height: 8px;
-    border-radius: var(--radius-max);
-    border: 1px solid var(--color-gray-600);
-  }
-
-  .dark input[type="range"]::-moz-range-track {
-    background: var(--color-gray-700);
-    border: 1px solid var(--color-gray-600);
-  }
-
-  input[type="range"]::-moz-range-progress {
-    background: var(--color-purple-500);
-    height: 8px;
-    border-radius: var(--radius-max);
-  }
-
-  .dark input[type="range"]::-moz-range-progress {
-    background: var(--color-purple-400);
-  }
-
-  input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: var(--color-purple-500);
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid var(--color-white);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  }
-
-  .dark input[type="range"]::-moz-range-thumb {
-    background: var(--color-purple-400);
-    border: 2px solid var(--color-dark-100);
-  }
-
-  /* Стили для чекбоксов */
-  input[type="checkbox"] {
-    accent-color: var(--color-purple-500);
-  }
-
-  .dark input[type="checkbox"] {
-    accent-color: var(--color-purple-400);
-  }
 }
 
 @layer utilities {

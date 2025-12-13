@@ -1,59 +1,51 @@
 <script setup lang="ts">
-import { useParallax } from '@vueuse/core'
+import { useAudioController } from 'composables/useAudioController'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
 import { useVisualizer } from 'composables/useVisualizer'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, useTemplateRef, watch } from 'vue'
 
-interface Props {
-  analyser: AnalyserNode | null
-  isPlaying: boolean
-}
+const canvas = useTemplateRef('canvas')
+const audioController = useAudioController()
 
-const props = defineProps<Props>()
+const analyser = computed(() => audioController?.analyser.value ?? null)
+const isPlaying = computed(() => audioController?.state.isPlaying ?? false)
 
-const canvas = ref<HTMLCanvasElement | null>(null)
+const { fadeOutVisualization, startVisualization, stopVisualization } = useVisualizer(canvas, analyser)
 
-const { startVisualization, stopVisualization } = useVisualizer(canvas, computed(() => props.analyser))
-
-// Получаем активную радиостанцию для отслеживания изменений
 const { activeRadio } = useRadio()
 const { electricEffects } = useAudioSettings()
 
-// Parallax эффект для 3D визуализации
-const parallax = reactive(useParallax(canvas))
-const cardStyle = computed(() => ({
-  transform: `rotateX(${parallax.roll * 20 + 170}deg) rotateY(${
-    parallax.tilt * 20 + 170
-  }deg)`,
-  transition: '.3s ease-out all',
-}))
-
-// Отслеживаем изменения состояния воспроизведения и анализатора
-watch([() => props.isPlaying, () => props.analyser], ([isPlaying, analyser]) => {
-  if (isPlaying && analyser) {
-    // Добавляем небольшую задержку для стабилизации аудио потока
+watch([isPlaying, analyser], ([playing, analyserNode]) => {
+  if (playing && analyserNode) {
     setTimeout(() => {
-      if (props.isPlaying && props.analyser) {
+      if (isPlaying.value && analyser.value) {
         startVisualization()
       }
     }, 100)
   }
 }, { immediate: true })
 
-// Останавливаем визуализацию при смене радиостанции
 watch(() => activeRadio.value, () => {
-  stopVisualization()
+  fadeOutVisualization()
+  if (isPlaying.value && analyser.value) {
+    setTimeout(() => {
+      if (isPlaying.value && analyser.value) {
+        startVisualization()
+      }
+    }, 300)
+  }
 })
 
 defineExpose({
+  fadeOutVisualization,
   startVisualization,
   stopVisualization,
 })
 </script>
 
 <template>
-  <div class="canvas-container" :style="cardStyle">
+  <div class="canvas-container rotate-180 m-auto">
     <svg v-if="electricEffects" class="absolute">
       <defs>
         <filter id="turbulent-displace" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
@@ -105,9 +97,7 @@ defineExpose({
   position: relative;
   width: 360px;
   height: 200px;
-  margin: 0 auto 8px 0;
 }
-
 /* Электрическая рамка  */
 .electric-border-frame {
   position: absolute;

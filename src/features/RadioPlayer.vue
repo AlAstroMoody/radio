@@ -1,22 +1,19 @@
 <script setup lang="ts">
+import { useAudioController } from 'composables/useAudioController'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
-import { useMusicStore } from 'composables/useMusicStore'
 import { useRadio } from 'composables/useRadio'
 import { useRadioPlayer } from 'composables/useRadioPlayer'
-import { AudioVisualizer, BaseButton, iPlay, iSpin } from 'shared/ui'
-import { onMounted, watch } from 'vue'
+import { BaseButton, iPlay, iSpin } from 'shared/ui'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
-const { activeRadio, changeActiveRadio, nextRadio, prevRadio } = useRadio()
-const { userRadios } = useMusicStore()
+const { activeRadio, isRadioMode, nextRadio, prevRadio } = useRadio()
 const { volume } = useAudioSettings()
-const { visualization } = useAudioSettings()
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
 
 const {
-  analyser,
   audio,
   isPlaying,
   pause,
@@ -25,40 +22,78 @@ const {
 } = useRadioPlayer(activeRadio)
 
 const { autoplay } = useAudioSettings()
+const audioController = useAudioController()
+const wasPlayingBeforeToggle = ref(false)
 
-watch(userRadios, (radios) => {
-  if (radios.length > 0 && !activeRadio.value) {
-    changeActiveRadio(radios[0].id)
-  }
-}, { immediate: true })
-
-watch(activeRadio, async () => {
+watch(activeRadio, async (station) => {
+  const shouldResume = audioController?.state.isPlaying ?? false
   pause()
-  if (autoplay.value) {
-    playRadio()
+  if (!station)
+    return
+
+  if (!autoplay.value && !shouldResume)
+    return
+
+  try {
+    await playRadio()
+  }
+  catch { }
+})
+
+watch(() => isRadioMode.value, (value) => {
+  if (!value) {
+    wasPlayingBeforeToggle.value = isPlaying.value
+    pause()
+    audioController?.stop()
+    return
+  }
+
+  if (wasPlayingBeforeToggle.value) {
+    nextTick(() => {
+      if (!isRadioMode.value || !activeRadio.value)
+        return
+
+      playRadio()
+      wasPlayingBeforeToggle.value = false
+    })
   }
 })
 
 async function playRadio() {
-  const { applySettings } = useAudioSettings()
-
-  applySettings()
-  if (audio.value) {
-    audio.value.playbackRate = 1
+  try {
+    await play()
+    audio.value!.playbackRate = 1
   }
-
-  await play()
+  catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return
+    }
+    throw error
+  }
 }
 
-// Media Session функции для радио
 function setupRadioMediaSessionHandlers(): void {
   if (!isMediaSessionSupported.value)
     return
 
   setActionHandlers({
     nexttrack: nextRadio,
-    pause: () => isPlaying.value ? pause() : playRadio(),
-    play: () => isPlaying.value ? pause() : playRadio(),
+    pause: () => {
+      if (isPlaying.value) {
+        pause()
+      }
+      else {
+        playRadio()
+      }
+    },
+    play: () => {
+      if (isPlaying.value) {
+        pause()
+      }
+      else {
+        playRadio()
+      }
+    },
     previoustrack: prevRadio,
   })
 }
@@ -74,7 +109,14 @@ function updateRadioMediaSessionMetadata(): void {
 
 // Горячие клавиши для радио
 useHotkeys([
-  { callback: () => isPlaying.value ? pause() : playRadio(), key: ' ', preventDefault: true },
+  { callback: () => {
+    if (isPlaying.value) {
+      pause()
+    }
+    else {
+      playRadio()
+    }
+  }, key: ' ', preventDefault: true },
   { callback: () => {
     volume.value = Math.min(100, volume.value + 10)
   }, key: 'ArrowUp', preventDefault: true },
@@ -86,17 +128,11 @@ useHotkeys([
 ])
 
 onMounted(() => {
-  // Настраиваем Media Session для радио
   setupRadioMediaSessionHandlers()
   updateRadioMediaSessionMetadata()
 
   if (autoplay.value) {
-    const { applySettings } = useAudioSettings()
-    applySettings()
-    if (audio.value) {
-      audio.value.playbackRate = 1
-    }
-    play()
+    playRadio()
   }
 })
 
@@ -113,23 +149,11 @@ watch(isPlaying, (playing) => {
 
 <template>
   <div class="relative flex flex-col justify-between landscape-flex-row">
-    <AudioVisualizer
-      v-if="visualization"
-      :analyser="analyser"
-      :is-playing="isPlaying"
-    />
     <div class="z-10 mt-auto md:relative">
       <figure>
-        <div class="mx-auto flex w-[300px] justify-start font-blackcraft">
+        <div class="mx-auto flex w-[300px] justify-start font-blackcraft text-black dark:text-white">
           {{ activeRadio?.name }}
         </div>
-        <audio
-          ref="audio"
-          :src="activeRadio?.src"
-          class="hidden"
-          crossorigin="anonymous"
-          preload="metadata"
-        />
       </figure>
       <div class="relative z-10 flex text-3xl font-normal justify-center">
         <BaseButton
@@ -138,7 +162,7 @@ watch(isPlaying, (playing) => {
           label="prev"
           @click="prevRadio"
         >
-          <span>prev</span>
+          <span class="text-black dark:text-white">prev</span>
         </BaseButton>
         <BaseButton
           class="disabled:opacity-80 w-32"
@@ -149,7 +173,7 @@ watch(isPlaying, (playing) => {
         >
           <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
           <iSpin v-show="pending" />
-          <span>{{ isPlaying ? 'pause' : 'play' }}</span>
+          <span class="text-black dark:text-white">{{ isPlaying ? 'pause' : 'play' }}</span>
         </BaseButton>
         <BaseButton
           class="rounded-r-full"
@@ -157,7 +181,7 @@ watch(isPlaying, (playing) => {
           label="next"
           @click="nextRadio"
         >
-          <span>next</span>
+          <span class="text-black dark:text-white">next</span>
         </BaseButton>
       </div>
     </div>

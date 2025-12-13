@@ -1,12 +1,13 @@
 <script setup lang="ts" generic="T extends PropertyKey">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
 interface Option<T> {
   label: string
   value: T
 }
 
-const { label, options, placeholder } = defineProps<{
+const { disabled = false, label, options, placeholder } = defineProps<{
+  disabled?: boolean
   label?: string
   options: Option<T>[]
   placeholder?: string
@@ -19,10 +20,10 @@ const emit = defineEmits<{
 const model = defineModel<T>()
 
 const isOpen = ref(false)
-const selectRef = ref<HTMLElement | null>(null)
-const buttonRef = ref<HTMLButtonElement | null>(null)
-const dropdownRef = ref<HTMLDivElement | null>(null)
+const buttonRef = useTemplateRef('buttonRef')
+const dropdownRef = useTemplateRef('dropdownRef')
 const focusedOptionIndex = ref(-1)
+const selectRef = useTemplateRef('selectRef')
 
 const selectedOption = computed(() => {
   return options.find(option => option.value === model.value) || { label: '' }
@@ -100,13 +101,14 @@ onUnmounted(() => {
 
 <template>
   <div class="flex items-center gap-2 justify-between w-full" @keydown.stop>
-    <label v-if="label" class="truncate w-20 flex-1">{{ label }}</label>
+    <label v-if="label" class="truncate w-20 flex-1 text-black dark:text-white">{{ label }}</label>
     <div ref="selectRef" class="relative w-full max-w-xs flex-1">
       <button
         ref="buttonRef"
         type="button"
         :aria-label="label ? `${label}: ${selectedOption.label || placeholder}` : selectedOption.label || placeholder"
-        class="w-full bg-white border border-light-100 rounded-md px-2 py-1 text-left flex justify-between items-center text-dark-100 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-100 outline-none"
+        :disabled="disabled"
+        class="w-full bg-white dark:bg-dark-200 border border-light-100 dark:border-purple-500/50 rounded-md px-2 py-1 text-left flex justify-between items-center text-dark-100 dark:text-white transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-100 dark:focus-visible:ring-purple-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
         @click="toggleDropdown"
         @keydown.enter.prevent="toggleDropdown"
         @keydown.space.prevent="toggleDropdown"
@@ -115,7 +117,7 @@ onUnmounted(() => {
       >
         <span>{{ selectedOption.label || placeholder }}</span>
         <svg
-          class="w-5 h-5 transition-transform text-dark-200"
+          class="w-5 h-5 transition-transform text-dark-200 dark:text-white"
           :class="{ 'rotate-180': isOpen }"
           fill="none"
           stroke="currentColor"
@@ -134,7 +136,7 @@ onUnmounted(() => {
       <div
         v-if="isOpen"
         ref="dropdownRef"
-        class="absolute z-10 w-full mt-1 bg-white border border-light-100 rounded-md shadow-button max-h-60 overflow-auto"
+        class="absolute z-10 w-full mt-1 bg-white dark:bg-dark-200 border border-light-100 dark:border-purple-500/50 rounded-md shadow-button dark:shadow-lg max-h-60 overflow-auto"
         @keydown.arrow-down.prevent="focusNextOption"
         @keydown.arrow-up.prevent="focusPreviousOption"
         @keydown.enter.prevent="selectFocusedOption"
@@ -145,9 +147,9 @@ onUnmounted(() => {
           :key="option.value"
           class="block px-2 py-1 cursor-pointer transition-all duration-200"
           :class="{
-            'bg-light-200 text-dark-100': index === focusedOptionIndex || option.value === model,
-            'hover:bg-light-100': index !== focusedOptionIndex && option.value !== model,
-            'text-dark-200': index !== focusedOptionIndex && option.value !== model,
+            'bg-light-200 dark:bg-purple-500/30 text-dark-100 dark:text-white': index === focusedOptionIndex || option.value === model,
+            'hover:bg-light-100 dark:hover:bg-purple-500/20': index !== focusedOptionIndex && option.value !== model,
+            'text-dark-200 dark:text-gray-200': index !== focusedOptionIndex && option.value !== model,
           }"
         >
           <input

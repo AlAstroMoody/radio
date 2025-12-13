@@ -52,8 +52,8 @@ function handleProgressClick(event: MouseEvent) {
     <div class="flex justify-between text-lg text-gray-600 dark:text-white mb-1 font-blackcraft ">
       <span>{{ formatTime(safeCurrentTime) }}</span>
       <span v-if="safeDuration > 0">{{ formatTime(safeDuration) }}</span>
-      <span v-else-if="isLoading" class="text-gray-400">Loading...</span>
-      <span v-else class="text-gray-400">--:--</span>
+      <span v-else-if="isLoading" class="text-gray-600">Loading...</span>
+      <span v-else class="text-gray-600">--:--</span>
     </div>
     <div
       class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 cursor-pointer relative overflow-hidden"
@@ -62,7 +62,7 @@ function handleProgressClick(event: MouseEvent) {
     >
       <div
         v-if="isLoading && safeDuration <= 0"
-        class="absolute inset-0 bg-gradient-to-r from-purple-300 to-purple-500 opacity-50 animate-pulse"
+        class="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 opacity-50 animate-pulse"
       />
 
       <div

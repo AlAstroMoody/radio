@@ -1,3 +1,6 @@
+// Сохраняет и восстанавливает позицию воспроизведения для каждого трека в localStorage
+// Позволяет продолжить прослушивание с того места, где остановились
+
 import type { Ref } from 'vue'
 
 import { useStorage } from '@vueuse/core'
@@ -12,7 +15,7 @@ interface AudioPosition {
 const MAX_POSITIONS = 10
 const positions = useStorage<AudioPosition[]>('audioPositions', [])
 
-export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileName: Ref<string>): {
+export function useAudioPosition(audio: Ref<HTMLAudioElement | null>, fileName: Ref<string>): {
   clearPosition: () => void
   restorePosition: () => void
   savePosition: () => void
@@ -21,13 +24,15 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileN
   const currentTrackName = ref(fileName.value)
 
   function savePosition(): void {
-    if (!audio.value || !currentTrackName.value)
+    if (!currentTrackName.value || !audio.value)
       return
+
+    const currentTime = audio.value.currentTime
 
     const existingIndex = positions.value.findIndex(p => p.name === currentTrackName.value)
     const newPosition = {
       name: currentTrackName.value,
-      position: audio.value.currentTime,
+      position: currentTime,
       timestamp: Date.now(),
     }
 
@@ -46,16 +51,16 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | undefined>, fileN
   }
 
   function restorePosition(): void {
-    if (!audio.value) {
+    if (!audio.value)
       return
-    }
-
+    
     if (!currentTrackName.value) {
       audio.value.currentTime = 0
       return
     }
 
-    audio.value.currentTime = positions.value.find(p => p.name === currentTrackName.value)?.position || 0
+    const stored = positions.value.find(p => p.name === currentTrackName.value)?.position ?? 0
+    audio.value.currentTime = stored
   }
 
   function clearPosition(): void {

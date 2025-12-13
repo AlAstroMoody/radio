@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { useFileList } from 'composables/useFileList'
-import { computed } from 'vue'
+import { useRadio } from 'composables/useRadio'
 
 import MusicFileList from './MusicFileList.vue'
 import RadioStationList from './RadioStationList.vue'
 
-const { isRadioMode } = defineProps({
-  isRadioMode: Boolean,
-})
-
-const { files } = useFileList()
-const hasFiles = computed(() => files.value.length > 0)
+const { isRadioMode } = useRadio()
 </script>
 
 <template>
-  <RadioStationList v-if="isRadioMode || !hasFiles" />
+  <RadioStationList v-if="isRadioMode" />
   <MusicFileList v-else />
 </template>

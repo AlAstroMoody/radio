@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
+import { useRadio } from 'composables/useRadio'
 import { BaseSelect, CheckboxInput, RangeInput } from 'shared'
 
+const { isRadioMode } = useRadio()
 const {
   applyPreset,
   autoplay,
@@ -56,7 +58,7 @@ const visualizationOptions = [
       unit="%"
     />
 
-    <BaseSelect v-model="playbackRate" :options="playbackRateOptions" placeholder="default" label="Playback Rate:" />
+    <BaseSelect v-model="playbackRate" :options="playbackRateOptions" placeholder="default" label="Playback Rate:" :disabled="isRadioMode" />
     <BaseSelect v-model="visualization" :options="visualizationOptions" placeholder="default" label="Visualization:" />
 
     <BaseSelect
@@ -66,7 +68,7 @@ const visualizationOptions = [
       }))" placeholder="default" label="Equalizer Preset:" @change="handlePresetChange"
     />
 
-    <div class="flex flex-col gap-2 pl-3 p-2 bg-purple-500/10 border border-purple-500/40 rounded-lg shadow-md dark:bg-purple-500/20 dark:border-purple-500/50 dark:shadow-lg">
+    <div class="flex flex-col gap-2 pl-3 p-2 bg-purple-500/15 border border-purple-500/50 rounded-lg shadow-md dark:bg-purple-500/20 dark:border-purple-500/50 dark:shadow-lg">
       <RangeInput
         v-for="(filter, key) in filterSettings"
         :key="`${key}-${selectedPreset}`"

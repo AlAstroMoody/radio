@@ -1,11 +1,10 @@
+// Drag & Drop для списков: перетаскивание элементов мышью и на touch устройствах,
+// визуальные индикаторы места вставки, переупорядочивание элементов
+
 import type { DragDropCallbacks, DragDropHandlers, DragDropOptions, DragDropState, UseDragDropReturn } from 'shared/types/drag-drop'
 
 import { reactive } from 'vue'
 
-/**
- * Переиспользуемый composable для drag & drop функциональности
- * Поддерживает как mouse, так и touch события
- */
 export function useDragDrop<T = any>(
   callbacks: DragDropCallbacks<T> = {},
   options: DragDropOptions = {},
@@ -24,10 +23,10 @@ export function useDragDrop<T = any>(
     onReorder,
   } = callbacks
 
-  // Состояние drag & drop
   const state = reactive<DragDropState>({
     draggedIndex: null,
     dragOverIndex: null,
+    insertPosition: null,
     isDragging: false,
     touchCurrentY: 0,
     touchStartY: 0,
@@ -38,6 +37,7 @@ export function useDragDrop<T = any>(
   function reset(): void {
     state.draggedIndex = null
     state.dragOverIndex = null
+    state.insertPosition = null
     state.isDragging = false
     state.touchStartY = 0
     state.touchCurrentY = 0
@@ -65,6 +65,16 @@ export function useDragDrop<T = any>(
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'move'
     }
+
+    // Определяем позицию вставки на основе позиции курсора
+    const target = event.currentTarget as HTMLElement
+    if (target) {
+      const rect = target.getBoundingClientRect()
+      const mouseY = event.clientY
+      const elementCenter = rect.top + rect.height / 2
+      state.insertPosition = mouseY < elementCenter ? 'before' : 'after'
+    }
+
     state.dragOverIndex = index
     onDragOver?.(item, index)
   }
@@ -73,7 +83,14 @@ export function useDragDrop<T = any>(
     if (!enableMouse)
       return
 
+    // Проверяем, действительно ли мы покинули элемент (не перешли на дочерний)
+    const relatedTarget = event.relatedTarget as HTMLElement
+    const currentTarget = event.currentTarget as HTMLElement
+    if (relatedTarget && currentTarget.contains(relatedTarget))
+      return
+
     state.dragOverIndex = null
+    state.insertPosition = null
     onDragLeave?.(item, index)
   }
 
@@ -145,8 +162,23 @@ export function useDragDrop<T = any>(
       if (buttonElement) {
         const targetIndex = Number.parseInt(buttonElement.getAttribute('data-drag-index') || '0')
         if (targetIndex !== state.draggedIndex) {
+          // Определяем позицию вставки на основе позиции тача
+          const rect = buttonElement.getBoundingClientRect()
+          const touchY = touch.clientY
+          const elementCenter = rect.top + rect.height / 2
+          state.insertPosition = touchY < elementCenter ? 'before' : 'after'
           state.dragOverIndex = targetIndex
         }
+        else {
+          // Если навели на тот же элемент, сбрасываем
+          state.dragOverIndex = null
+          state.insertPosition = null
+        }
+      }
+      else {
+        // Если не на элементе, сбрасываем
+        state.dragOverIndex = null
+        state.insertPosition = null
       }
     }
   }
@@ -181,10 +213,11 @@ export function useDragDrop<T = any>(
       draggable: {
         'class': [
           state.draggedIndex === index ? 'opacity-50 scale-95' : '',
-          state.dragOverIndex === index ? 'ring-2 ring-blue-400 ring-opacity-50' : '',
           state.isDragging && state.draggedIndex === index ? 'z-10' : '',
         ],
         'data-drag-index': index,
+        'data-insert-after': state.dragOverIndex === index && state.insertPosition === 'after' ? '' : null,
+        'data-insert-before': state.dragOverIndex === index && state.insertPosition === 'before' ? '' : null,
         'draggable': enableMouse,
         'onDragend': (event: DragEvent) => handleDragEnd(event, index, item),
         'onDragstart': (event: DragEvent) => handleDragStart(event, index, item),

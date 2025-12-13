@@ -1,3 +1,5 @@
+// Управление темой приложения (светлая/темная). Сохраняет выбор в localStorage и применяет класс .dark
+
 import { useDark, useToggle } from '@vueuse/core'
 
 interface UseThemeReturn {

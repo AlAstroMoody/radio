@@ -1,6 +1,8 @@
+// Управление модальными окнами: открытие/закрытие, блокировка скролла страницы при открытии
+// Singleton - один экземпляр на все приложение
+
 import { ref } from 'vue'
 
-// Глобальный экземпляр модалки
 let modalInstance: null | ReturnType<typeof createModalInstance> = null
 
 export function useModal(): {

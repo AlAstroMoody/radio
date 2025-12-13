@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { useFileList } from 'composables/useFileList'
-import { useIndexedDB } from 'composables/useIndexedDB'
+import { useAudioController } from 'composables/useAudioController'
+import { useAudioSettings } from 'composables/useAudioSettings'
 import { useModal } from 'composables/useModal'
-import { useMusicStore } from 'composables/useMusicStore'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
-import { BaseModal, HotkeysHint } from 'shared/ui'
-import { onMounted, ref } from 'vue'
+import { AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
+import { runStorageMigration } from 'shared/utils/storage-migration'
+import { useLibraryStore, useStationsStore } from 'stores'
+import { onMounted, ref, watch } from 'vue'
+
+import AudioRoot from './providers/AudioRoot.vue'
 
 const { isRadioMode } = useRadio()
-const { loadStations } = useMusicStore()
-const { updateFiles } = useFileList()
-const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB } = useIndexedDB()
+const stationsStore = useStationsStore()
+const libraryStore = useLibraryStore()
+const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB, updateFiles } = libraryStore
 const { openModal } = useModal()
 const currentModal = ref<'audio-settings' | 'radio-list' | null>(null)
+const audioController = useAudioController(false)
+const { visualization } = useAudioSettings()
 
 function handleOpenAudioSettings() {
   currentModal.value = 'audio-settings'
@@ -26,7 +31,8 @@ function handleOpenRadioList(_isRadioMode: boolean) {
 }
 
 onMounted(() => {
-  loadStations()
+  runStorageMigration()
+  stationsStore.fetchStations()
 
   if (window.launchQueue) {
     window.launchQueue.setConsumer(async (launchParams: LaunchParams) => {
@@ -45,53 +51,66 @@ onMounted(() => {
             await saveActiveFileIndex(0)
           }
         }
-        catch (error) {
-          console.error('Error processing launchQueue files:', error)
-        }
+        catch { }
       }
     })
   }
 })
+
+watch(() => isRadioMode.value, (value) => {
+  if (!audioController)
+    return
+
+  audioController.pause()
+
+  if (value) {
+    audioController.setEffectChain(null)
+  }
+}, { flush: 'post' })
 </script>
 
 <template>
-  <div
-    class="flex min-h-mobile w-full flex-col gap-4 relative"
-  >
-    <div class="flex-1 flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe md:flex-row">
-      <RadioList class="z-1 w-full md:h-fit md:w-96 md:min-w-[24rem] hidden md:block h-fit bg-glass backdrop-blur-md border border-glass shadow-lg rounded-r-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border" :is-radio-mode="isRadioMode" />
+  <AudioRoot>
+    <div
+      class="flex min-h-mobile w-full flex-col gap-4 relative"
+    >
+      <div class="flex-1 flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe md:flex-row">
+        <RadioList class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-none border-t-none rounded-br-lg" />
 
-      <div class="flex-1 flex flex-col justify-between items-center gap:20">
-        <div
-          class="h-10 mt-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
-        >
-          Amazing <div class="w-20">
-            {{ isRadioMode ? 'radio' : 'music' }}
+        <div class="flex-1 flex flex-col justify-between items-center gap:20">
+          <div
+            class="h-10 mt-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
+          >
+            Amazing <div class="w-20">
+              {{ isRadioMode ? 'radio' : 'music' }}
+            </div>
+          </div>
+
+          <AudioVisualizer v-if="visualization" class="translate-y-1/2" />
+          <div class="w-full md:w-max mb-4 min-h-[300px]">
+            <MusicPlayer v-show="!isRadioMode" class="h-full mt-auto" />
+            <RadioPlayer v-show="isRadioMode" class="h-full mt-auto" />
           </div>
         </div>
-        <div class="mb-4">
-          <MusicPlayer v-if="!isRadioMode" class="w-full md:w-max" />
-          <RadioPlayer v-else class="w-full md:w-max" />
-        </div>
+
+        <AudioSettings class="ml-auto mb-auto hidden lg:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
       </div>
 
-      <AudioSettings class="ml-auto mb-auto hidden lg:flex bg-glass backdrop-blur-md border border-glass shadow-lg rounded-bl-lg p-4 dark:bg-glass-purple dark:border-glass-purple-border border-r-none border-t-none" />
+      <ControlPanel
+        @open-audio-settings="handleOpenAudioSettings"
+        @open-radio-list="handleOpenRadioList"
+      />
+
+      <iLovePwa />
+
+      <HotkeysHint />
+
+      <BaseModal>
+        <AudioSettings v-if="currentModal === 'audio-settings'" class="m-auto" />
+        <RadioList v-if="currentModal === 'radio-list'" />
+      </BaseModal>
     </div>
-
-    <ControlPanel
-      @open-audio-settings="handleOpenAudioSettings"
-      @open-radio-list="handleOpenRadioList"
-    />
-
-    <iLovePwa />
-
-    <HotkeysHint />
-
-    <BaseModal>
-      <AudioSettings v-if="currentModal === 'audio-settings'" class="m-auto" />
-      <RadioList v-if="currentModal === 'radio-list'" :is-radio-mode="isRadioMode" />
-    </BaseModal>
-  </div>
+  </AudioRoot>
 </template>
 
 <style>

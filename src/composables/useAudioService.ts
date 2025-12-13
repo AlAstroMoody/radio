@@ -1,21 +1,19 @@
+// Основной сервис для воспроизведения аудио файлов: загрузка файлов, управление воспроизведением,
+// перемотка, сохранение позиции, применение эффектов. Используется в MusicPlayer
+
 import type { Ref } from 'vue'
 
+import { useAudioController } from 'composables/useAudioController'
+import { useAudioEffects } from 'composables/useAudioEffects'
 import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
-import { AudioService } from 'services'
-import { computed, onUnmounted, readonly, ref, watch } from 'vue'
+import { usePlaybackStore } from 'stores'
+import { computed, onBeforeUnmount, readonly, ref, watch } from 'vue'
 
-// Константы
-const SEEK_STEP = 10 // секунд для перемотки
-const AUDIO_CONFIG = {
-  fftSize: 2048,
-  smoothingTimeConstant: 0.8,
-} as const
-
-const POSITION_SAVE_INTERVAL = 1000 // мс между автосохранениями
+const SEEK_STEP = 10
+const POSITION_SAVE_INTERVAL = 1000
 
 export function useAudioService(
-  audio: Ref<HTMLAudioElement>,
   fileName: Ref<string>,
 ): {
   cleanup: () => void
@@ -35,8 +33,11 @@ export function useAudioService(
   togglePlayPause: () => void
   undoLastSeek: () => void
 } {
-  // Состояние
-  const audioService = ref<AudioService | null>(null)
+  const controller = useAudioController()!
+  const playbackStore = usePlaybackStore()
+
+  const audioElement = computed(() => controller.audio.value)
+
   const state = ref({
     currentTime: 0,
     duration: 0,
@@ -45,18 +46,43 @@ export function useAudioService(
     progress: 0,
   })
 
-  // История перемотки
+  const currentDescriptorId = ref<null | string>(null)
+  const isCurrentSource = computed(() => controller.currentSource.value?.id === currentDescriptorId.value)
+
   const lastSeekPosition = ref<null | number>(null)
 
-  const { applySettings, autoplay, filterSettings, loop, playbackRate, volume } = useAudioSettings()
+  const { autoplay, loop, playbackRate, volume } = useAudioSettings()
+  const { effectBuilder } = useAudioEffects()
   const { clearPosition, restorePosition, savePosition, setTrackName } = useAudioPosition(
-    audio,
+    audioElement,
     fileName,
   )
 
   let lastPositionSavedAt = 0
+  let watchers: Array<() => void> = []
+  let suppressPositionPersistence = false
+
+  function updateProgress(): void {
+    const duration = controller.state.duration
+    const current = controller.state.currentTime
+    state.value.progress = duration ? Math.trunc((current / duration) * 100) : 0
+  }
+
+  function shouldSkipPositionPersistence(): boolean {
+    if (!isCurrentSource.value) {
+      return true
+    }
+
+    if (suppressPositionPersistence)
+      return true
+
+    return false
+  }
 
   function savePositionThrottled(): void {
+    if (shouldSkipPositionPersistence())
+      return
+
     const now = Date.now()
     if (now - lastPositionSavedAt < POSITION_SAVE_INTERVAL)
       return
@@ -66,140 +92,182 @@ export function useAudioService(
   }
 
   function flushPositionSave(): void {
+    if (shouldSkipPositionPersistence())
+      return
+
     savePosition()
     lastPositionSavedAt = Date.now()
   }
 
   function clearStoredPosition(): void {
+    if (shouldSkipPositionPersistence())
+      return
+
     clearPosition()
     lastPositionSavedAt = 0
   }
 
-  // Анимация
-  let animationFrameId: null | number = null
+  function setupWatchers(): void {
+    teardownWatchers()
 
-  // Вспомогательные функции
-  function updateAudioState(): void {
-    if (!audioService.value)
+    watchers = [
+      watch(
+        () => controller.state.currentTime,
+        (current) => {
+          if (!isCurrentSource.value)
+            return
+
+          state.value.currentTime = current
+          updateProgress()
+          savePositionThrottled()
+        },
+      ),
+      watch(
+        () => controller.state.duration,
+        (duration) => {
+          if (!isCurrentSource.value)
+            return
+
+          state.value.duration = duration
+          updateProgress()
+        },
+      ),
+      watch(
+        () => controller.state.isPlaying,
+        (playing) => {
+          if (!isCurrentSource.value)
+            return
+
+          state.value.isPlaying = playing
+          if (!playing) {
+            flushPositionSave()
+          }
+        },
+      ),
+      watch(
+        () => controller.state.isReady,
+        (ready) => {
+          if (!isCurrentSource.value)
+            return
+
+          if (ready) {
+            state.value.isMetadataLoading = false
+            state.value.duration = controller.state.duration
+            updateProgress()
+          }
+        },
+      ),
+      watch(
+        () => controller.state.ended,
+        (ended) => {
+          if (!isCurrentSource.value)
+            return
+
+          if (ended) {
+            clearStoredPosition()
+          }
+        },
+      ),
+      watch(
+        () => controller.state.error,
+        (error) => {
+          if (!isCurrentSource.value)
+            return
+
+          if (error) {
+            state.value.isPlaying = false
+          }
+        },
+      ),
+    ]
+  }
+
+  function teardownWatchers(): void {
+    watchers.forEach(stop => stop())
+    watchers = []
+  }
+
+  async function waitForReady(): Promise<void> {
+    if (controller.state.isReady)
       return
 
-    state.value.progress = audioService.value.getProgress()
-    state.value.currentTime = audioService.value.getCurrentTime()
-    state.value.duration = audioService.value.getDuration()
-    savePositionThrottled()
+    await new Promise<void>((resolve) => {
+      const stop = watch(
+        () => controller.state.isReady,
+        (ready) => {
+          if (ready) {
+            stop()
+            resolve()
+          }
+        },
+      )
+    })
   }
 
-  function startProgressUpdate(): void {
-    if (!animationFrameId) {
-      updateProgress()
-    }
+  function descriptorIdForFile(file: File): string {
+    return `file-${file.name}-${file.lastModified}-${file.size}`
   }
 
-  function stopProgressUpdate(): void {
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId)
-      animationFrameId = null
-    }
-  }
-
-  function updateProgress(): void {
-    if (audioService.value && state.value.isPlaying) {
-      updateAudioState()
-      animationFrameId = requestAnimationFrame(updateProgress)
-    }
-  }
-
-  // Обработчики событий
-  const eventHandlers = {
-    ended: (): void => {
-      state.value.isPlaying = false
-      stopProgressUpdate()
-      clearStoredPosition()
-    },
-    loadedMetadata: (): void => {
-      state.value.isMetadataLoading = false
-      if (audioService.value) {
-        state.value.duration = audioService.value.getDuration()
-      }
-    },
-    pause: (): void => {
-      state.value.isPlaying = false
-      stopProgressUpdate()
-      flushPositionSave()
-    },
-    play: (): void => {
-      state.value.isPlaying = true
-      startProgressUpdate()
-    },
-    timeUpdate: (): void => {
-      updateAudioState()
-    },
-  }
-
-  // Инициализация
   function initializeAudioService(): void {
-    if (!audio.value)
-      return
-
-    audioService.value = new AudioService(audio.value, AUDIO_CONFIG)
-
-    // Устанавливаем обработчики событий AudioService
-    audioService.value.onTimeUpdate(eventHandlers.timeUpdate)
-    audioService.value.onEnded(eventHandlers.ended)
-    audioService.value.onLoadedMetadata(eventHandlers.loadedMetadata)
-
-    // Синхронизируем состояние воспроизведения с реальным состоянием аудио
-    audio.value.addEventListener('play', eventHandlers.play)
-    audio.value.addEventListener('pause', eventHandlers.pause)
-    audio.value.addEventListener('ended', eventHandlers.ended)
+    controller.setEffectChain(effectBuilder)
+    setupWatchers()
   }
 
   async function initializeAudio(file: File): Promise<void> {
-    if (!audioService.value)
-      return
+    state.value.isMetadataLoading = true
+    lastSeekPosition.value = null
+    lastPositionSavedAt = 0
 
+    suppressPositionPersistence = true
+    controller.setEffectChain(effectBuilder)
+    setTrackName(file.name)
+
+    const descriptorId = descriptorIdForFile(file)
+    currentDescriptorId.value = descriptorId
+
+    await controller.load({
+      autoplay: false,
+      file,
+      id: descriptorId,
+      label: file.name,
+      type: 'file',
+    })
+    playbackStore.setCurrentSourceId(descriptorId)
+
+    await waitForReady()
+
+    suppressPositionPersistence = false
+    restorePosition()
+    flushPositionSave()
+
+    state.value.duration = controller.state.duration
+  }
+
+  async function play(): Promise<void> {
     try {
-      state.value.isMetadataLoading = true
-      // Сбрасываем историю перемотки при смене файла
-      lastSeekPosition.value = null
-      await audioService.value.initializeAudio(file)
-      setTrackName(file.name)
-      lastPositionSavedAt = 0
-      applySettings()
-      restorePosition()
-      flushPositionSave()
+      if (currentDescriptorId.value) {
+        playbackStore.setCurrentSourceId(currentDescriptorId.value)
+      }
 
-      if (audioService.value) {
-        state.value.duration = audioService.value.getDuration()
+      await controller.play()
+
+      const audioElement = controller.audio.value
+      if (audioElement && !audioElement.paused) {
+        state.value.isPlaying = true
+      }
+      else {
+        state.value.isPlaying = controller.state.isPlaying
       }
     }
     catch (error) {
-      console.error('Ошибка инициализации аудио:', error)
-      state.value.isMetadataLoading = false
+      state.value.isPlaying = false
       throw error
     }
   }
 
-  // Управление воспроизведением
-  async function play(): Promise<void> {
-    if (!audioService.value)
-      return
-
-    try {
-      await audioService.value.play()
-      // Состояние будет установлено обработчиком события 'play'
-    }
-    catch (error) {
-      console.error('Ошибка воспроизведения:', error)
-      state.value.isPlaying = false
-    }
-  }
-
   function pause(): void {
-    if (!audioService.value)
-      return
-    audioService.value.pause()
-    // Состояние будет установлено обработчиком события 'pause'
+    controller.pause()
+    state.value.isPlaying = false
   }
 
   function togglePlayPause(): void {
@@ -207,87 +275,65 @@ export function useAudioService(
       pause()
     }
     else {
-      play()
+      void play()
     }
   }
 
-  // Управление перемоткой
   function seekBackward(): void {
-    if (!audioService.value)
-      return
-
-    lastSeekPosition.value = audioService.value.getCurrentTime()
-    audioService.value.seekBySeconds(-SEEK_STEP)
+    lastSeekPosition.value = controller.state.currentTime
+    controller.seek(Math.max(0, controller.state.currentTime - SEEK_STEP))
     flushPositionSave()
   }
 
   function seekForward(): void {
-    if (!audioService.value)
-      return
-
-    lastSeekPosition.value = audioService.value.getCurrentTime()
-    audioService.value.seekBySeconds(SEEK_STEP)
+    lastSeekPosition.value = controller.state.currentTime
+    controller.seek(controller.state.currentTime + SEEK_STEP)
     flushPositionSave()
   }
 
   function undoLastSeek(): void {
-    if (!audioService.value || lastSeekPosition.value === null) {
+    if (lastSeekPosition.value === null)
       return
-    }
 
-    audioService.value.seek(lastSeekPosition.value)
+    controller.seek(lastSeekPosition.value)
     lastSeekPosition.value = null
   }
 
   function handleProgressSeek(percent: number): void {
-    if (!audioService.value)
-      return
-
-    const duration = audioService.value.getDuration()
+    const duration = controller.state.duration
     if (duration <= 0)
       return
 
-    lastSeekPosition.value = audioService.value.getCurrentTime()
-    audioService.value.seek(percent * duration)
+    lastSeekPosition.value = controller.state.currentTime
+    controller.seek(percent * duration)
     flushPositionSave()
   }
 
-  // Утилиты
   function getAnalyser(): AnalyserNode | null {
-    return audioService.value?.getAnalyser() || null
+    return controller.analyser.value
   }
 
   function cleanup(): void {
-    // Удаляем обработчики событий
-    if (audio.value) {
-      audio.value.removeEventListener('play', eventHandlers.play)
-      audio.value.removeEventListener('pause', eventHandlers.pause)
-      audio.value.removeEventListener('ended', eventHandlers.ended)
-    }
-
-    stopProgressUpdate()
+    teardownWatchers()
+    controller.setEffectChain(null)
     flushPositionSave()
-    audioService.value?.cleanup()
-    audioService.value = null
+    currentDescriptorId.value = null
+    suppressPositionPersistence = false
+    playbackStore.setCurrentSourceId(null)
   }
 
-  // Watchers
-  watch(filterSettings, (newSettings) => {
-    audioService.value?.updateFilterSettings(newSettings)
-  }, { deep: true })
-
   watch([volume, playbackRate, loop, autoplay], () => {
-    if (audioService.value) {
-      audioService.value.applyAudioSettings({
-        autoplay: autoplay.value,
-        loop: loop.value,
-        playbackRate: playbackRate.value,
-        volume: volume.value,
-      })
-    }
+    const audioRef = controller.audio.value
+    if (!audioRef)
+      return
+
+    audioRef.volume = volume.value / 100
+    audioRef.playbackRate = playbackRate.value
+    audioRef.loop = loop.value
+    audioRef.autoplay = autoplay.value
   })
 
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     cleanup()
   })
 
