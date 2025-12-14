@@ -15,7 +15,7 @@
     "fullscreen",
     "window-controls-overlay"
   ],
-  "orientation": "any",
+  "orientation": "portrait",
   "screenshots": [
     {
       "src": "./screenshot.webp",

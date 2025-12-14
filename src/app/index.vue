@@ -74,8 +74,8 @@ watch(() => isRadioMode.value, (value) => {
     <div
       class="flex min-h-mobile w-full flex-col gap-4 relative"
     >
-      <div class="flex-1 flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-[1] pb-safe md:flex-row">
-        <RadioList class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-none border-t-none rounded-br-lg" />
+      <div class="flex-1 flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-1 pb-safe md:flex-row">
+        <RadioList class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-none border-t-none rounded-br-lg" />
 
         <div class="flex-1 flex flex-col justify-between items-center gap:20">
           <div
@@ -86,10 +86,12 @@ watch(() => isRadioMode.value, (value) => {
             </div>
           </div>
 
-          <AudioVisualizer v-if="visualization" class="translate-y-1/2" />
-          <div class="w-full md:w-max mb-4 min-h-[300px]">
-            <MusicPlayer v-show="!isRadioMode" class="h-full mt-auto" />
-            <RadioPlayer v-show="isRadioMode" class="h-full mt-auto" />
+          <div class="flex gap-4 flex-wrap md:flex-col">
+            <AudioVisualizer v-if="visualization" />
+            <div class="w-fit mb-15 mx-auto">
+              <MusicPlayer v-show="!isRadioMode" class="mt-auto h-56" />
+              <RadioPlayer v-show="isRadioMode" class="mt-auto h-56" />
+            </div>
           </div>
         </div>
 
@@ -97,6 +99,7 @@ watch(() => isRadioMode.value, (value) => {
       </div>
 
       <ControlPanel
+        class="fixed max-w-15 md:relative md:max-w-fit"
         @open-audio-settings="handleOpenAudioSettings"
         @open-radio-list="handleOpenRadioList"
       />

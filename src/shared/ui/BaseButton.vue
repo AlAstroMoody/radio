@@ -20,7 +20,6 @@ const classes: Record<string, string> = {
       classes[variant],
       active && variant === 'list' && 'font-bold bg-purple-500/40 border-purple-400/80 shadow-purple-500/40 shadow-lg scale-[1.02] dark:bg-purple-500/50 dark:border-purple-400/80',
     ]"
-    :style="active && variant === 'list' ? { transform: 'scale(1.02)', transition: 'transform 0s' } : undefined"
     class="min-w-0 relative active:translate-y-[2px] active:brightness-90 active:shadow-md group dark:border-glass-purple-border"
   >
     <slot />

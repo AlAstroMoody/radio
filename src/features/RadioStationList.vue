@@ -59,17 +59,17 @@ function handleRadioClick(radioId: string, _index: number): void {
 </script>
 
 <template>
-  <div class="font-medium px-1 md:px-5 max-w-full border-gray-200/50 dark:border-gray-600/50 shadow-lg dark:shadow-xl shadow-right p-4 flex flex-col max-h-[70vh] overflow-hidden">
-    <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center flex-shrink-0">
+  <div class="font-medium px-1 md:px-5 max-w-full border-gray-200/50 dark:border-gray-600/50 shadow-lg dark:shadow-xl shadow-right p-4 flex flex-col max-h-[70dvh] overflow-hidden">
+    <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       radio stations
     </div>
-    <div v-if="isStationsLoading" class="text-xs text-center mb-2 flex-shrink-0">
+    <div v-if="isStationsLoading" class="text-xs text-center mb-2 shrink-0">
       Загрузка списка станций...
     </div>
-    <div v-else-if="stationsError" class="text-xs text-purple-500 dark:text-purple-400 text-center mb-2 flex-shrink-0">
+    <div v-else-if="stationsError" class="text-xs text-purple-500 dark:text-purple-400 text-center mb-2 shrink-0">
       Ошибка при загрузке списка станций
     </div>
-    <div v-else class="text-xs text-center mb-2 flex-shrink-0">
+    <div v-else class="text-xs text-center mb-2 shrink-0">
       drag to reorder
     </div>
 

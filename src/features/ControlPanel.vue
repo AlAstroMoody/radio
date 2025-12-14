@@ -14,7 +14,7 @@ const { toggleDark } = useTheme()
 
 <template>
   <div class="w-fit overflow-visible z-50 pb-safe mb-safe">
-    <div class="flex gap-4 items-center p-1 rounded-tr-2xl border-r-0 border-b-0 bg-glass backdrop-blur-xl border border-glass shadow-lg shadow-top transition-all duration-300 dark:bg-glass-purple dark:border-glass-purple-border">
+    <div class="flex flex-wrap gap-4 items-center p-1 rounded-br-2xl md:rounded-br-none md:rounded-tr-2xl border-l-0 md:border-b-0 bg-glass backdrop-blur-xl border border-glass shadow-lg shadow-top transition-all duration-300 dark:bg-glass-purple dark:border-glass-purple-border">
       <ButtonWithIcon label="theme" @click="toggleDark()">
         <iLamp />
       </ButtonWithIcon>

@@ -74,11 +74,11 @@ watch(files, loadVisibleDurations, { immediate: true })
 </script>
 
 <template>
-  <div class="font-medium px-1 md:px-5 max-w-full border border-gray-200/50 dark:border-gray-600/50 shadow-lg dark:shadow-xl shadow-right p-4 flex flex-col max-h-[70vh] overflow-hidden">
-    <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center flex-shrink-0">
+  <div class="font-medium px-1 md:px-5 max-w-full p-4 flex flex-col max-h-[70dvh] overflow-hidden">
+    <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
-    <div class="text-xs  text-center mb-2 flex-shrink-0">
+    <div class="text-xs  text-center mb-2 shrink-0">
       drag to reorder
     </div>
     <div ref="scrollContainer" class="overflow-auto max-h-[calc(100dvh-190px)] md:h-[600px]">
@@ -88,7 +88,7 @@ watch(files, loadVisibleDurations, { immediate: true })
           :key="file.name"
           :label="file.name"
           variant="list"
-          class="max-w-full justify-between cursor-move relative"
+          class="w-full max-w-80 justify-between cursor-move relative"
           :class="[
             dragDrop.createHandlers(index, file).draggable.class,
             dragDrop.state.dragOverIndex === index && dragDrop.state.insertPosition === 'before' && dragDrop.state.draggedIndex !== index && 'outline-2 outline-purple-500 dark:outline-purple-400 outline-offset-[-6px]',
@@ -102,7 +102,7 @@ watch(files, loadVisibleDurations, { immediate: true })
           @click="handleFileClick(index)"
         >
           <span class="truncate flex-1 min-w-0 mr-2 text-left">{{ file.name }}</span>
-          <span class="text-sm flex-shrink-0 whitespace-nowrap">
+          <span class="text-sm shrink-0 whitespace-nowrap">
             {{ fileDurations[file.name] || '...' }}
           </span>
         </BaseButton>

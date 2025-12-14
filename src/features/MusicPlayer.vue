@@ -270,8 +270,8 @@ watch(() => isRadioMode.value, (value) => {
         @files-selected="handleFilesSelected"
       />
     </div>
-    <div class="md:max-w-96 m-auto max-w-full">
-      <div v-if="activeFile" class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft text-black dark:text-white">
+    <div v-if="activeFile" class="flex flex-col my-2 gap-4 items-center">
+      <div class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft text-black dark:text-white">
         <MarqueeText
           :text="currentFileName"
           :speed="30"
@@ -282,9 +282,6 @@ watch(() => isRadioMode.value, (value) => {
           {{ progress }}%
         </div>
       </div>
-    </div>
-
-    <div v-if="activeFile" class="flex flex-col my-2 gap-4 items-center">
       <AudioControls
         :is-playing="isPlaying"
         :is-shuffle="isShuffle"
