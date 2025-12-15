@@ -47,10 +47,10 @@ export function useAudioEffects(): {
 
     filterNodes.bass.type = 'lowshelf'
     filterNodes.bass.Q.value = 1 // для lowshelf это не критично, но лучше задать
-    
+
     filterNodes.mid.type = 'peaking'
     filterNodes.mid.Q.value = 0.7 // уменьшаем Q для более плавной кривой и меньше искажений
-    
+
     filterNodes.treble.type = 'highshelf'
     filterNodes.treble.Q.value = 1 // для highshelf это не критично
 

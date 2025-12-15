@@ -38,24 +38,31 @@ const {
 const { effectBuilder, hasActiveEffects } = useAudioEffects()
 const { filterSettings } = useAudioSettings()
 
-// Обновляем эффекты при изменении настроек эквалайзера
+let lastHasActiveEffects = hasActiveEffects()
+
 watch(filterSettings, () => {
-  if (hasActiveEffects()) {
-    setEffectChain(effectBuilder)
-  }
-  else {
-    setEffectChain(null)
+  const currentHasActiveEffects = hasActiveEffects()
+  if (currentHasActiveEffects !== lastHasActiveEffects) {
+    if (currentHasActiveEffects) {
+      setEffectChain(effectBuilder)
+    }
+    else {
+      setEffectChain(null)
+    }
+    lastHasActiveEffects = currentHasActiveEffects
   }
 }, { deep: true })
 
 // Применяем эффекты при загрузке нового источника
 watch(currentSource, () => {
-  if (hasActiveEffects()) {
+  const currentHasActiveEffects = hasActiveEffects()
+  if (currentHasActiveEffects) {
     setEffectChain(effectBuilder)
   }
   else {
     setEffectChain(null)
   }
+  lastHasActiveEffects = currentHasActiveEffects
 })
 
 function detachObjectUrl(): void {
