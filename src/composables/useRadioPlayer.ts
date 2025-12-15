@@ -1,5 +1,5 @@
-// Плеер для радиостанций: автоматически загружает станцию при изменении activeRadio,
-// отключает эффекты эквалайзера для радио. Используется в RadioPlayer
+// Плеер для радиостанций: автоматически загружает станцию при изменении activeRadio.
+// Используется в RadioPlayer
 
 import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
@@ -39,9 +39,6 @@ export function useRadioPlayer(activeRadio: Ref<undefined | Wave>): UseRadioPlay
         type: 'stream',
       }
     },
-    onLoaded: () => {
-      controller.setEffectChain(null)
-    },
   })
 
   const pending = computed(() => audioPlayer.isLoading.value && !audioPlayer.isPlaying.value)
@@ -51,7 +48,6 @@ export function useRadioPlayer(activeRadio: Ref<undefined | Wave>): UseRadioPlay
     async (station, _prev, onCleanup) => {
       if (!station) {
         audioPlayer.stop()
-        controller.setEffectChain(null)
         return
       }
 

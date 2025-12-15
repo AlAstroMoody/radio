@@ -16,9 +16,16 @@ interface Filters {
 export function useAudioEffects(): {
   effectBuilder: AudioEffectBuilder
   filters: Ref<Filters | null>
+  hasActiveEffects: () => boolean
 } {
   const { filterSettings } = useAudioSettings()
   const filters = ref<Filters | null>(null)
+
+  // Проверяет, есть ли активные эффекты (ненулевые gain)
+  function hasActiveEffects(): boolean {
+    const settings = filterSettings.value
+    return settings.bass.gain !== 0 || settings.mid.gain !== 0 || settings.treble.gain !== 0
+  }
 
   function applyFilterSettings(nodes: Filters): void {
     const settings = filterSettings.value
@@ -39,8 +46,13 @@ export function useAudioEffects(): {
     }
 
     filterNodes.bass.type = 'lowshelf'
+    filterNodes.bass.Q.value = 1 // для lowshelf это не критично, но лучше задать
+    
     filterNodes.mid.type = 'peaking'
+    filterNodes.mid.Q.value = 0.7 // уменьшаем Q для более плавной кривой и меньше искажений
+    
     filterNodes.treble.type = 'highshelf'
+    filterNodes.treble.Q.value = 1 // для highshelf это не критично
 
     return filterNodes
   }
@@ -84,5 +96,6 @@ export function useAudioEffects(): {
   return {
     effectBuilder,
     filters,
+    hasActiveEffects,
   }
 }

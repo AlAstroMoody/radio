@@ -4,7 +4,6 @@
 import type { Ref } from 'vue'
 
 import { useAudioController } from 'composables/useAudioController'
-import { useAudioEffects } from 'composables/useAudioEffects'
 import { useAudioPosition } from 'composables/useAudioPosition'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { usePlaybackStore } from 'stores'
@@ -52,7 +51,6 @@ export function useAudioService(
   const lastSeekPosition = ref<null | number>(null)
 
   const { autoplay, loop, playbackRate, volume } = useAudioSettings()
-  const { effectBuilder } = useAudioEffects()
   const { clearPosition, restorePosition, savePosition, setTrackName } = useAudioPosition(
     audioElement,
     fileName,
@@ -209,7 +207,6 @@ export function useAudioService(
   }
 
   function initializeAudioService(): void {
-    controller.setEffectChain(effectBuilder)
     setupWatchers()
   }
 
@@ -219,7 +216,6 @@ export function useAudioService(
     lastPositionSavedAt = 0
 
     suppressPositionPersistence = true
-    controller.setEffectChain(effectBuilder)
     setTrackName(file.name)
 
     const descriptorId = descriptorIdForFile(file)
@@ -315,7 +311,6 @@ export function useAudioService(
 
   function cleanup(): void {
     teardownWatchers()
-    controller.setEffectChain(null)
     flushPositionSave()
     currentDescriptorId.value = null
     suppressPositionPersistence = false

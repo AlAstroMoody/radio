@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useAudioContext } from 'composables/useAudioContext'
+import { useAudioEffects } from 'composables/useAudioEffects'
 import { useAudioElement } from 'composables/useAudioElement'
+import { useAudioSettings } from 'composables/useAudioSettings'
 import { nextTick, onBeforeUnmount, provide, reactive, ref, watch } from 'vue'
 
 import type { AudioController, AudioPlaybackState, AudioSourceDescriptor } from './audio'
@@ -32,6 +34,30 @@ const {
   setEffectChain,
 } = useAudioContext(audio)
 
+// Централизованное управление эффектами для всех источников (музыка и радио)
+const { effectBuilder, hasActiveEffects } = useAudioEffects()
+const { filterSettings } = useAudioSettings()
+
+// Обновляем эффекты при изменении настроек эквалайзера
+watch(filterSettings, () => {
+  if (hasActiveEffects()) {
+    setEffectChain(effectBuilder)
+  }
+  else {
+    setEffectChain(null)
+  }
+}, { deep: true })
+
+// Применяем эффекты при загрузке нового источника
+watch(currentSource, () => {
+  if (hasActiveEffects()) {
+    setEffectChain(effectBuilder)
+  }
+  else {
+    setEffectChain(null)
+  }
+})
+
 function detachObjectUrl(): void {
   if (objectUrl) {
     URL.revokeObjectURL(objectUrl)
@@ -44,11 +70,12 @@ async function load(descriptor: AudioSourceDescriptor): Promise<void> {
 
   await nextTick()
 
-  ensureAudioGraph()
   detachObjectUrl()
 
   resetState()
   currentSource.value = descriptor
+
+  ensureAudioGraph()
 
   if (descriptor.file) {
     objectUrl = URL.createObjectURL(descriptor.file)
@@ -81,7 +108,7 @@ function pause(): void {
 async function play(): Promise<void> {
   if (!audio.value)
     return
-  
+
   if (audioContext.value?.state === 'suspended') {
     try {
       await audioContext.value.resume()
