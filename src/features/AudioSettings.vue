@@ -77,7 +77,7 @@ const visualizationOptions = [
         :min="-12"
         :max="12"
         unit=" dB"
-        class="!w-full"
+        class="w-full!"
       />
     </div>
 

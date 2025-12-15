@@ -89,8 +89,8 @@ watch(() => isRadioMode.value, (value) => {
           <div class="flex gap-4 flex-wrap md:flex-col">
             <AudioVisualizer v-if="visualization" />
             <div class="w-fit mb-15 mx-auto">
-              <MusicPlayer v-show="!isRadioMode" class="mt-auto h-56" />
-              <RadioPlayer v-show="isRadioMode" class="mt-auto h-56" />
+              <MusicPlayer v-if="!isRadioMode" class="mt-auto h-56" />
+              <RadioPlayer v-else class="mt-auto h-56" />
             </div>
           </div>
         </div>
