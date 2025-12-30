@@ -69,9 +69,9 @@ async function handleFilesSelected(newFiles: File[]): Promise<void> {
     // Запоминаем, была ли музыка в процессе воспроизведения
     const wasPlaying = isPlaying.value
     pause()
+    wasPlayingBeforeSwitch.value = wasPlaying
     updateFiles(newFiles)
     changeActiveFile(0)
-    await initializeAudioWithSettings(wasPlaying)
     await clearFilesFromIndexedDB()
     await saveFilesToIndexedDB(newFiles)
     await saveActiveFileIndex(0)
@@ -88,12 +88,8 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
 
   try {
     await initializeAudio(activeFile.value)
-    if (shouldAutoPlay) {
+    if (shouldAutoPlay)
       await play()
-    }
-    if (audioController) {
-      audioController.audio.value!.playbackRate = 1
-    }
     wasPlayingBeforeSwitch.value = false
   }
   catch { }

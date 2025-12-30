@@ -59,6 +59,16 @@ export function useAudioService(
   let lastPositionSavedAt = 0
   let watchers: Array<() => void> = []
   let suppressPositionPersistence = false
+  function applySettings(): void {
+    const audioRef = controller.audio.value
+    if (!audioRef)
+      return
+
+    audioRef.volume = volume.value / 100
+    audioRef.playbackRate = playbackRate.value
+    audioRef.loop = loop.value
+    audioRef.autoplay = autoplay.value
+  }
 
   function updateProgress(): void {
     const duration = controller.state.duration
@@ -231,6 +241,7 @@ export function useAudioService(
     playbackStore.setCurrentSourceId(descriptorId)
 
     await waitForReady()
+    applySettings()
 
     suppressPositionPersistence = false
     restorePosition()
@@ -245,6 +256,7 @@ export function useAudioService(
         playbackStore.setCurrentSourceId(currentDescriptorId.value)
       }
 
+      applySettings()
       await controller.play()
 
       const audioElement = controller.audio.value
@@ -318,15 +330,8 @@ export function useAudioService(
   }
 
   watch([volume, playbackRate, loop, autoplay], () => {
-    const audioRef = controller.audio.value
-    if (!audioRef)
-      return
-
-    audioRef.volume = volume.value / 100
-    audioRef.playbackRate = playbackRate.value
-    audioRef.loop = loop.value
-    audioRef.autoplay = autoplay.value
-  })
+    applySettings()
+  }, { immediate: true })
 
   onBeforeUnmount(() => {
     cleanup()
