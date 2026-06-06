@@ -12,6 +12,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const fileDropZone = ref<InstanceType<typeof FileDropZone> | null>(null)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
+const isRestoringFromDb = ref(false)
 const { isRadioMode } = useRadio()
 
 const libraryStore = useLibraryStore()
@@ -69,7 +70,7 @@ async function handleFilesSelected(newFiles: File[]): Promise<void> {
     // Запоминаем, была ли музыка в процессе воспроизведения
     const wasPlaying = isPlaying.value
     pause()
-    wasPlayingBeforeSwitch.value = wasPlaying
+    wasPlayingBeforeSwitch.value = wasPlaying || autoplay.value
     updateFiles(newFiles)
     changeActiveFile(0)
     await clearFilesFromIndexedDB()
@@ -95,18 +96,24 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
   catch { }
 }
 
-function initPlayerOnMount() {
-  // Восстанавливаем файлы из IndexedDB, если они есть и файлов сейчас нет
-  if (!files.value.length) {
-    Promise.all([loadFilesFromIndexedDB(), loadActiveFileIndex()]).then(([dbFiles, activeIndex]) => {
-      if (dbFiles.length) {
-        updateFilesWithoutReset(dbFiles)
-        const validIndex = Math.min(activeIndex, dbFiles.length - 1)
-        changeActiveFile(validIndex)
-        // При восстановлении из IndexedDB не запускаем автоматически
-        initializeAudioWithSettings(false)
-      }
-    }).catch(() => { })
+async function initPlayerOnMount() {
+  if (files.value.length)
+    return
+
+  try {
+    const [dbFiles, activeIndex] = await Promise.all([loadFilesFromIndexedDB(), loadActiveFileIndex()])
+    if (!dbFiles.length)
+      return
+
+    isRestoringFromDb.value = true
+    updateFilesWithoutReset(dbFiles)
+    const validIndex = Math.min(activeIndex, dbFiles.length - 1)
+    changeActiveFile(validIndex)
+    await initializeAudioWithSettings(false)
+  }
+  catch { }
+  finally {
+    isRestoringFromDb.value = false
   }
 }
 
@@ -121,8 +128,14 @@ function setupMediaSessionHandlers(): void {
 
   setActionHandlers({
     nexttrack: nextFile,
-    pause: togglePlayPause,
-    play: togglePlayPause,
+    pause: () => {
+      if (isPlaying.value)
+        pause()
+    },
+    play: () => {
+      if (!isPlaying.value)
+        void play()
+    },
     previoustrack: prevFile,
     seekbackward: (_details) => {
       seekBackward()
@@ -180,11 +193,11 @@ onMounted(() => {
   setupMediaSessionHandlers()
 
   if (files.value.length) {
-    initializeAudioWithSettings()
+    void initializeAudioWithSettings(autoplay.value)
     return
   }
 
-  initPlayerOnMount()
+  void initPlayerOnMount()
 })
 
 watch(
@@ -201,10 +214,13 @@ watch(
 )
 
 watch(activeFile, () => {
-  const shouldContinuePlaying = wasPlayingBeforeSwitch.value || isPlaying.value
+  if (isRestoringFromDb.value)
+    return
+
+  const shouldAutoPlay = wasPlayingBeforeSwitch.value || isPlaying.value || autoplay.value
   pause()
   setTimeout(() => {
-    initializeAudioWithSettings(shouldContinuePlaying)
+    void initializeAudioWithSettings(shouldAutoPlay)
     updateMediaSessionMetadata()
   }, 50)
 })

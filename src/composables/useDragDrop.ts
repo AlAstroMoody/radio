@@ -50,9 +50,14 @@ export function useDragDrop<T = any>(
     clickStartTime = Date.now()
     clickStartPosition = { x: event.clientX, y: event.clientY }
     state.draggedIndex = index
+
+    const row = (event.currentTarget as HTMLElement).closest('[data-drag-index]') as HTMLElement | null
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move'
       event.dataTransfer.setData('text/html', '')
+      if (row) {
+        event.dataTransfer.setDragImage(row, row.offsetWidth / 2, row.offsetHeight / 2)
+      }
     }
     onDragStart?.(item, index)
   }
@@ -145,10 +150,10 @@ export function useDragDrop<T = any>(
     const touch = event.touches[0]
     state.touchCurrentY = touch.clientY
 
+    const deltaX = Math.abs(touch.clientX - clickStartPosition.x)
     const deltaY = Math.abs(state.touchCurrentY - state.touchStartY)
-    const touchDuration = Date.now() - clickStartTime
 
-    if (deltaY > touchThreshold && touchDuration > 500 && !state.isDragging) {
+    if (Math.hypot(deltaX, deltaY) > touchThreshold && !state.isDragging) {
       state.isDragging = true
       event.preventDefault()
     }
@@ -210,14 +215,11 @@ export function useDragDrop<T = any>(
 
   function createHandlers(index: number, item: T): DragDropHandlers {
     return {
-      draggable: {
+      dragHandle: {
         'class': [
-          state.draggedIndex === index ? 'opacity-50 scale-95' : '',
-          state.isDragging && state.draggedIndex === index ? 'z-10' : '',
+          'cursor-grab active:cursor-grabbing touch-none select-none',
+          state.isDragging && state.draggedIndex === index ? 'cursor-grabbing' : '',
         ],
-        'data-drag-index': index,
-        'data-insert-after': state.dragOverIndex === index && state.insertPosition === 'after' ? '' : null,
-        'data-insert-before': state.dragOverIndex === index && state.insertPosition === 'before' ? '' : null,
         'draggable': enableMouse,
         'onDragend': (event: DragEvent) => handleDragEnd(event, index, item),
         'onDragstart': (event: DragEvent) => handleDragStart(event, index, item),
@@ -229,6 +231,15 @@ export function useDragDrop<T = any>(
         onDragleave: (event: DragEvent) => handleDragLeave(event, index, item),
         onDragover: (event: DragEvent) => handleDragOver(event, index, item),
         onDrop: (event: DragEvent) => handleDrop(event, index),
+      },
+      row: {
+        'class': [
+          state.draggedIndex === index ? 'opacity-50 scale-95' : '',
+          state.isDragging && state.draggedIndex === index ? 'z-10' : '',
+        ],
+        'data-drag-index': index,
+        'data-insert-after': state.dragOverIndex === index && state.insertPosition === 'after' ? '' : null,
+        'data-insert-before': state.dragOverIndex === index && state.insertPosition === 'before' ? '' : null,
       },
     }
   }

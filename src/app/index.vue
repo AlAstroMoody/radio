@@ -6,7 +6,7 @@ import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer } from 'features'
 import { AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
 import { runStorageMigration } from 'shared/utils/storage-migration'
-import { useLibraryStore, useStationsStore } from 'stores'
+import { useLibraryStore, usePlaybackStore, useStationsStore } from 'stores'
 import { onMounted, ref, watch } from 'vue'
 
 import AudioRoot from './providers/AudioRoot.vue'
@@ -14,6 +14,7 @@ import AudioRoot from './providers/AudioRoot.vue'
 const { isRadioMode } = useRadio()
 const stationsStore = useStationsStore()
 const libraryStore = useLibraryStore()
+const playbackStore = usePlaybackStore()
 const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB, updateFiles } = libraryStore
 const { openModal } = useModal()
 const currentModal = ref<'audio-settings' | 'radio-list' | null>(null)
@@ -57,16 +58,22 @@ onMounted(() => {
   }
 })
 
-watch(() => isRadioMode.value, (value) => {
+watch(() => isRadioMode.value, (isRadio) => {
   if (!audioController)
     return
 
   audioController.pause()
 
-  if (value) {
+  if (isRadio) {
     audioController.setEffectChain(null)
+    return
   }
-}, { flush: 'post' })
+
+  if (audioController.currentSource.value?.type === 'stream') {
+    audioController.stop()
+    playbackStore.setCurrentSourceId(null)
+  }
+}, { flush: 'sync' })
 </script>
 
 <template>

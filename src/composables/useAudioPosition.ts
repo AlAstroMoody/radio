@@ -53,7 +53,7 @@ export function useAudioPosition(audio: Ref<HTMLAudioElement | null>, fileName: 
   function restorePosition(): void {
     if (!audio.value)
       return
-    
+
     if (!currentTrackName.value) {
       audio.value.currentTime = 0
       return

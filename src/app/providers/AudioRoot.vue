@@ -23,9 +23,10 @@ const state = reactive<AudioPlaybackState>({
 })
 
 const currentSource = ref<AudioSourceDescriptor | null>(null)
+const userPaused = ref(false)
 let objectUrl: null | string = null
 
-const { audio } = useAudioElement(state)
+const { audio } = useAudioElement(state, userPaused)
 const {
   analyser,
   audioContext,
@@ -107,6 +108,8 @@ async function load(descriptor: AudioSourceDescriptor): Promise<void> {
 }
 
 function pause(): void {
+  userPaused.value = true
+  state.isPlaying = false
   if (audio.value) {
     audio.value.pause()
   }
@@ -116,9 +119,12 @@ async function play(): Promise<void> {
   if (!audio.value)
     return
 
-  if (audioContext.value?.state === 'suspended') {
+  userPaused.value = false
+
+  const contextState = audioContext.value?.state
+  if (contextState === 'suspended' || contextState === 'interrupted') {
     try {
-      await audioContext.value.resume()
+      await audioContext.value!.resume()
     }
     catch { }
   }

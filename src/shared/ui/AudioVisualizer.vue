@@ -3,13 +3,17 @@ import { useAudioController } from 'composables/useAudioController'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
 import { useVisualizer } from 'composables/useVisualizer'
+import { usePlaybackStore } from 'stores'
 import { computed, useTemplateRef, watch } from 'vue'
 
 const canvas = useTemplateRef('canvas')
 const audioController = useAudioController()
+const playbackStore = usePlaybackStore()
 
 const analyser = computed(() => audioController?.analyser.value ?? null)
-const isPlaying = computed(() => audioController?.state.isPlaying ?? false)
+const isPlaying = computed(
+  () => !!(audioController?.state.isPlaying && playbackStore.currentSourceId),
+)
 
 const { fadeOutVisualization, startVisualization, stopVisualization } = useVisualizer(canvas, analyser)
 

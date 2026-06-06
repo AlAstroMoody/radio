@@ -6,7 +6,7 @@ import type { Ref } from 'vue'
 
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { usePlaybackStore } from 'stores'
-import { readonly, ref, watch } from 'vue'
+import { computed, readonly, ref, watch } from 'vue'
 
 import { useAudioControllerRequired } from './useAudioController'
 
@@ -48,8 +48,15 @@ export function useAudioPlayer(options: UseAudioPlayerOptions): UseAudioPlayerRe
   const { volume } = useAudioSettings()
 
   const isLoading = ref(false)
-  const isPlaying = ref(false)
   const currentDescriptor = ref<AudioSourceDescriptor | null>(null)
+
+  const isCurrentSource = computed(
+    () => currentDescriptor.value?.id === controller.currentSource.value?.id,
+  )
+
+  const isPlaying = computed(
+    () => isCurrentSource.value && controller.state.isPlaying,
+  )
 
   const { getDescriptor, onLoaded, onLoadError, shouldLoad = () => true } = options
 
@@ -101,7 +108,6 @@ export function useAudioPlayer(options: UseAudioPlayerOptions): UseAudioPlayerRe
     isLoading.value = true
     try {
       await controller.play()
-      isPlaying.value = true
       if (descriptor.id)
         playbackStore.setCurrentSourceId(descriptor.id ?? null)
     }
@@ -116,26 +122,12 @@ export function useAudioPlayer(options: UseAudioPlayerOptions): UseAudioPlayerRe
 
   function pause(): void {
     controller.pause()
-    isPlaying.value = false
   }
 
   function stop(): void {
     controller.stop()
-    isPlaying.value = false
     currentDescriptor.value = null
   }
-
-  watch(
-    () => controller.state.isPlaying,
-    (playing) => {
-      if (currentDescriptor.value?.id === controller.currentSource.value?.id) {
-        isPlaying.value = playing
-      }
-      else {
-        isPlaying.value = false
-      }
-    },
-  )
 
   watch(volume, () => {
     const audioRef = controller.audio.value

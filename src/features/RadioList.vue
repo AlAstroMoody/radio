@@ -8,6 +8,8 @@ const { isRadioMode } = useRadio()
 </script>
 
 <template>
-  <RadioStationList v-if="isRadioMode" />
-  <MusicFileList v-else />
+  <div class="flex h-full min-h-0 flex-col">
+    <RadioStationList v-if="isRadioMode" />
+    <MusicFileList v-else />
+  </div>
 </template>

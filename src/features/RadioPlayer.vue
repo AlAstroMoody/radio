@@ -26,7 +26,7 @@ const audioController = useAudioController()
 const wasPlayingBeforeToggle = ref(false)
 
 watch(activeRadio, async (station) => {
-  const shouldResume = audioController?.state.isPlaying ?? false
+  const shouldResume = isPlaying.value
   pause()
   if (!station)
     return
@@ -79,20 +79,12 @@ function setupRadioMediaSessionHandlers(): void {
   setActionHandlers({
     nexttrack: nextRadio,
     pause: () => {
-      if (isPlaying.value) {
+      if (isPlaying.value)
         pause()
-      }
-      else {
-        playRadio()
-      }
     },
     play: () => {
-      if (isPlaying.value) {
-        pause()
-      }
-      else {
-        playRadio()
-      }
+      if (!isPlaying.value)
+        void playRadio()
     },
     previoustrack: prevRadio,
   })

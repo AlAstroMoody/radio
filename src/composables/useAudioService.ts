@@ -41,12 +41,15 @@ export function useAudioService(
     currentTime: 0,
     duration: 0,
     isMetadataLoading: false,
-    isPlaying: false,
     progress: 0,
   })
 
   const currentDescriptorId = ref<null | string>(null)
   const isCurrentSource = computed(() => controller.currentSource.value?.id === currentDescriptorId.value)
+
+  const isPlaying = computed(
+    () => isCurrentSource.value && controller.state.isPlaying && !controller.state.error,
+  )
 
   const lastSeekPosition = ref<null | number>(null)
 
@@ -146,10 +149,8 @@ export function useAudioService(
           if (!isCurrentSource.value)
             return
 
-          state.value.isPlaying = playing
-          if (!playing) {
+          if (!playing)
             flushPositionSave()
-          }
         },
       ),
       watch(
@@ -173,17 +174,6 @@ export function useAudioService(
 
           if (ended) {
             clearStoredPosition()
-          }
-        },
-      ),
-      watch(
-        () => controller.state.error,
-        (error) => {
-          if (!isCurrentSource.value)
-            return
-
-          if (error) {
-            state.value.isPlaying = false
           }
         },
       ),
@@ -251,40 +241,22 @@ export function useAudioService(
   }
 
   async function play(): Promise<void> {
-    try {
-      if (currentDescriptorId.value) {
-        playbackStore.setCurrentSourceId(currentDescriptorId.value)
-      }
+    if (currentDescriptorId.value)
+      playbackStore.setCurrentSourceId(currentDescriptorId.value)
 
-      applySettings()
-      await controller.play()
-
-      const audioElement = controller.audio.value
-      if (audioElement && !audioElement.paused) {
-        state.value.isPlaying = true
-      }
-      else {
-        state.value.isPlaying = controller.state.isPlaying
-      }
-    }
-    catch (error) {
-      state.value.isPlaying = false
-      throw error
-    }
+    applySettings()
+    await controller.play()
   }
 
   function pause(): void {
     controller.pause()
-    state.value.isPlaying = false
   }
 
   function togglePlayPause(): void {
-    if (state.value.isPlaying) {
+    if (isPlaying.value)
       pause()
-    }
-    else {
+    else
       void play()
-    }
   }
 
   function seekBackward(): void {
@@ -346,7 +318,7 @@ export function useAudioService(
     initializeAudio,
     initializeAudioService,
     isMetadataLoading: readonly(computed(() => state.value.isMetadataLoading)),
-    isPlaying: readonly(computed(() => state.value.isPlaying)),
+    isPlaying: readonly(isPlaying),
     pause,
     play,
     progress: readonly(computed(() => state.value.progress)),

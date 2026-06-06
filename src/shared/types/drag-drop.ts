@@ -12,11 +12,8 @@ export interface DragDropCallbacks<T = any> {
 }
 
 export interface DragDropHandlers {
-  draggable: {
+  dragHandle: {
     'class': string[]
-    'data-drag-index': number
-    'data-insert-after'?: null | string
-    'data-insert-before'?: null | string
     'draggable': boolean
     'onDragend': (event: DragEvent) => void
     'onDragstart': (event: DragEvent) => void
@@ -28,6 +25,12 @@ export interface DragDropHandlers {
     onDragleave: (event: DragEvent) => void
     onDragover: (event: DragEvent) => void
     onDrop: (event: DragEvent) => void
+  }
+  row: {
+    'class': string[]
+    'data-drag-index': number
+    'data-insert-after'?: null | string
+    'data-insert-before'?: null | string
   }
 }
 

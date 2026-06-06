@@ -11,7 +11,10 @@ interface UseAudioElementReturn {
   audio: Ref<HTMLAudioElement | null>
 }
 
-export function useAudioElement(state: AudioPlaybackState): UseAudioElementReturn {
+export function useAudioElement(
+  state: AudioPlaybackState,
+  userPaused: Ref<boolean>,
+): UseAudioElementReturn {
   const audio = ref<HTMLAudioElement | null>(null)
 
   function initializeAudioElement(): void {
@@ -42,6 +45,15 @@ export function useAudioElement(state: AudioPlaybackState): UseAudioElementRetur
     })
 
     useEventListener(audioElement, 'play', () => {
+      const element = audio.value
+      if (!element)
+        return
+
+      if (userPaused.value) {
+        element.pause()
+        return
+      }
+
       state.isPlaying = true
       state.ended = false
       state.error = null

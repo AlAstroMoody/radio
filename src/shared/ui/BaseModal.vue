@@ -48,7 +48,7 @@ const contentClasses = computed(() => [
       @click.self="closeModal"
     >
       <div :class="contentClasses" class="m-auto content-visibility-auto">
-        <div class="relative w-full flex flex-col bg-light-100 dark:bg-dark-100">
+        <div class="relative flex h-full min-h-0 w-full flex-col bg-light-100 dark:bg-dark-100">
           <button
             class="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors z-10"
             aria-label="Close modal"
@@ -56,7 +56,7 @@ const contentClasses = computed(() => [
           >
             <iClose class="w-6 h-6 dark:text-white" />
           </button>
-          <div class="flex-1 min-w-[320px] md:min-w-[480px]">
+          <div class="flex flex-1 flex-col h-full min-h-0 min-w-[320px] md:min-w-[480px]">
             <slot />
           </div>
         </div>

@@ -2,7 +2,7 @@
 import { useDragDrop } from 'composables/useDragDrop'
 import { useScrollToActive } from 'composables/useScrollToActive'
 import { storeToRefs } from 'pinia'
-import { BaseButton } from 'shared'
+import { BaseButton, ListDragHandle } from 'shared'
 import { formatTime, getAudioDuration, getCachedDuration } from 'shared/utils/time'
 import { useLibraryStore } from 'stores'
 import { computed, ref, useTemplateRef, watch } from 'vue'
@@ -23,10 +23,14 @@ const dragDrop = useDragDrop(
   {
     enableMouse: true,
     enableTouch: true,
-    touchThreshold: 40,
+    touchThreshold: 12,
   },
 )
 const currentFileName = computed(() => activeFile.value?.name || '')
+
+const listHint = computed(() =>
+  files.value.length ? 'use ⋮⋮ handle to reorder' : 'No files selected',
+)
 
 useScrollToActive({
   activeItem: activeFile,
@@ -39,6 +43,12 @@ useScrollToActive({
 
 function handleFileClick(index: number): void {
   changeActiveFile(index)
+}
+
+function isDropBefore(index: number): boolean {
+  return dragDrop.state.dragOverIndex === index
+    && dragDrop.state.insertPosition === 'before'
+    && dragDrop.state.draggedIndex !== index
 }
 
 const fileDurations = ref<Record<string, string>>({})
@@ -56,7 +66,6 @@ async function loadFileDuration(file: File): Promise<void> {
   }
 }
 
-// Загружаем метаданные для видимых файлов
 function loadVisibleDurations(): void {
   files.value.forEach((file: File) => {
     const cached = getCachedDuration(file.name)
@@ -69,38 +78,38 @@ function loadVisibleDurations(): void {
   })
 }
 
-// Загружаем метаданные при изменении списка файлов
 watch(files, loadVisibleDurations, { immediate: true })
 </script>
 
 <template>
-  <div class="font-medium px-1 md:px-5 max-w-full p-4 flex flex-col max-h-[70dvh] overflow-hidden">
+  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden p-4 px-1 md:px-5">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
-    <div class="text-xs  text-center mb-2 shrink-0">
-      drag to reorder
+    <div class="text-xs text-center mb-2 shrink-0">
+      {{ listHint }}
     </div>
-    <div ref="scrollContainer" class="overflow-auto max-h-[calc(100dvh-190px)] md:h-[600px]">
+    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
       <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 max-w-2xl list-optimized">
         <BaseButton
           v-for="(file, index) in files"
           :key="file.name"
           :label="file.name"
           variant="list"
-          class="w-full max-w-80 justify-between cursor-move relative"
+          class="relative flex w-full max-w-80 items-center gap-1"
           :class="[
-            dragDrop.createHandlers(index, file).draggable.class,
-            dragDrop.state.dragOverIndex === index && dragDrop.state.insertPosition === 'before' && dragDrop.state.draggedIndex !== index && 'outline-2 outline-purple-500 dark:outline-purple-400 outline-offset-[-6px]',
+            dragDrop.createHandlers(index, file).row.class,
+            isDropBefore(index) && 'outline-2 outline-purple-500 dark:outline-purple-400 outline-offset-[-6px]',
           ]"
-          :style="dragDrop.state.dragOverIndex === index && dragDrop.state.insertPosition === 'before' && dragDrop.state.draggedIndex !== index ? { boxShadow: '0 0 8px rgba(168, 85, 247, 0.8), 0 0 4px rgba(168, 85, 247, 0.6)' } : undefined"
+          :style="isDropBefore(index) ? { boxShadow: '0 0 8px rgba(168, 85, 247, 0.8), 0 0 4px rgba(168, 85, 247, 0.6)' } : undefined"
           :active="file.name === currentFileName"
           v-bind="{
-            ...dragDrop.createHandlers(index, file).draggable,
+            ...dragDrop.createHandlers(index, file).row,
             ...dragDrop.createHandlers(index, file).dropTarget,
           }"
           @click="handleFileClick(index)"
         >
+          <ListDragHandle v-bind="dragDrop.createHandlers(index, file).dragHandle" />
           <span class="truncate flex-1 min-w-0 mr-2 text-left">{{ file.name }}</span>
           <span class="text-sm shrink-0 whitespace-nowrap">
             {{ fileDurations[file.name] || '...' }}

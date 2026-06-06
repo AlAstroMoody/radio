@@ -4,7 +4,7 @@
 import type { Wave } from 'shared/types/audio'
 import type { Ref } from 'vue'
 
-import { computed, readonly, watch } from 'vue'
+import { computed, onScopeDispose, readonly, watch } from 'vue'
 
 import { useAudioController } from './useAudioController'
 import { useAudioPlayer } from './useAudioPlayer'
@@ -72,10 +72,12 @@ export function useRadioPlayer(activeRadio: Ref<undefined | Wave>): UseRadioPlay
     { immediate: true },
   )
 
-  watch(
-    () => controller.state.isPlaying,
-    () => {},
-  )
+  onScopeDispose(() => {
+    audioPlayer.pause()
+    if (controller.currentSource.value?.type === 'stream') {
+      audioPlayer.stop()
+    }
+  })
 
   return {
     analyser: controller.analyser,
