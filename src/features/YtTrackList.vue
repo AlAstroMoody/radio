@@ -22,6 +22,7 @@ const {
 } = useYt()
 
 const query = ref(lastQuery.value)
+const failedThumbnailIds = ref(new Set<string>())
 const buttonsContainer = useTemplateRef('buttonsContainer')
 const scrollContainer = useTemplateRef('scrollContainer')
 
@@ -44,6 +45,20 @@ function handleTrackClick(index: number): void {
 
 function trackThumbnail(track: YtTrack): string | undefined {
   return getYtThumbnailUrl(track, 60)
+}
+
+function showThumbnail(track: YtTrack): boolean {
+  if (!track.videoId)
+    return false
+
+  return !!trackThumbnail(track) && !failedThumbnailIds.value.has(track.videoId)
+}
+
+function handleThumbnailError(videoId: string | undefined): void {
+  if (!videoId || failedThumbnailIds.value.has(videoId))
+    return
+
+  failedThumbnailIds.value = new Set([...failedThumbnailIds.value, videoId])
 }
 
 async function handleSearch(): Promise<void> {
@@ -108,13 +123,20 @@ function handleScroll(): void {
         >
           <div class="flex min-w-0 flex-1 items-center gap-2">
             <img
-              v-if="trackThumbnail(track)"
+              v-if="showThumbnail(track)"
               :src="trackThumbnail(track)"
-              :alt="formatYtTitle(track)"
+              alt=""
               class="size-10 shrink-0 rounded object-cover"
               loading="lazy"
+              @error="handleThumbnailError(track.videoId)"
             >
-            <iNote v-else class="size-10 shrink-0 opacity-60" />
+            <span
+              v-else
+              class="flex size-10 shrink-0 items-center justify-center rounded bg-glass/40 dark:bg-glass-purple/30"
+              aria-hidden="true"
+            >
+              <iNote class="size-6 opacity-80" />
+            </span>
             <div class="min-w-0 text-left">
               <div class="truncate">
                 {{ formatYtTitle(track) }}
