@@ -2,7 +2,7 @@ import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-export type PlaybackMode = 'music' | 'radio'
+export type PlaybackMode = 'music' | 'radio' | 'yt'
 
 export const usePlaybackStore = defineStore('playback', () => {
   const mode = useStorage<PlaybackMode>('radio-mode', 'radio')
@@ -17,6 +17,7 @@ export const usePlaybackStore = defineStore('playback', () => {
   })
 
   const isMusicMode = computed<boolean>(() => mode.value === 'music')
+  const isYtMode = computed<boolean>(() => mode.value === 'yt')
 
   function setMode(next: PlaybackMode): void {
     mode.value = next
@@ -39,6 +40,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     currentSourceId,
     isMusicMode,
     isRadioMode,
+    isYtMode,
     mode,
     setActiveRadioId,
     setCurrentSourceId,

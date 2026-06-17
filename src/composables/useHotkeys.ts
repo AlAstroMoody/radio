@@ -12,8 +12,25 @@ export interface HotkeyConfig {
   shift?: boolean
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement))
+    return false
+
+  const tag = target.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')
+    return true
+
+  if (target.isContentEditable)
+    return true
+
+  return !!target.closest('[contenteditable="true"]')
+}
+
 export function useHotkeys(configs: HotkeyConfig[]): void {
   function handleKeydown(event: KeyboardEvent): void {
+    if (isEditableTarget(event.target))
+      return
+
     for (const config of configs) {
       const keyMatches = event.key.toLowerCase() === config.key.toLowerCase()
       const ctrlMatches = !!config.ctrl === event.ctrlKey

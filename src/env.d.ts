@@ -10,14 +10,6 @@ interface FileSystemFileHandle {
   getFile: () => Promise<File>
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-
-interface ImportMetaEnv extends Readonly<Record<string, string>> {
-  readonly VITE_APP_API_URL: string
-}
-
 interface LaunchParams {
   files: FileSystemFileHandle[]
 }

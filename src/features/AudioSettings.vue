@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
+import { usePlaybackStore } from 'stores'
 import { BaseSelect, CheckboxInput, RangeInput } from 'shared'
 
 const { isRadioMode } = useRadio()
+const playbackStore = usePlaybackStore()
 const {
   applyPreset,
   autoplay,
@@ -17,6 +19,7 @@ const {
   visualizationFPS,
   visualizationIntensity,
   volume,
+  ytCoverArt,
 } = useAudioSettings()
 
 function handlePresetChange(presetName: string) {
@@ -61,6 +64,11 @@ const visualizationOptions = [
     <BaseSelect v-model="playbackRate" :options="playbackRateOptions" placeholder="default" label="Playback Rate:" :disabled="isRadioMode" />
     <BaseSelect v-model="visualization" :options="visualizationOptions" placeholder="default" label="Visualization:" />
 
+    <CheckboxInput
+      v-if="playbackStore.isYtMode"
+      v-model="ytCoverArt"
+      label="Cover art instead of visualization"
+    />
     <BaseSelect
       v-model="selectedPreset" :options="equalizerPresets.map((preset) => ({
         label: preset.name,

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon } from '@heroicons/vue/24/solid'
+import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon, RadioIcon } from '@heroicons/vue/24/solid'
 import { useRadio } from 'composables/useRadio'
 import { useTheme } from 'composables/useTheme'
+import { usePlaybackStore } from 'stores'
 import { ButtonWithIcon, iLamp, iStation } from 'shared/ui'
 
 const emit = defineEmits<{
   openAudioSettings: []
-  openRadioList: [isRadioMode: boolean]
+  openPlaylist: []
 }>()
 const { isRadioMode, toggleMode } = useRadio()
 const { toggleDark } = useTheme()
+const playbackStore = usePlaybackStore()
 </script>
 
 <template>
@@ -18,12 +20,15 @@ const { toggleDark } = useTheme()
       <ButtonWithIcon label="theme" @click="toggleDark()">
         <iLamp />
       </ButtonWithIcon>
-      <ButtonWithIcon label="playlist" @click="emit('openRadioList', isRadioMode)">
+      <ButtonWithIcon label="playlist" @click="emit('openPlaylist')">
         <ListBulletIcon class="size-6" />
       </ButtonWithIcon>
       <ButtonWithIcon :label="`${isRadioMode ? 'audio' : 'radio'} mode`" @click="toggleMode">
         <MusicalNoteIcon v-if="isRadioMode" class="size-6" />
         <iStation v-else />
+      </ButtonWithIcon>
+      <ButtonWithIcon label="yt mode" @click="playbackStore.setMode('yt')">
+        <RadioIcon class="size-6" />
       </ButtonWithIcon>
       <ButtonWithIcon label="settings" @click="emit('openAudioSettings')">
         <AdjustmentsVerticalIcon class="size-6" />
