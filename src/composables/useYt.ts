@@ -8,6 +8,7 @@ interface UseYtReturn {
   activeIndex: Ref<number>
   activeTrack: ComputedRef<undefined | YtTrack>
   changeActiveTrack: (index: number) => void
+  ensureDefaultSearch: () => Promise<void>
   error: Ref<string>
   hasMore: ComputedRef<boolean>
   isLoading: Ref<boolean>
@@ -42,6 +43,7 @@ export function useYt(): UseYtReturn {
     activeIndex,
     activeTrack,
     changeActiveTrack: ytStore.changeActiveTrack,
+    ensureDefaultSearch: ytStore.ensureDefaultSearch,
     error,
     hasMore,
     isLoading,

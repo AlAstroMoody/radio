@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 const API_BASE = 'https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api/yt'
+const DEFAULT_SEARCH_QUERY = 'Dracondaz'
 
 interface YtSearchPage {
   continuation: null | string
@@ -172,11 +173,19 @@ export const useYtStore = defineStore('yt', () => {
     }
   }
 
+  async function ensureDefaultSearch(): Promise<void> {
+    if (lastQuery.value || results.value.length || isLoading.value)
+      return
+
+    await search(DEFAULT_SEARCH_QUERY)
+  }
+
   return {
     activeIndex,
     activeTrack,
     changeActiveTrack,
     continuationToken,
+    ensureDefaultSearch,
     error,
     getStreamUrl,
     hasMore,

@@ -6,7 +6,7 @@ import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer, YtPlayer, YtTrackList } from 'features'
 import { AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
 import { runStorageMigration } from 'shared/utils/storage-migration'
-import { useLibraryStore, usePlaybackStore, useStationsStore } from 'stores'
+import { useLibraryStore, usePlaybackStore, useStationsStore, useYtStore } from 'stores'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import AudioRoot from './providers/AudioRoot.vue'
@@ -15,6 +15,7 @@ const { isRadioMode } = useRadio()
 const stationsStore = useStationsStore()
 const libraryStore = useLibraryStore()
 const playbackStore = usePlaybackStore()
+const ytStore = useYtStore()
 const isYtMode = computed(() => playbackStore.mode === 'yt')
 const modeLabel = computed(() => {
   if (isYtMode.value)
@@ -80,6 +81,11 @@ watch(() => playbackStore.mode, (mode) => {
     playbackStore.setCurrentSourceId(null)
   }
 }, { flush: 'sync' })
+
+watch(isYtMode, (value) => {
+  if (value)
+    void ytStore.ensureDefaultSearch()
+}, { immediate: true })
 </script>
 
 <template>
