@@ -43,24 +43,24 @@
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="/favicon/apple-touch-icon.png"
+      href="/radio/favicon/apple-touch-icon.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="/favicon/favicon-32x32.png"
+      href="/radio/favicon/favicon-32x32.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="16x16"
-      href="/favicon/favicon-16x16.png"
+      href="/radio/favicon/favicon-16x16.png"
     />
-    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <link rel="manifest" href="/radio/favicon/site.webmanifest" />
     <link
       rel="mask-icon"
-      href="/favicon/safari-pinned-tab.svg"
+      href="/radio/favicon/safari-pinned-tab.svg"
       color="#5bbad5"
     />
     <meta name="msapplication-TileColor" content="#da532c" />
@@ -69,7 +69,7 @@
     <link
       rel="preload"
       as="image"
-      href="/images/flame-left.webp"
+      href="/radio/images/flame-left.webp"
       media="(min-width: 768px)"
       fetchpriority="high"
       type="image/webp"
@@ -77,7 +77,7 @@
     <link
       rel="preload"
       as="image"
-      href="/images/flame-left-mobile.webp"
+      href="/radio/images/flame-left-mobile.webp"
       media="(max-width: 767px)"
       fetchpriority="high"
       type="image/webp"
@@ -85,7 +85,7 @@
     <link
       rel="preload"
       as="image"
-      href="/images/flame-right.webp"
+      href="/radio/images/flame-right.webp"
       media="(min-width: 768px)"
       fetchpriority="low"
       type="image/webp"
@@ -93,22 +93,26 @@
     <link
       rel="preload"
       as="image"
-      href="/images/flame-right-mobile.webp"
+      href="/radio/images/flame-right-mobile.webp"
       media="(max-width: 767px)"
       fetchpriority="low"
       type="image/webp"
     />
-  </head>
+    <script type="module" crossorigin src="/radio/assets/index-etZ86zjg.js"></script>
+    <link rel="modulepreload" crossorigin href="/radio/assets/vue-CIM1wjku.js">
+    <link rel="modulepreload" crossorigin href="/radio/assets/utils-BSRvHaBh.js">
+    <link rel="stylesheet" crossorigin href="/radio/assets/index-C0cjbJdX.css">
+  <link rel="manifest" href="/radio/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/radio/registerSW.js"></script></head>
   <body>
     <picture class="pointer-events-none fixed bottom-0 right-0 z-1" style="pointer-events: none; position: fixed; bottom: 0; right: 0; z-index: 1;">
-      <source srcset="/images/flame-right.webp" media="(min-width: 768px)">
-      <img src="/images/flame-right-mobile.webp" alt="flame" loading="lazy" fetchpriority="low" width="189" height="346" class="flame-right" decoding="async" style="opacity: 1; transition: opacity 0.3s ease-in-out; height: auto;">
+      <source srcset="/radio/images/flame-right.webp" media="(min-width: 768px)">
+      <img src="/radio/images/flame-right-mobile.webp" alt="flame" loading="lazy" fetchpriority="low" width="189" height="346" class="flame-right" decoding="async" style="opacity: 1; transition: opacity 0.3s ease-in-out; height: auto;">
     </picture>
 
     <picture class="pointer-events-none fixed left-0 top-0 z-1 h-full md:h-fit" style="pointer-events: none; position: fixed; left: 0; top: 0; z-index: 1; height: 100%;">
-      <source srcset="/images/flame-left.webp" media="(min-width: 768px)">
+      <source srcset="/radio/images/flame-left.webp" media="(min-width: 768px)">
       <img 
-        src="/images/flame-left-mobile.webp" 
+        src="/radio/images/flame-left-mobile.webp" 
         alt="flame" 
         loading="eager" 
         fetchpriority="high" 
@@ -122,6 +126,5 @@
 
     <div id="app" class="bg-light-100 dark:text-blue-100 transition-colors dark:bg-dark-100"></div>
 
-    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
