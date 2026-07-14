@@ -22,6 +22,8 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
   const ytStore = useYtStore()
 
   const loadError = ref('')
+  const isLoadInFlight = ref(false)
+  let loadPromise: null | Promise<void> = null
 
   const activeSourceId = computed(() => (
     activeTrack.value?.videoId ? `yt-${activeTrack.value.videoId}` : null
@@ -49,7 +51,7 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
     if (!activeTrack.value?.videoId || loadError.value || controller.state.error)
       return false
 
-    if (audioPlayer.isLoading.value)
+    if (audioPlayer.isLoading.value || isLoadInFlight.value)
       return true
 
     const descriptorId = activeSourceId.value
@@ -64,41 +66,53 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
     return false
   })
 
-  async function probeStream(videoId: string): Promise<void> {
-    let response: Response
-
-    try {
-      response = await fetch(ytStore.getStreamUrl(videoId), {
-        headers: { Range: 'bytes=0-0' },
-      })
-      void response.body?.cancel()
-    }
-    catch {
-      // CORS/сеть — пусть проверяет audio element
-      return
-    }
-
-    if (response.ok || response.status === 206)
-      return
-
-    throw new Error(formatStreamHttpError(response.status))
+  function isCurrentTrackReady(videoId: string): boolean {
+    const descriptorId = `yt-${videoId}`
+    return controller.currentSource.value?.id === descriptorId
+      && controller.state.isReady
+      && !controller.state.error
   }
 
   async function loadCurrentTrack(): Promise<void> {
-    const track = activeTrack.value
-    if (!track?.videoId)
+    const videoId = activeTrack.value?.videoId
+    if (typeof videoId !== 'string')
       return
 
+    if (isCurrentTrackReady(videoId)) {
+      loadError.value = ''
+      await applySavedPosition(videoId)
+      return
+    }
+
+    if (loadPromise)
+      return loadPromise
+
     loadError.value = ''
+    isLoadInFlight.value = true
+
+    const pendingVideoId = videoId
+
+    loadPromise = (async () => {
+      try {
+        await audioPlayer.load(false)
+        if (controller.state.error) {
+          loadError.value = controller.state.error
+          return
+        }
+        await applySavedPosition(pendingVideoId)
+      }
+      catch (error) {
+        loadError.value = error instanceof Error ? error.message : 'Ошибка загрузки стрима'
+        audioPlayer.pause()
+      }
+    })()
 
     try {
-      await probeStream(track.videoId)
-      await audioPlayer.load(false)
-      await applySavedPosition(track.videoId)
+      await loadPromise
     }
-    catch (error) {
-      loadError.value = error instanceof Error ? error.message : 'Ошибка загрузки стрима'
-      audioPlayer.pause()
+    finally {
+      loadPromise = null
+      isLoadInFlight.value = false
     }
   }
 
@@ -107,6 +121,8 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
     async (track, _prev, onCleanup) => {
       if (!track?.videoId) {
         loadError.value = ''
+        loadPromise = null
+        isLoadInFlight.value = false
         audioPlayer.stop()
         return
       }
@@ -116,14 +132,6 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
       onCleanup(() => {
         cancelled = true
       })
-
-      const descriptorId = activeSourceId.value ?? `yt-${track.videoId}`
-
-      if (controller.currentSource.value?.id === descriptorId && controller.state.isReady && !controller.state.error) {
-        loadError.value = ''
-        await applySavedPosition(track.videoId)
-        return
-      }
 
       if (!cancelled)
         await loadCurrentTrack()
@@ -178,12 +186,7 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
 
     loadError.value = ''
 
-    const descriptorId = activeSourceId.value ?? `yt-${track.videoId}`
-    if (
-      controller.currentSource.value?.id !== descriptorId
-      || !controller.state.isReady
-      || controller.state.error
-    ) {
+    if (!isCurrentTrackReady(track.videoId)) {
       await loadCurrentTrack()
       if (loadError.value)
         return
@@ -215,17 +218,4 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
     pending: readonly(pending),
     play,
   }
-}
-
-function formatStreamHttpError(status: number): string {
-  if (status === 403)
-    return 'Stream unavailable (403)'
-
-  if (status === 404)
-    return 'Stream not found (404)'
-
-  if (status === 500 || status === 502 || status === 503)
-    return `Backend error (${status})`
-
-  return `Stream error (${status})`
 }
