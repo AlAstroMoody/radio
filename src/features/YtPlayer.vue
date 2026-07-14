@@ -14,7 +14,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const POSITION_SAVE_INTERVAL = 1000
 
-const { activeTrack, isLoadingRadio, loadSimilarTracks, nextTrack, prevTrack } = useYt()
+const { activeTrack, isLoadingLiked, isLoadingRadio, isShuffle, lastQuery, loadLiked, loadSimilarTracks, nextTrack, prevTrack, shuffleTracks } = useYt()
 const playbackStore = usePlaybackStore()
 const ytStore = useYtStore()
 const { isYtMode } = storeToRefs(playbackStore)
@@ -50,7 +50,6 @@ const {
   progress,
   seekBackward,
   seekForward,
-  undoLastSeek,
 } = usePlaybackProgress({
   fallbackDuration,
   isActiveSource: () => {
@@ -236,7 +235,6 @@ useHotkeys([
     void nextTrack()
   }, key: 'n', preventDefault: true },
   { callback: prevTrack, key: 'p', preventDefault: true },
-  { callback: undoLastSeek, key: 'u', preventDefault: true },
 ])
 
 onMounted(() => {
@@ -288,6 +286,9 @@ watch([currentTime, duration], () => {
       :pending="pending"
       :play-error="playError"
       :loading-similar-tracks="isLoadingRadio"
+      :loading-favorites="isLoadingLiked"
+      :is-favorites="lastQuery === 'Liked'"
+      :is-shuffle="isShuffle"
       :show-library-controls="false"
       @seek-backward="seekBackward"
       @prev-file="prevTrack"
@@ -295,7 +296,8 @@ watch([currentTime, duration], () => {
       @next-file="() => void nextTrack()"
       @seek-forward="seekForward"
       @load-similar-tracks="() => void loadSimilarTracks()"
-      @undo-last-seek="undoLastSeek"
+      @load-favorites="() => void loadLiked()"
+      @shuffle-files="shuffleTracks"
     />
 
     <ProgressBar

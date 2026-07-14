@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon, SparklesIcon } from '@heroicons/vue/24/solid'
+import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, BookmarkIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon, SparklesIcon } from '@heroicons/vue/24/solid'
 import { BaseButton, iSpin } from 'shared/ui'
 
 const {
+  isFavorites = false,
   isPlaying,
   isRepeat = false,
   isShuffle = false,
+  loadingFavorites = false,
   loadingSimilarTracks = false,
   pending = false,
   playError = '',
   showLibraryControls = true,
 } = defineProps<{
+  isFavorites?: boolean
   isPlaying: boolean
   isRepeat?: boolean
   isShuffle?: boolean
+  loadingFavorites?: boolean
   loadingSimilarTracks?: boolean
   pending?: boolean
   playError?: string
@@ -21,6 +25,7 @@ const {
 }>()
 
 const emit = defineEmits<{
+  loadFavorites: []
   loadSimilarTracks: []
   nextFile: []
   openFiles: []
@@ -145,10 +150,26 @@ const emit = defineEmits<{
       </BaseButton>
       <BaseButton
         variant="player"
-        label="Отменить последнюю перемотку"
-        @click="emit('undoLastSeek')"
+        :class="{ 'text-purple-500': isFavorites }"
+        :disabled="loadingFavorites"
+        label="Избранное"
+        @click="emit('loadFavorites')"
       >
-        <ArrowUturnLeftIcon class="h-5 w-5" />
+        <BookmarkIcon class="h-5 w-5" :class="{ 'animate-pulse': loadingFavorites }" />
+      </BaseButton>
+      <BaseButton
+        variant="player"
+        :class="{ 'text-purple-500': isShuffle }"
+        :label="isShuffle ? 'Отключить случайный порядок' : 'Включить случайный порядок'"
+        @click="emit('shuffleFiles')"
+      >
+        <div class="relative">
+          <ArrowsUpDownIcon class="h-5 w-5" />
+          <div
+            v-if="isShuffle"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
+          />
+        </div>
       </BaseButton>
     </div>
   </div>

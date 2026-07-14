@@ -41,9 +41,12 @@ export const useYtStore = defineStore('yt', () => {
   const continuationToken = useStorage<null | string>('yt-search-continuation', null)
   const playbackPosition = useStorage<null | YtPlaybackPosition>('yt-playback-position', null)
   const isLoading = ref(false)
+  const isLoadingLiked = ref(false)
   const isLoadingMore = ref(false)
   const isLoadingRadio = ref(false)
   const isLoadingSuggestions = ref(false)
+  const isShuffle = ref(false)
+  const originalResults = ref<YtTrack[]>([])
   const suggestions = ref<string[]>([])
   const error = ref('')
 
@@ -68,6 +71,11 @@ export const useYtStore = defineStore('yt', () => {
   })
 
   function replaceResults(tracks: YtTrack[]): void {
+    if (isShuffle.value) {
+      isShuffle.value = false
+      originalResults.value = []
+    }
+
     const previousVideoId = activeTrack.value?.videoId
 
     results.value = tracks
@@ -261,11 +269,49 @@ export const useYtStore = defineStore('yt', () => {
     }
   }
 
-  async function loadLiked(): Promise<void> {
-    if (isLoading.value)
+  function shuffleTracks(): void {
+    if (!results.value.length)
       return
 
-    isLoading.value = true
+    if (!isShuffle.value) {
+      originalResults.value = [...results.value]
+      const currentVideoId = activeTrack.value?.videoId
+      const shuffled = [...results.value].sort(() => Math.random() - 0.5)
+      results.value = shuffled
+
+      if (currentVideoId) {
+        const newIndex = shuffled.findIndex(track => track.videoId === currentVideoId)
+        activeIndex.value = newIndex >= 0 ? newIndex : 0
+      }
+      else {
+        activeIndex.value = 0
+      }
+
+      isShuffle.value = true
+    }
+    else {
+      const currentVideoId = activeTrack.value?.videoId
+      results.value = [...originalResults.value]
+
+      if (currentVideoId) {
+        const restoredIndex = results.value.findIndex(track => track.videoId === currentVideoId)
+        activeIndex.value = restoredIndex >= 0
+          ? restoredIndex
+          : Math.min(activeIndex.value, results.value.length - 1)
+      }
+      else {
+        activeIndex.value = Math.min(activeIndex.value, results.value.length - 1)
+      }
+
+      isShuffle.value = false
+    }
+  }
+
+  async function loadLiked(): Promise<void> {
+    if (isLoadingLiked.value)
+      return
+
+    isLoadingLiked.value = true
     error.value = ''
     continuationToken.value = null
     clearSuggestions()
@@ -290,7 +336,7 @@ export const useYtStore = defineStore('yt', () => {
       error.value = e instanceof Error ? e.message : 'Ошибка загрузки Liked'
     }
     finally {
-      isLoading.value = false
+      isLoadingLiked.value = false
     }
   }
 
@@ -356,9 +402,11 @@ export const useYtStore = defineStore('yt', () => {
     getStreamUrl,
     hasMore,
     isLoading,
+    isLoadingLiked,
     isLoadingMore,
     isLoadingRadio,
     isLoadingSuggestions,
+    isShuffle,
     lastQuery,
     loadLiked,
     loadMore,
@@ -368,6 +416,7 @@ export const useYtStore = defineStore('yt', () => {
     results,
     savePlaybackPosition,
     search,
+    shuffleTracks,
     suggestions,
   }
 })

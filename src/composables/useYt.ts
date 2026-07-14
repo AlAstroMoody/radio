@@ -14,9 +14,11 @@ interface UseYtReturn {
   fetchSuggestions: (query: string) => Promise<void>
   hasMore: ComputedRef<boolean>
   isLoading: Ref<boolean>
+  isLoadingLiked: Ref<boolean>
   isLoadingMore: Ref<boolean>
   isLoadingRadio: Ref<boolean>
   isLoadingSuggestions: Ref<boolean>
+  isShuffle: Ref<boolean>
   lastQuery: Ref<string>
   loadLiked: () => Promise<void>
   loadMore: () => Promise<void>
@@ -25,6 +27,7 @@ interface UseYtReturn {
   prevTrack: () => void
   results: Ref<YtTrack[]>
   search: (query: string) => Promise<void>
+  shuffleTracks: () => void
   suggestions: Ref<string[]>
 }
 
@@ -36,9 +39,11 @@ export function useYt(): UseYtReturn {
     error,
     hasMore,
     isLoading,
+    isLoadingLiked,
     isLoadingMore,
     isLoadingRadio,
     isLoadingSuggestions,
+    isShuffle,
     lastQuery,
     results,
     suggestions,
@@ -54,9 +59,11 @@ export function useYt(): UseYtReturn {
     fetchSuggestions: ytStore.fetchSuggestions,
     hasMore,
     isLoading,
+    isLoadingLiked,
     isLoadingMore,
     isLoadingRadio,
     isLoadingSuggestions,
+    isShuffle,
     lastQuery,
     loadLiked: ytStore.loadLiked,
     loadMore: ytStore.loadMore,
@@ -65,6 +72,7 @@ export function useYt(): UseYtReturn {
     prevTrack: ytStore.prevTrack,
     results,
     search: ytStore.search,
+    shuffleTracks: ytStore.shuffleTracks,
     suggestions,
   }
 }

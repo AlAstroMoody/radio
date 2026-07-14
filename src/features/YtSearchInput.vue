@@ -8,7 +8,6 @@ const {
   fetchSuggestions,
   isLoading,
   lastQuery,
-  loadLiked,
   search,
   suggestions,
 } = useYt()
@@ -31,12 +30,6 @@ watch(query, (value) => {
 
   void debouncedFetchSuggestions(value)
 })
-
-async function handleLiked(): Promise<void> {
-  showSuggestions.value = false
-  clearSuggestions()
-  await loadLiked()
-}
 
 async function handleSearch(): Promise<void> {
   showSuggestions.value = false
@@ -93,13 +86,6 @@ async function handleSuggestionClick(suggestion: string): Promise<void> {
         @click="handleSearch"
       >
         {{ isLoading ? '...' : 'Search' }}
-      </button>
-      <button
-        class="shrink-0 rounded-lg border border-glass-purple-border bg-glass px-3 py-2 text-sm text-black disabled:opacity-60 dark:bg-glass-purple/40 dark:text-white"
-        :disabled="isLoading"
-        @click="handleLiked"
-      >
-        {{ isLoading ? '...' : 'Favorites' }}
       </button>
     </div>
 
