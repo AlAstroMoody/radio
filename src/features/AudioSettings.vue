@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
-import { usePlaybackStore } from 'stores'
 import { BaseSelect, CheckboxInput, RangeInput } from 'shared'
+import { usePlaybackStore } from 'stores'
 
 const { isRadioMode } = useRadio()
 const playbackStore = usePlaybackStore()

@@ -3,23 +3,27 @@ import { useAudioController } from 'composables/useAudioController'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
+import { usePlaybackProgress } from 'composables/usePlaybackProgress'
 import { useYt } from 'composables/useYt'
 import { useYtPlayer } from 'composables/useYtPlayer'
-import { usePlaybackStore } from 'stores'
-import { formatYtArtists, formatYtTitle, getYtThumbnailArtwork, getYtThumbnailUrl } from 'shared/types/yt'
-import { BaseButton, iPlay, iSpin } from 'shared/ui'
 import { storeToRefs } from 'pinia'
+import { formatYtArtists, formatYtTitle, getYtThumbnailArtwork, getYtThumbnailUrl } from 'shared/types/yt'
+import { AudioControls, MarqueeText, ProgressBar } from 'shared/ui'
+import { usePlaybackStore, useYtStore } from 'stores'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
-const { activeTrack, nextTrack, prevTrack } = useYt()
-const playbackStore = usePlaybackStore()
-const { isYtMode } = storeToRefs(playbackStore)
-const { volume, autoplay, ytCoverArt } = useAudioSettings()
+const POSITION_SAVE_INTERVAL = 1000
 
-const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
+const { activeTrack, isLoadingRadio, loadSimilarTracks, nextTrack, prevTrack } = useYt()
+const playbackStore = usePlaybackStore()
+const ytStore = useYtStore()
+const { isYtMode } = storeToRefs(playbackStore)
+const { volume, ytCoverArt } = useAudioSettings()
+
+const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
 const {
-  audio,
+  error: playError,
   isPlaying,
   pause,
   pending,
@@ -27,67 +31,42 @@ const {
 } = useYtPlayer(activeTrack)
 
 const audioController = useAudioController()
-const wasPlayingBeforeToggle = ref(false)
 const wasPlayingBeforeSwitch = ref(false)
+let lastPositionSavedAt = 0
 
 const trackTitle = computed(() => formatYtTitle(activeTrack.value))
 const trackArtist = computed(() => formatYtArtists(activeTrack.value))
 const coverUrl = computed(() => getYtThumbnailUrl(activeTrack.value, 120))
+const marqueeText = computed(() => `${trackTitle.value} — ${trackArtist.value}`)
+const fallbackDuration = computed(() => activeTrack.value?.duration_seconds)
+const activeSourceId = computed(() => (
+  activeTrack.value?.videoId ? `yt-${activeTrack.value.videoId}` : null
+))
 
-watch(activeTrack, async (track) => {
-  const shouldResume = isPlaying.value || wasPlayingBeforeSwitch.value
-  wasPlayingBeforeSwitch.value = false
-  pause()
-
-  if (!track)
-    return
-
-  if (!autoplay.value && !shouldResume)
-    return
-
-  try {
-    await playYt()
-  }
-  catch {}
-})
-
-watch(() => isYtMode.value, (value) => {
-  if (!value) {
-    wasPlayingBeforeToggle.value = isPlaying.value
-    pause()
-    return
-  }
-
-  if (wasPlayingBeforeToggle.value) {
-    nextTick(() => {
-      if (!isYtMode.value || !activeTrack.value)
-        return
-
-      playYt()
-      wasPlayingBeforeToggle.value = false
-    })
-  }
-})
-
-watch(
-  () => audioController?.state.ended,
-  (ended) => {
-    if (!ended || !isYtMode.value)
-      return
-
-    if (!audioController?.currentSource.value?.id?.startsWith('yt-'))
-      return
-
-    wasPlayingBeforeSwitch.value = true
-    nextTrack()
+const {
+  currentTime,
+  duration,
+  handleProgressSeek,
+  progress,
+  seekBackward,
+  seekForward,
+  undoLastSeek,
+} = usePlaybackProgress({
+  fallbackDuration,
+  isActiveSource: () => {
+    const currentId = audioController?.currentSource.value?.id
+    return !!currentId && currentId === activeSourceId.value
   },
-)
+})
+
+function onProgressSeek(percent: number): void {
+  handleProgressSeek(percent)
+  saveCurrentPosition()
+}
 
 async function playYt(): Promise<void> {
   try {
     await play()
-    if (audio.value)
-      audio.value.playbackRate = 1
   }
   catch (error) {
     if (error instanceof Error && error.name === 'AbortError')
@@ -97,12 +76,42 @@ async function playYt(): Promise<void> {
   }
 }
 
+function saveCurrentPosition(): void {
+  const videoId = activeTrack.value?.videoId
+  if (!videoId || !audioController)
+    return
+
+  const currentId = audioController.currentSource.value?.id
+  if (currentId !== activeSourceId.value)
+    return
+
+  ytStore.savePlaybackPosition(videoId, audioController.state.currentTime)
+  lastPositionSavedAt = Date.now()
+}
+
+function saveCurrentPositionThrottled(): void {
+  if (!isYtMode.value || !activeTrack.value?.videoId)
+    return
+
+  const currentId = audioController?.currentSource.value?.id
+  if (!currentId || currentId !== activeSourceId.value)
+    return
+
+  const now = Date.now()
+  if (now - lastPositionSavedAt < POSITION_SAVE_INTERVAL)
+    return
+
+  saveCurrentPosition()
+}
+
 function setupYtMediaSessionHandlers(): void {
   if (!isMediaSessionSupported.value)
     return
 
   setActionHandlers({
-    nexttrack: nextTrack,
+    nexttrack: () => {
+      void nextTrack()
+    },
     pause: () => {
       if (isPlaying.value)
         pause()
@@ -112,7 +121,20 @@ function setupYtMediaSessionHandlers(): void {
         void playYt()
     },
     previoustrack: prevTrack,
+    seekbackward: () => {
+      seekBackward()
+    },
+    seekforward: () => {
+      seekForward()
+    },
   })
+}
+
+function togglePlayPause(): void {
+  if (isPlaying.value)
+    pause()
+  else
+    void playYt()
 }
 
 function updateYtMediaSessionMetadata(): void {
@@ -126,21 +148,95 @@ function updateYtMediaSessionMetadata(): void {
   })
 }
 
+function updateYtMediaSessionPosition(): void {
+  if (!isMediaSessionSupported.value || duration.value <= 0)
+    return
+
+  setPositionState({
+    duration: duration.value,
+    playbackRate: 1,
+    position: currentTime.value,
+  })
+}
+
+watch(activeTrack, async (track, oldTrack) => {
+  updateYtMediaSessionMetadata()
+
+  const trackChanged = !!oldTrack?.videoId && track?.videoId !== oldTrack.videoId
+
+  const shouldResume = isPlaying.value || wasPlayingBeforeSwitch.value
+  wasPlayingBeforeSwitch.value = false
+  pause()
+
+  if (!track)
+    return
+
+  if (trackChanged) {
+    ytStore.clearPlaybackPosition()
+    lastPositionSavedAt = 0
+  }
+
+  if (!shouldResume)
+    return
+
+  try {
+    await playYt()
+  }
+  catch {}
+})
+
+watch(() => isYtMode.value, async (value) => {
+  if (!value) {
+    saveCurrentPosition()
+    pause()
+    return
+  }
+
+  await nextTick()
+
+  if (!playbackStore.consumeModeEnterResume() || !activeTrack.value)
+    return
+
+  try {
+    await playYt()
+  }
+  catch {}
+}, { immediate: true })
+
+watch(
+  () => audioController?.state.ended,
+  (ended) => {
+    if (!ended || !isYtMode.value)
+      return
+
+    if (!audioController?.currentSource.value?.id?.startsWith('yt-'))
+      return
+
+    if (activeTrack.value?.videoId) {
+      ytStore.clearPlaybackPosition()
+      lastPositionSavedAt = 0
+    }
+
+    wasPlayingBeforeSwitch.value = true
+    void nextTrack()
+  },
+)
+
 useHotkeys([
-  { callback: () => {
-    if (isPlaying.value)
-      pause()
-    else
-      void playYt()
-  }, key: ' ', preventDefault: true },
+  { callback: togglePlayPause, key: ' ', preventDefault: true },
+  { callback: seekBackward, key: 'ArrowLeft', preventDefault: true },
+  { callback: seekForward, key: 'ArrowRight', preventDefault: true },
   { callback: () => {
     volume.value = Math.min(100, volume.value + 10)
   }, key: 'ArrowUp', preventDefault: true },
   { callback: () => {
     volume.value = Math.max(0, volume.value - 10)
   }, key: 'ArrowDown', preventDefault: true },
-  { callback: nextTrack, key: 'n', preventDefault: true },
+  { callback: () => {
+    void nextTrack()
+  }, key: 'n', preventDefault: true },
   { callback: prevTrack, key: 'p', preventDefault: true },
+  { callback: undoLastSeek, key: 'u', preventDefault: true },
 ])
 
 onMounted(() => {
@@ -148,66 +244,67 @@ onMounted(() => {
   updateYtMediaSessionMetadata()
 })
 
-watch(activeTrack, () => {
-  updateYtMediaSessionMetadata()
-})
+watch(isPlaying, (playing, wasPlaying) => {
+  if (wasPlaying && !playing)
+    saveCurrentPosition()
 
-watch(isPlaying, (playing) => {
   if (isMediaSessionSupported.value)
     setPlaybackState(playing ? 'playing' : 'paused')
+})
+
+watch(currentTime, () => {
+  saveCurrentPositionThrottled()
+})
+
+watch([currentTime, duration], () => {
+  if (isMediaSessionSupported.value && duration.value > 0)
+    updateYtMediaSessionPosition()
 })
 </script>
 
 <template>
-  <div class="relative flex flex-col justify-between landscape-flex-row">
-    <div class="z-10 mt-auto md:relative">
-      <figure>
-        <img
-          v-if="coverUrl && ytCoverArt"
-          :src="coverUrl"
-          :alt="trackTitle"
-          class="mx-auto mb-4 size-48 rounded-xl object-cover shadow-lg ring-1 ring-glass-purple-border md:size-56"
-        >
-        <div class="mx-auto flex w-[300px] flex-col justify-start font-blackcraft text-black dark:text-white">
-          <div class="truncate">
-            {{ trackTitle }}
-          </div>
-          <div class="truncate text-lg opacity-80">
-            {{ trackArtist }}
-          </div>
-        </div>
-      </figure>
-      <div class="relative z-10 flex justify-center text-3xl font-normal">
-        <BaseButton
-          class="rounded-l-full"
-          variant="control"
-          label="prev"
-          :disabled="!activeTrack"
-          @click="prevTrack"
-        >
-          <span class="text-black dark:text-white">prev</span>
-        </BaseButton>
-        <BaseButton
-          class="w-32 disabled:opacity-80"
-          :disabled="pending || !activeTrack"
-          variant="control"
-          label="play"
-          @click="isPlaying ? pause() : playYt()"
-        >
-          <iPlay v-show="!pending" :is-play="isPlaying" class="mr-2" />
-          <iSpin v-show="pending" />
-          <span class="text-black dark:text-white">{{ isPlaying ? 'pause' : 'play' }}</span>
-        </BaseButton>
-        <BaseButton
-          class="rounded-r-full"
-          variant="control"
-          label="next"
-          :disabled="!activeTrack"
-          @click="nextTrack"
-        >
-          <span class="text-black dark:text-white">next</span>
-        </BaseButton>
+  <div v-if="activeTrack" class="flex w-full max-w-[360px] flex-col items-center gap-2">
+    <img
+      v-if="coverUrl && ytCoverArt"
+      :src="coverUrl"
+      :alt="trackTitle"
+      class="size-32 shrink-0 rounded-xl object-cover shadow-lg ring-1 ring-glass-purple-border md:size-40"
+    >
+
+    <div class="flex w-full justify-between gap-2 px-2 font-blackcraft text-black dark:text-white">
+      <MarqueeText
+        :text="marqueeText"
+        :speed="30"
+        :min-duration="8"
+        class="max-w-[calc(100%-48px)]"
+      />
+      <div class="flex min-w-[48px] items-center justify-center text-center">
+        {{ progress }}%
       </div>
     </div>
+
+    <AudioControls
+      :is-playing="isPlaying"
+      :pending="pending"
+      :play-error="playError"
+      :loading-similar-tracks="isLoadingRadio"
+      :show-library-controls="false"
+      @seek-backward="seekBackward"
+      @prev-file="prevTrack"
+      @toggle-play-pause="togglePlayPause"
+      @next-file="() => void nextTrack()"
+      @seek-forward="seekForward"
+      @load-similar-tracks="() => void loadSimilarTracks()"
+      @undo-last-seek="undoLastSeek"
+    />
+
+    <ProgressBar
+      class="w-full"
+      :current-time="currentTime"
+      :duration="duration"
+      :progress="progress"
+      :is-loading="pending && !playError"
+      @seek="onProgressSeek"
+    />
   </div>
 </template>

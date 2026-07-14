@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/solid'
-import { BaseButton } from 'shared/ui'
+import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon, SparklesIcon } from '@heroicons/vue/24/solid'
+import { BaseButton, iSpin } from 'shared/ui'
 
-defineProps<{
+const {
+  isPlaying,
+  isRepeat = false,
+  isShuffle = false,
+  loadingSimilarTracks = false,
+  pending = false,
+  playError = '',
+  showLibraryControls = true,
+} = defineProps<{
   isPlaying: boolean
-  isRepeat: boolean
-  isShuffle: boolean
+  isRepeat?: boolean
+  isShuffle?: boolean
+  loadingSimilarTracks?: boolean
   pending?: boolean
+  playError?: string
+  showLibraryControls?: boolean
 }>()
 
 const emit = defineEmits<{
+  loadSimilarTracks: []
   nextFile: []
   openFiles: []
   prevFile: []
@@ -23,7 +35,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 items-center">
+  <div class="flex flex-col items-center" :class="showLibraryControls ? 'gap-4' : 'gap-2'">
     <!-- Основные кнопки управления -->
     <div class="flex items-center gap-4">
       <BaseButton
@@ -40,16 +52,26 @@ const emit = defineEmits<{
       >
         <ChevronDoubleLeftIcon class="h-6 w-6" />
       </BaseButton>
-      <BaseButton
-        variant="player"
-        class="!size-14"
-        :disabled="pending"
-        :label="isPlaying ? 'Пауза' : 'Воспроизвести'"
-        @click="emit('togglePlayPause')"
-      >
-        <PlayIcon v-if="!isPlaying" class="h-10 w-10" />
-        <PauseIcon v-else class="h-10 w-10" />
-      </BaseButton>
+      <div class="relative group">
+        <BaseButton
+          variant="player"
+          class="size-14!"
+          :class="{ 'text-red-500 dark:text-red-400': playError }"
+          :disabled="pending"
+          :label="playError || (pending ? 'Загрузка' : isPlaying ? 'Пауза' : 'Воспроизвести')"
+          @click="emit('togglePlayPause')"
+        >
+          <iSpin v-if="pending" class="mr-0! h-10 w-10" />
+          <PlayIcon v-else-if="!isPlaying" class="h-10 w-10" />
+          <PauseIcon v-else class="h-10 w-10" />
+        </BaseButton>
+        <div
+          v-if="playError"
+          class="pointer-events-none absolute -top-10 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1.5 text-sm text-white shadow-lg"
+        >
+          {{ playError }}
+        </div>
+      </div>
       <BaseButton
         variant="player"
         label="Следующий трек"
@@ -67,7 +89,7 @@ const emit = defineEmits<{
     </div>
 
     <!-- Дополнительные кнопки -->
-    <div class="flex items-center gap-4">
+    <div v-if="showLibraryControls" class="flex items-center gap-4">
       <BaseButton
         variant="player"
         :class="{ 'text-purple-500': isShuffle }"
@@ -102,6 +124,24 @@ const emit = defineEmits<{
             class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
           />
         </div>
+      </BaseButton>
+      <BaseButton
+        variant="player"
+        label="Отменить последнюю перемотку"
+        @click="emit('undoLastSeek')"
+      >
+        <ArrowUturnLeftIcon class="h-5 w-5" />
+      </BaseButton>
+    </div>
+
+    <div v-else class="flex items-center gap-4">
+      <BaseButton
+        variant="player"
+        label="Похожие треки после текущего"
+        :disabled="loadingSimilarTracks"
+        @click="emit('loadSimilarTracks')"
+      >
+        <SparklesIcon class="h-5 w-5" :class="{ 'animate-pulse': loadingSimilarTracks }" />
       </BaseButton>
       <BaseButton
         variant="player"

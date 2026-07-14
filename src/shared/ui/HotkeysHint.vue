@@ -27,9 +27,11 @@ const radioHotkeys = [
 
 const ytHotkeys = [
   { action: 'play/pause', key: 'Space' },
+  { action: 'seek', key: '←', suffix: ' / →' },
   { action: 'volume', key: '↑', suffix: ' / ↓' },
   { action: 'next track', key: 'n' },
   { action: 'previous track', key: 'p' },
+  { action: 'undo seek', key: 'u' },
 ]
 
 const currentHotkeys = computed(() => {

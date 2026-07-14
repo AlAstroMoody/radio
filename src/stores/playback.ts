@@ -8,6 +8,7 @@ export const usePlaybackStore = defineStore('playback', () => {
   const mode = useStorage<PlaybackMode>('radio-mode', 'radio')
   const activeRadioId = useStorage<number>('active-radio-id', 1)
   const currentSourceId = ref<null | string>(null)
+  const shouldResumeOnModeEnter = ref(false)
 
   const isRadioMode = computed<boolean>({
     get: () => mode.value === 'radio',
@@ -19,8 +20,18 @@ export const usePlaybackStore = defineStore('playback', () => {
   const isMusicMode = computed<boolean>(() => mode.value === 'music')
   const isYtMode = computed<boolean>(() => mode.value === 'yt')
 
+  function consumeModeEnterResume(): boolean {
+    const shouldResume = shouldResumeOnModeEnter.value
+    shouldResumeOnModeEnter.value = false
+    return shouldResume
+  }
+
   function setMode(next: PlaybackMode): void {
     mode.value = next
+  }
+
+  function setShouldResumeOnModeEnter(value: boolean): void {
+    shouldResumeOnModeEnter.value = value
   }
 
   function toggleMode(): void {
@@ -37,6 +48,7 @@ export const usePlaybackStore = defineStore('playback', () => {
 
   return {
     activeRadioId,
+    consumeModeEnterResume,
     currentSourceId,
     isMusicMode,
     isRadioMode,
@@ -45,6 +57,8 @@ export const usePlaybackStore = defineStore('playback', () => {
     setActiveRadioId,
     setCurrentSourceId,
     setMode,
+    setShouldResumeOnModeEnter,
+    shouldResumeOnModeEnter,
     toggleMode,
   }
 })

@@ -216,16 +216,16 @@ export function useDragDrop<T = any>(
   function createHandlers(index: number, item: T): DragDropHandlers {
     return {
       dragHandle: {
-        'class': [
+        class: [
           'cursor-grab active:cursor-grabbing touch-none select-none',
           state.isDragging && state.draggedIndex === index ? 'cursor-grabbing' : '',
         ],
-        'draggable': enableMouse,
-        'onDragend': (event: DragEvent) => handleDragEnd(event, index, item),
-        'onDragstart': (event: DragEvent) => handleDragStart(event, index, item),
-        'onTouchend': (event: TouchEvent) => handleTouchEnd(event, index, item),
-        'onTouchmove': (event: TouchEvent) => handleTouchMove(event, index),
-        'onTouchstart': (event: TouchEvent) => handleTouchStart(event, index, item),
+        draggable: enableMouse,
+        onDragend: (event: DragEvent) => handleDragEnd(event, index, item),
+        onDragstart: (event: DragEvent) => handleDragStart(event, index, item),
+        onTouchend: (event: TouchEvent) => handleTouchEnd(event, index, item),
+        onTouchmove: (event: TouchEvent) => handleTouchMove(event, index),
+        onTouchstart: (event: TouchEvent) => handleTouchStart(event, index, item),
       },
       dropTarget: {
         onDragleave: (event: DragEvent) => handleDragLeave(event, index, item),

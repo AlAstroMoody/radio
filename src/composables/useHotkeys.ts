@@ -12,20 +12,6 @@ export interface HotkeyConfig {
   shift?: boolean
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement))
-    return false
-
-  const tag = target.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')
-    return true
-
-  if (target.isContentEditable)
-    return true
-
-  return !!target.closest('[contenteditable="true"]')
-}
-
 export function useHotkeys(configs: HotkeyConfig[]): void {
   function handleKeydown(event: KeyboardEvent): void {
     if (isEditableTarget(event.target))
@@ -54,4 +40,18 @@ export function useHotkeys(configs: HotkeyConfig[]): void {
   onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown)
   })
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement))
+    return false
+
+  const tag = target.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')
+    return true
+
+  if (target.isContentEditable)
+    return true
+
+  return !!target.closest('[contenteditable="true"]')
 }

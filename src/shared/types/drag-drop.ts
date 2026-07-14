@@ -13,13 +13,13 @@ export interface DragDropCallbacks<T = any> {
 
 export interface DragDropHandlers {
   dragHandle: {
-    'class': string[]
-    'draggable': boolean
-    'onDragend': (event: DragEvent) => void
-    'onDragstart': (event: DragEvent) => void
-    'onTouchend': (event: TouchEvent) => void
-    'onTouchmove': (event: TouchEvent) => void
-    'onTouchstart': (event: TouchEvent) => void
+    class: string[]
+    draggable: boolean
+    onDragend: (event: DragEvent) => void
+    onDragstart: (event: DragEvent) => void
+    onTouchend: (event: TouchEvent) => void
+    onTouchmove: (event: TouchEvent) => void
+    onTouchstart: (event: TouchEvent) => void
   }
   dropTarget: {
     onDragleave: (event: DragEvent) => void

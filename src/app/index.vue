@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useAudioController } from 'composables/useAudioController'
+import type { PlaybackMode } from 'stores/playback'
+
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useModal } from 'composables/useModal'
 import { useRadio } from 'composables/useRadio'
@@ -22,10 +23,32 @@ const modeLabel = computed(() => {
     return 'yt'
   return isRadioMode.value ? 'radio' : 'music'
 })
+
+// Тяжёлый UI (списки/плееры) переключаем после paint кнопок ControlPanel
+const deferredMode = ref<PlaybackMode>(playbackStore.mode)
+const isYtView = computed(() => deferredMode.value === 'yt')
+const isRadioView = computed(() => deferredMode.value === 'radio')
+const isMusicView = computed(() => deferredMode.value === 'music')
+let deferredModeToken = 0
+
+watch(() => playbackStore.mode, (mode) => {
+  if (deferredMode.value === mode)
+    return
+
+  const token = ++deferredModeToken
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (token !== deferredModeToken)
+        return
+
+      deferredMode.value = mode
+    })
+  })
+})
+
 const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB, updateFiles } = libraryStore
 const { openModal } = useModal()
 const currentModal = ref<'audio-settings' | 'playlist' | null>(null)
-const audioController = useAudioController(false)
 const { visualization, ytCoverArt } = useAudioSettings()
 
 function handleOpenAudioSettings() {
@@ -65,23 +88,6 @@ onMounted(() => {
   }
 })
 
-watch(() => playbackStore.mode, (mode) => {
-  if (!audioController)
-    return
-
-  audioController.pause()
-
-  if (mode === 'radio' || mode === 'yt') {
-    audioController.setEffectChain(null)
-    return
-  }
-
-  if (audioController.currentSource.value?.type === 'stream') {
-    audioController.stop()
-    playbackStore.setCurrentSourceId(null)
-  }
-}, { flush: 'sync' })
-
 watch(isYtMode, (value) => {
   if (value)
     void ytStore.ensureDefaultSearch()
@@ -94,24 +100,27 @@ watch(isYtMode, (value) => {
       class="flex min-h-mobile w-full flex-col gap-4 relative"
     >
       <div class="flex-1 flex h-[calc(100dvh-144px)] md:h-[calc(100dvh-64px)] w-full z-1 pb-safe md:flex-row">
-        <RadioList v-if="!isYtMode" class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-0 border-t-0 rounded-br-lg" />
+        <RadioList v-if="!isYtView" class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-0 border-t-0 rounded-br-lg" />
         <YtTrackList v-else class="z-1 w-full md:h-full md:w-96 md:min-w-[24rem] hidden md:block bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-0 border-t-0 rounded-br-lg" />
 
-        <div class="flex-1 flex flex-col justify-between items-center gap:20">
+        <div class="flex-1 flex flex-col items-center min-h-0">
           <div
-            class="h-10 mt-4 w-full max-w-sm font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
+            class="h-10 mt-4 w-full max-w-sm shrink-0 font-blackcraft text-4xl lg:text-5xl text-black dark:text-white text-center flex gap-2 justify-center"
           >
             Amazing <div class="w-20">
               {{ modeLabel }}
             </div>
           </div>
 
-          <div class="flex gap-4 flex-wrap md:flex-col">
-            <AudioVisualizer v-if="visualization && !(isYtMode && ytCoverArt)" />
-            <div class="w-fit mb-15 mx-auto">
-              <YtPlayer v-if="isYtMode" class="mt-auto" />
-              <MusicPlayer v-else-if="!isRadioMode" class="mt-auto h-56" />
-              <RadioPlayer v-else class="mt-auto h-56" />
+          <div class="mt-auto mb-15 flex w-full flex-col items-center gap-3">
+            <AudioVisualizer
+              v-if="visualization && !(isYtView && ytCoverArt)"
+              class="shrink-0"
+            />
+            <div class="flex w-full max-w-[360px] min-h-56 flex-col justify-end mx-auto">
+              <YtPlayer v-if="isYtView" class="w-full" />
+              <MusicPlayer v-else-if="isMusicView" class="w-full min-h-56" />
+              <RadioPlayer v-else-if="isRadioView" class="w-full" />
             </div>
           </div>
         </div>

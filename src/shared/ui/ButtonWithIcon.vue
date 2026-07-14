@@ -1,19 +1,18 @@
 <script setup lang="ts">
-const { label = '', variant = 'base' } = defineProps<{
+const { active = false, label = '' } = defineProps<{
+  active?: boolean
   label?: string
-  variant?: 'base' | 'primary' | 'secondary'
 }>()
-
-const classes: Record<string, string> = {
-  base: 'text-gray-700 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-700',
-}
 </script>
 
 <template>
   <button
     :aria-label="label"
-    :class="classes[variant]"
+    :aria-pressed="active"
     class="flex items-center justify-center w-12 h-12 rounded-full transition-all active:translate-y-[2px] active:scale-95 group relative"
+    :class="active
+      ? 'text-purple-500 bg-purple-500/10 dark:text-purple-400 dark:bg-purple-500/20'
+      : 'text-gray-700 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-700'"
   >
     <slot />
     <div

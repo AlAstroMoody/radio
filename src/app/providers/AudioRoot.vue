@@ -3,11 +3,15 @@ import { useAudioContext } from 'composables/useAudioContext'
 import { useAudioEffects } from 'composables/useAudioEffects'
 import { useAudioElement } from 'composables/useAudioElement'
 import { useAudioSettings } from 'composables/useAudioSettings'
-import { nextTick, onBeforeUnmount, provide, reactive, ref, watch } from 'vue'
+import { usePlaybackStore } from 'stores'
+import { nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
 
 import type { AudioController, AudioPlaybackState, AudioSourceDescriptor } from './audio'
 
 import { audioControllerKey } from './audio'
+
+const playbackStore = usePlaybackStore()
+const { autoplay, filterSettings } = useAudioSettings()
 
 const state = reactive<AudioPlaybackState>({
   buffered: null,
@@ -25,6 +29,8 @@ const state = reactive<AudioPlaybackState>({
 const currentSource = ref<AudioSourceDescriptor | null>(null)
 const userPaused = ref(false)
 let objectUrl: null | string = null
+const unlockQueue: Array<() => Promise<void>> = []
+let unlockListenersAttached = false
 
 const { audio } = useAudioElement(state, userPaused)
 const {
@@ -35,9 +41,80 @@ const {
   setEffectChain,
 } = useAudioContext(audio)
 
+function attachUnlockListeners(): void {
+  if (unlockListenersAttached)
+    return
+
+  unlockListenersAttached = true
+  window.addEventListener('pointerdown', onUserGesture)
+  window.addEventListener('keydown', onUserGesture)
+}
+
+function detachUnlockListeners(): void {
+  if (!unlockListenersAttached)
+    return
+
+  window.removeEventListener('pointerdown', onUserGesture)
+  window.removeEventListener('keydown', onUserGesture)
+  unlockListenersAttached = false
+}
+
+function hasUserActivation(): boolean {
+  const activation = navigator.userActivation
+  if (!activation)
+    return false
+
+  return activation.isActive || activation.hasBeenActive
+}
+
+async function onUserGesture(): Promise<void> {
+  const ctx = audioContext.value
+  if (ctx?.state === 'suspended') {
+    try {
+      await ctx.resume()
+    }
+    catch {}
+  }
+
+  const queue = unlockQueue.splice(0)
+  for (const callback of queue)
+    await callback()
+}
+
+function queuePlayUntilGesture(callback: () => Promise<void>): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    unlockQueue.push(async () => {
+      try {
+        await callback()
+        resolve()
+      }
+      catch (error) {
+        reject(error)
+      }
+    })
+    attachUnlockListeners()
+  })
+}
+
+async function resumeAudioContext(): Promise<boolean> {
+  const ctx = audioContext.value
+  if (!ctx || ctx.state === 'running')
+    return true
+
+  if (!hasUserActivation())
+    return false
+
+  try {
+    await ctx.resume()
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
 // Централизованное управление эффектами для всех источников (музыка и радио)
 const { effectBuilder, hasActiveEffects } = useAudioEffects()
-const { filterSettings } = useAudioSettings()
 
 let lastHasActiveEffects = hasActiveEffects()
 
@@ -121,20 +198,25 @@ async function play(): Promise<void> {
 
   userPaused.value = false
 
-  const contextState = audioContext.value?.state
-  if (contextState === 'suspended' || contextState === 'interrupted') {
-    try {
-      await audioContext.value!.resume()
-    }
-    catch { }
-  }
+  if (!hasUserActivation())
+    return queuePlayUntilGesture(playNow)
+
+  await playNow()
+}
+
+async function playNow(): Promise<void> {
+  if (!audio.value)
+    return
+
+  if (!(await resumeAudioContext()))
+    return
+
   try {
     await audio.value.play()
   }
   catch (error) {
-    if (error instanceof Error && error.name !== 'AbortError') {
+    if (error instanceof Error && error.name !== 'AbortError')
       throw error
-    }
   }
 }
 
@@ -177,6 +259,31 @@ function stop(): void {
   state.isPlaying = false
 }
 
+watch(() => playbackStore.mode, (mode, oldMode) => {
+  // Холодный старт — не автоплей. Смена режима — продолжить, если играло и включён autoplay.
+  const isModeSwitch = oldMode !== undefined && oldMode !== mode
+  playbackStore.setShouldResumeOnModeEnter(
+    isModeSwitch && state.isPlaying && autoplay.value,
+  )
+
+  pause()
+
+  nextTick(() => {
+    if (playbackStore.mode !== mode)
+      return
+
+    if (mode === 'radio' || mode === 'yt') {
+      setEffectChain(null)
+      return
+    }
+
+    if (currentSource.value?.type === 'stream') {
+      stop()
+      playbackStore.setCurrentSourceId(null)
+    }
+  })
+}, { flush: 'sync' })
+
 async function waitForAudioElement(): Promise<void> {
   if (audio.value)
     return
@@ -191,7 +298,14 @@ async function waitForAudioElement(): Promise<void> {
   })
 }
 
+onMounted(() => {
+  attachUnlockListeners()
+})
+
 onBeforeUnmount(() => {
+  detachUnlockListeners()
+  unlockQueue.length = 0
+
   if (audio.value) {
     audio.value.pause()
     audio.value.src = ''

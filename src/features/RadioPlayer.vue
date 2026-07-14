@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { useAudioController } from 'composables/useAudioController'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
 import { useRadio } from 'composables/useRadio'
 import { useRadioPlayer } from 'composables/useRadioPlayer'
 import { BaseButton, iPlay, iSpin } from 'shared/ui'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { usePlaybackStore } from 'stores'
+import { nextTick, onMounted, watch } from 'vue'
 
-const { activeRadio, isRadioMode, nextRadio, prevRadio } = useRadio()
+const { activeRadio, nextRadio, prevRadio } = useRadio()
 const { volume } = useAudioSettings()
+const playbackStore = usePlaybackStore()
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState } = useMediaSession()
 
@@ -21,42 +22,16 @@ const {
   play,
 } = useRadioPlayer(activeRadio)
 
-const { autoplay } = useAudioSettings()
-const audioController = useAudioController()
-const wasPlayingBeforeToggle = ref(false)
-
 watch(activeRadio, async (station) => {
   const shouldResume = isPlaying.value
   pause()
-  if (!station)
-    return
-
-  if (!autoplay.value && !shouldResume)
+  if (!station || !shouldResume)
     return
 
   try {
     await playRadio()
   }
   catch { }
-})
-
-watch(() => isRadioMode.value, (value) => {
-  if (!value) {
-    wasPlayingBeforeToggle.value = isPlaying.value
-    pause()
-    audioController?.stop()
-    return
-  }
-
-  if (wasPlayingBeforeToggle.value) {
-    nextTick(() => {
-      if (!isRadioMode.value || !activeRadio.value)
-        return
-
-      playRadio()
-      wasPlayingBeforeToggle.value = false
-    })
-  }
 })
 
 async function playRadio() {
@@ -99,7 +74,6 @@ function updateRadioMediaSessionMetadata(): void {
   })
 }
 
-// Горячие клавиши для радио
 useHotkeys([
   { callback: () => {
     if (isPlaying.value) {
@@ -123,9 +97,16 @@ onMounted(() => {
   setupRadioMediaSessionHandlers()
   updateRadioMediaSessionMetadata()
 
-  if (autoplay.value) {
-    playRadio()
-  }
+  const shouldResume = playbackStore.consumeModeEnterResume()
+  if (!shouldResume)
+    return
+
+  nextTick(() => {
+    if (!activeRadio.value)
+      return
+
+    void playRadio()
+  })
 })
 
 watch(activeRadio, () => {

@@ -80,6 +80,10 @@ export function useAudioElement(
     useEventListener(audioElement, 'error', () => {
       const element = audio.value
       const error = element?.error
+
+      state.isPlaying = false
+      state.isReady = false
+
       if (!error) {
         state.error = 'Неизвестная ошибка аудио'
         return
@@ -93,10 +97,10 @@ export function useAudioElement(
           state.error = 'Ошибка декодирования аудио'
           break
         case MediaError.MEDIA_ERR_NETWORK:
-          state.error = 'Сетевая ошибка воспроизведения'
+          state.error = 'Сетевая ошибка / стрим недоступен'
           break
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          state.error = 'Источник аудио не поддерживается'
+          state.error = 'Стрим недоступен или не поддерживается'
           break
         default:
           state.error = 'Ошибка аудио'

@@ -4,17 +4,16 @@ import { useAudioService } from 'composables/useAudioService'
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
-import { useRadio } from 'composables/useRadio'
 import { storeToRefs } from 'pinia'
 import { AudioControls, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
-import { useLibraryStore } from 'stores'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useLibraryStore, usePlaybackStore } from 'stores'
+import { computed, nextTick, ref, watch } from 'vue'
 
 const fileDropZone = ref<InstanceType<typeof FileDropZone> | null>(null)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
 const isRestoringFromDb = ref(false)
-const { isRadioMode } = useRadio()
 
+const playbackStore = usePlaybackStore()
 const libraryStore = useLibraryStore()
 const {
   activeFile,
@@ -62,6 +61,26 @@ const {
 } = useAudioService(currentFileName)
 const pending = computed(() => isMetadataLoading.value)
 
+async function enterMusicMode(shouldPlay: boolean): Promise<void> {
+  await nextTick()
+
+  if (!files.value.length) {
+    await initPlayerOnMount()
+    wasPlayingBeforeSwitch.value = false
+    return
+  }
+
+  if (!activeFile.value)
+    return
+
+  try {
+    await initializeAudioWithSettings(shouldPlay)
+  }
+  catch { }
+
+  wasPlayingBeforeSwitch.value = false
+}
+
 async function handleFilesSelected(newFiles: File[]): Promise<void> {
   if (files.value?.map((file: File) => file.name).join() === newFiles.map((file: File) => file.name).join()) {
     return
@@ -96,7 +115,7 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
   catch { }
 }
 
-async function initPlayerOnMount() {
+async function initPlayerOnMount(): Promise<void> {
   if (files.value.length)
     return
 
@@ -188,17 +207,23 @@ useHotkeys([
   { callback: openFiles, key: 'o', preventDefault: true },
 ])
 
-onMounted(() => {
-  initializeAudioService()
-  setupMediaSessionHandlers()
+initializeAudioService()
+setupMediaSessionHandlers()
 
-  if (files.value.length) {
-    void initializeAudioWithSettings(autoplay.value)
+watch(() => playbackStore.mode, async (mode, oldMode) => {
+  if (mode !== 'music') {
+    if (oldMode === 'music')
+      pause()
+
     return
   }
 
-  void initPlayerOnMount()
-})
+  const isEnteringMusic = oldMode === undefined || oldMode !== 'music'
+  if (!isEnteringMusic)
+    return
+
+  await enterMusicMode(playbackStore.consumeModeEnterResume())
+}, { immediate: true })
 
 watch(
   () => audioController?.state.ended,
@@ -217,7 +242,7 @@ watch(activeFile, () => {
   if (isRestoringFromDb.value)
     return
 
-  const shouldAutoPlay = wasPlayingBeforeSwitch.value || isPlaying.value || autoplay.value
+  const shouldAutoPlay = wasPlayingBeforeSwitch.value || isPlaying.value
   pause()
   setTimeout(() => {
     void initializeAudioWithSettings(shouldAutoPlay)
@@ -241,35 +266,6 @@ watch([currentTime, duration], () => {
   if (isMediaSessionSupported.value && duration.value > 0) {
     updateMediaSessionPosition()
   }
-})
-
-watch(() => isRadioMode.value, (value) => {
-  if (value) {
-    wasPlayingBeforeSwitch.value = isPlaying.value
-    pause()
-    return
-  }
-
-  if (!activeFile.value || !files.value.length)
-    return
-
-  const shouldPlay = wasPlayingBeforeSwitch.value || autoplay.value
-
-  if (shouldPlay) {
-    nextTick(() => {
-      if (!isRadioMode.value && activeFile.value) {
-        initializeAudioWithSettings(shouldPlay)
-      }
-    })
-  }
-  else {
-    nextTick(() => {
-      if (!isRadioMode.value && activeFile.value) {
-        initializeAudioWithSettings(false)
-      }
-    })
-  }
-  wasPlayingBeforeSwitch.value = false
 })
 </script>
 

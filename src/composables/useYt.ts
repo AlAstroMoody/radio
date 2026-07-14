@@ -8,25 +8,27 @@ interface UseYtReturn {
   activeIndex: Ref<number>
   activeTrack: ComputedRef<undefined | YtTrack>
   changeActiveTrack: (index: number) => void
+  clearSuggestions: () => void
   ensureDefaultSearch: () => Promise<void>
   error: Ref<string>
+  fetchSuggestions: (query: string) => Promise<void>
   hasMore: ComputedRef<boolean>
   isLoading: Ref<boolean>
   isLoadingMore: Ref<boolean>
+  isLoadingRadio: Ref<boolean>
+  isLoadingSuggestions: Ref<boolean>
   lastQuery: Ref<string>
+  loadLiked: () => Promise<void>
   loadMore: () => Promise<void>
-  nextTrack: () => void
+  loadSimilarTracks: () => Promise<boolean>
+  nextTrack: () => Promise<void>
   prevTrack: () => void
   results: Ref<YtTrack[]>
   search: (query: string) => Promise<void>
+  suggestions: Ref<string[]>
 }
 
-let ytInstance: null | UseYtReturn = null
-
 export function useYt(): UseYtReturn {
-  if (ytInstance)
-    return ytInstance
-
   const ytStore = useYtStore()
   const {
     activeIndex,
@@ -35,26 +37,34 @@ export function useYt(): UseYtReturn {
     hasMore,
     isLoading,
     isLoadingMore,
+    isLoadingRadio,
+    isLoadingSuggestions,
     lastQuery,
     results,
+    suggestions,
   } = storeToRefs(ytStore)
 
-  ytInstance = {
+  return {
     activeIndex,
     activeTrack,
     changeActiveTrack: ytStore.changeActiveTrack,
+    clearSuggestions: ytStore.clearSuggestions,
     ensureDefaultSearch: ytStore.ensureDefaultSearch,
     error,
+    fetchSuggestions: ytStore.fetchSuggestions,
     hasMore,
     isLoading,
     isLoadingMore,
+    isLoadingRadio,
+    isLoadingSuggestions,
     lastQuery,
+    loadLiked: ytStore.loadLiked,
     loadMore: ytStore.loadMore,
+    loadSimilarTracks: ytStore.loadSimilarTracks,
     nextTrack: ytStore.nextTrack,
     prevTrack: ytStore.prevTrack,
     results,
     search: ytStore.search,
+    suggestions,
   }
-
-  return ytInstance
 }
