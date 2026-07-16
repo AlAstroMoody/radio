@@ -109,29 +109,32 @@ async function requestClose(): Promise<void> {
     return
   }
 
-  const offscreen = Math.ceil(panel.getBoundingClientRect().height + 24)
+  const sheet: HTMLElement = panel
+  const offscreen = Math.ceil(sheet.getBoundingClientRect().height + 24)
   dragY.value = Math.max(dragY.value, offscreen)
 
   let done = false
-  const finish = () => {
+  let fallback = 0
+
+  function finish() {
     if (done)
       return
     done = true
-    panel.removeEventListener('transitionend', onEnd)
+    sheet.removeEventListener('transitionend', onEnd)
     window.clearTimeout(fallback)
     isDismissing.value = false
     dragY.value = 0
     closeModal()
   }
 
-  const onEnd = (event: TransitionEvent) => {
+  function onEnd(event: TransitionEvent) {
     if (event.propertyName !== 'transform')
       return
     finish()
   }
 
-  panel.addEventListener('transitionend', onEnd)
-  const fallback = window.setTimeout(finish, 320)
+  sheet.addEventListener('transitionend', onEnd)
+  fallback = window.setTimeout(finish, 320)
 }
 </script>
 
