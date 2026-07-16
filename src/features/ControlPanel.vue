@@ -22,10 +22,6 @@ function setMode(next: PlaybackMode): void {
 </script>
 
 <template>
-  <!--
-    Mobile: horizontal dock at bottom.
-    bottom + safe-area — выше жестов/навигации Android & iOS home indicator.
-  -->
   <div
     class="z-50 flex w-fit items-center gap-1 rounded-xl border border-glass bg-glass p-1 shadow-lg shadow-top backdrop-blur-xl dark:border-glass-purple-border dark:bg-glass-purple max-md:fixed max-md:bottom-[max(0.5rem,env(safe-area-inset-bottom))] max-md:left-1/2 max-md:-translate-x-1/2"
   >
