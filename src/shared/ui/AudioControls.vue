@@ -48,7 +48,7 @@ const repeatLabel = {
 </script>
 
 <template>
-  <div class="flex flex-col items-center" :class="showLibraryControls ? 'gap-4' : 'gap-2'">
+  <div class="flex flex-col items-center gap-2">
     <!-- Основные кнопки управления -->
     <div class="flex items-center gap-4">
       <BaseButton

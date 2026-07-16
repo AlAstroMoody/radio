@@ -54,7 +54,7 @@ function isDropBefore(index: number): boolean {
 </script>
 
 <template>
-  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden border-gray-200/50 p-4 px-1 shadow-lg shadow-right dark:border-gray-600/50 dark:shadow-xl md:px-5">
+  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden border-gray-200/50 p-4 px-1 dark:border-gray-600/50">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       radio stations
     </div>
@@ -64,7 +64,7 @@ function isDropBefore(index: number): boolean {
     <div v-else-if="stationsError" class="text-xs text-purple-500 dark:text-purple-400 text-center mb-2 shrink-0">
       Ошибка при загрузке списка станций
     </div>
-    <div v-else class="text-xs text-center mb-2 shrink-0">
+    <div v-else class="text-xs text-center mb-2 shrink-0 dark:text-white ">
       use ⋮⋮ handle to reorder
     </div>
 

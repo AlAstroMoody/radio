@@ -7,7 +7,7 @@ import { usePlaybackProgress } from 'composables/usePlaybackProgress'
 import { useYt } from 'composables/useYt'
 import { useYtPlayer } from 'composables/useYtPlayer'
 import { storeToRefs } from 'pinia'
-import { formatYtArtists, formatYtTitle, getYtThumbnailArtwork, getYtThumbnailUrl } from 'shared/types/yt'
+import { formatYtArtists, formatYtTitle, getYtThumbnailArtwork } from 'shared/types/yt'
 import { AudioControls, MarqueeText, ProgressBar } from 'shared/ui'
 import { usePlaybackStore, useYtStore } from 'stores'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
@@ -18,7 +18,7 @@ const { activeTrack, isLoadingLiked, isLoadingRadio, isRepeat, isShuffle, lastQu
 const playbackStore = usePlaybackStore()
 const ytStore = useYtStore()
 const { isYtMode } = storeToRefs(playbackStore)
-const { loop, volume, ytCoverArt } = useAudioSettings()
+const { loop, volume } = useAudioSettings()
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
@@ -36,7 +36,6 @@ let lastPositionSavedAt = 0
 
 const trackTitle = computed(() => formatYtTitle(activeTrack.value))
 const trackArtist = computed(() => formatYtArtists(activeTrack.value))
-const coverUrl = computed(() => getYtThumbnailUrl(activeTrack.value, 120))
 const marqueeText = computed(() => `${trackTitle.value} — ${trackArtist.value}`)
 const fallbackDuration = computed(() => activeTrack.value?.duration_seconds)
 const activeSourceId = computed(() => (
@@ -288,25 +287,6 @@ watch([currentTime, duration], () => {
 
 <template>
   <div v-if="activeTrack" class="flex w-full max-w-[360px] flex-col items-center gap-2">
-    <img
-      v-if="coverUrl && ytCoverArt"
-      :src="coverUrl"
-      :alt="trackTitle"
-      class="size-32 shrink-0 rounded-xl object-cover shadow-lg ring-1 ring-glass-purple-border md:size-40"
-    >
-
-    <div class="flex w-full justify-between gap-2 px-2 font-blackcraft text-black dark:text-white">
-      <MarqueeText
-        :text="marqueeText"
-        :speed="30"
-        :min-duration="8"
-        class="max-w-[calc(100%-48px)]"
-      />
-      <div class="flex min-w-[48px] items-center justify-center text-center">
-        {{ progress }}%
-      </div>
-    </div>
-
     <AudioControls
       :is-playing="isPlaying"
       :pending="pending"
@@ -336,5 +316,17 @@ watch([currentTime, duration], () => {
       :is-loading="pending && !playError"
       @seek="onProgressSeek"
     />
+
+    <div class="flex w-full justify-between gap-2 px-2 font-blackcraft text-black dark:text-white">
+      <MarqueeText
+        :text="marqueeText"
+        :speed="30"
+        :min-duration="8"
+        class="max-w-[calc(100%-48px)]"
+      />
+      <div class="flex min-w-[48px] items-center justify-center text-center">
+        {{ progress }}%
+      </div>
+    </div>
   </div>
 </template>

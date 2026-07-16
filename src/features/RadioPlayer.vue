@@ -128,7 +128,7 @@ watch(isPlaying, (playing) => {
           {{ activeRadio?.name }}
         </div>
       </figure>
-      <div class="relative z-10 flex text-3xl font-normal justify-center">
+      <div class="relative z-10 flex text-3xl font-normal justify-center mb-1">
         <BaseButton
           class="rounded-l-full"
           variant="control"

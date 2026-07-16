@@ -294,26 +294,15 @@ watch([currentTime, duration], () => {
 </script>
 
 <template>
-  <div class="relative flex flex-col justify-between landscape-flex-row">
-    <div class="z-10 mt-auto md:relative">
+  <div class="relative flex w-full max-w-[360px] flex-col items-center landscape-flex-row">
+    <div class="z-10 w-full md:relative">
       <FileDropZone
         ref="fileDropZone"
         :has-files="!!files?.length"
         @files-selected="handleFilesSelected"
       />
     </div>
-    <div v-if="activeFile" class="flex flex-col my-2 gap-4 items-center">
-      <div class="flex w-full justify-between gap-2 px-4 max-w-[360px] font-blackcraft text-black dark:text-white">
-        <MarqueeText
-          :text="currentFileName"
-          :speed="30"
-          :min-duration="8"
-          class="max-w-[calc(100%-48px)]"
-        />
-        <div class="flex items-center justify-center text-center min-w-[48px]">
-          {{ progress }}%
-        </div>
-      </div>
+    <div v-if="activeFile" class="flex w-full flex-col items-center gap-2">
       <AudioControls
         :is-playing="isPlaying"
         :is-shuffle="isShuffle"
@@ -330,12 +319,24 @@ watch([currentTime, duration], () => {
         @undo-last-seek="undoLastSeek"
       />
       <ProgressBar
+        class="w-full"
         :current-time="currentTime"
         :duration="duration"
         :progress="progress"
         :is-loading="isMetadataLoading"
         @seek="handleProgressSeek"
       />
+      <div class="flex w-full justify-between gap-2 px-2 font-blackcraft text-black dark:text-white">
+        <MarqueeText
+          :text="currentFileName"
+          :speed="30"
+          :min-duration="8"
+          class="max-w-[calc(100%-48px)]"
+        />
+        <div class="flex min-w-[48px] items-center justify-center text-center">
+          {{ progress }}%
+        </div>
+      </div>
     </div>
   </div>
 </template>

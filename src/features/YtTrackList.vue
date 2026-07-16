@@ -68,7 +68,7 @@ function trackThumbnail(track: YtTrack): string | undefined {
 </script>
 
 <template>
-  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden border-gray-200/50 p-4 px-1 shadow-lg shadow-right dark:border-gray-600/50 dark:shadow-xl md:px-5">
+  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden border-gray-200/50 p-4 dark:border-gray-600/50">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       youtube search
     </div>
@@ -78,7 +78,7 @@ function trackThumbnail(track: YtTrack): string | undefined {
     <p v-if="error" class="mb-2 shrink-0 px-2 text-center text-xs text-red-500">
       {{ error }}
     </p>
-    <div v-else class="mb-2 shrink-0 px-2 text-center text-xs">
+    <div v-else class="mb-2 shrink-0 px-2 text-center text-xs dark:text-white">
       {{ results.length ? 'select a track to play' : 'search, Liked or a playlist' }}
     </div>
 

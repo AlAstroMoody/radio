@@ -82,11 +82,11 @@ watch(files, loadVisibleDurations, { immediate: true })
 </script>
 
 <template>
-  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden p-4 px-1 md:px-5">
+  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden p-4 px-1">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
-    <div class="text-xs text-center mb-2 shrink-0">
+    <div class="text-xs text-center mb-2 shrink-0 dark:text-white">
       {{ listHint }}
     </div>
     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
