@@ -6,6 +6,7 @@ import { useYtStore } from 'stores'
 
 interface UseYtReturn {
   activeIndex: Ref<number>
+  activePlaylistId: Ref<null | string>
   activeTrack: ComputedRef<undefined | YtTrack>
   changeActiveTrack: (index: number) => void
   clearSuggestions: () => void
@@ -16,12 +17,15 @@ interface UseYtReturn {
   isLoading: Ref<boolean>
   isLoadingLiked: Ref<boolean>
   isLoadingMore: Ref<boolean>
+  isLoadingPlaylist: Ref<boolean>
   isLoadingRadio: Ref<boolean>
   isLoadingSuggestions: Ref<boolean>
+  isRepeat: Ref<boolean>
   isShuffle: Ref<boolean>
   lastQuery: Ref<string>
   loadLiked: () => Promise<void>
   loadMore: () => Promise<void>
+  loadPlaylist: (playlistId: string, title?: string) => Promise<void>
   loadSimilarTracks: () => Promise<boolean>
   nextTrack: () => Promise<void>
   prevTrack: () => void
@@ -29,20 +33,24 @@ interface UseYtReturn {
   search: (query: string) => Promise<void>
   shuffleTracks: () => void
   suggestions: Ref<string[]>
+  toggleRepeat: () => void
 }
 
 export function useYt(): UseYtReturn {
   const ytStore = useYtStore()
   const {
     activeIndex,
+    activePlaylistId,
     activeTrack,
     error,
     hasMore,
     isLoading,
     isLoadingLiked,
     isLoadingMore,
+    isLoadingPlaylist,
     isLoadingRadio,
     isLoadingSuggestions,
+    isRepeat,
     isShuffle,
     lastQuery,
     results,
@@ -51,6 +59,7 @@ export function useYt(): UseYtReturn {
 
   return {
     activeIndex,
+    activePlaylistId,
     activeTrack,
     changeActiveTrack: ytStore.changeActiveTrack,
     clearSuggestions: ytStore.clearSuggestions,
@@ -61,12 +70,15 @@ export function useYt(): UseYtReturn {
     isLoading,
     isLoadingLiked,
     isLoadingMore,
+    isLoadingPlaylist,
     isLoadingRadio,
     isLoadingSuggestions,
+    isRepeat,
     isShuffle,
     lastQuery,
     loadLiked: ytStore.loadLiked,
     loadMore: ytStore.loadMore,
+    loadPlaylist: ytStore.loadPlaylist,
     loadSimilarTracks: ytStore.loadSimilarTracks,
     nextTrack: ytStore.nextTrack,
     prevTrack: ytStore.prevTrack,
@@ -74,5 +86,6 @@ export function useYt(): UseYtReturn {
     search: ytStore.search,
     shuffleTracks: ytStore.shuffleTracks,
     suggestions,
+    toggleRepeat: ytStore.toggleRepeat,
   }
 }

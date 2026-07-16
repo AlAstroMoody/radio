@@ -12,7 +12,7 @@ const musicHotkeys = [
   { action: 'volume', key: '↑', suffix: ' / ↓' },
   { action: 'next', key: 'n' },
   { action: 'previous', key: 'p' },
-  { action: 'repeat', key: 'r' },
+  { action: 'repeat (one/all)', key: 'r' },
   { action: 'shuffle', key: 's' },
   { action: 'undo seek', key: 'u' },
   { action: 'open files', key: 'o' },
@@ -31,7 +31,8 @@ const ytHotkeys = [
   { action: 'volume', key: '↑', suffix: ' / ↓' },
   { action: 'next track', key: 'n' },
   { action: 'previous track', key: 'p' },
-  { action: 'undo seek', key: 'u' },
+  { action: 'repeat (one/all)', key: 'r' },
+  { action: 'shuffle', key: 's' },
 ]
 
 const currentHotkeys = computed(() => {

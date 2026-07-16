@@ -1,27 +1,42 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import { useYt } from 'composables/useYt'
-import { ref, useTemplateRef, watch } from 'vue'
+import { YT_CURATED_PLAYLISTS } from 'shared/types/yt'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 const {
+  activePlaylistId,
   clearSuggestions,
   fetchSuggestions,
   isLoading,
+  isLoadingPlaylist,
   lastQuery,
+  loadPlaylist,
   search,
   suggestions,
 } = useYt()
 
-const query = ref(lastQuery.value === 'Liked' ? '' : lastQuery.value)
+const curatedTitles = new Set(YT_CURATED_PLAYLISTS.map(playlist => playlist.title))
+
+const query = ref(
+  lastQuery.value === 'Liked' || curatedTitles.has(lastQuery.value)
+    ? ''
+    : lastQuery.value,
+)
 const showSuggestions = ref(false)
 const searchInput = useTemplateRef('searchInput')
+
+const isBusy = computed(() => isLoading.value || isLoadingPlaylist.value)
 
 const debouncedFetchSuggestions = useDebounceFn((value: string) => {
   void fetchSuggestions(value)
 }, 250)
 
 watch(lastQuery, (value) => {
-  query.value = value === 'Liked' ? query.value : value
+  if (value === 'Liked' || curatedTitles.has(value) || activePlaylistId.value)
+    return
+
+  query.value = value
 })
 
 watch(query, (value) => {
@@ -30,6 +45,12 @@ watch(query, (value) => {
 
   void debouncedFetchSuggestions(value)
 })
+
+async function handlePlaylist(playlistId: string, title: string): Promise<void> {
+  showSuggestions.value = false
+  clearSuggestions()
+  await loadPlaylist(playlistId, title)
+}
 
 async function handleSearch(): Promise<void> {
   showSuggestions.value = false
@@ -82,10 +103,26 @@ async function handleSuggestionClick(suggestion: string): Promise<void> {
       >
       <button
         class="shrink-0 rounded-lg border border-glass-purple-border bg-glass-purple px-3 py-2 text-sm text-white disabled:opacity-60"
-        :disabled="isLoading"
+        :disabled="isBusy"
         @click="handleSearch"
       >
-        {{ isLoading ? '...' : 'Search' }}
+        {{ isBusy ? '...' : 'Search' }}
+      </button>
+    </div>
+
+    <div class="mt-2 flex gap-2 overflow-x-auto pb-1">
+      <button
+        v-for="playlist in YT_CURATED_PLAYLISTS"
+        :key="playlist.id"
+        type="button"
+        class="shrink-0 rounded-lg border px-2.5 py-1.5 text-xs transition-colors disabled:opacity-60"
+        :class="activePlaylistId === playlist.id
+          ? 'border-purple-400 bg-purple-500/30 text-black dark:text-white'
+          : 'border-glass-purple-border bg-glass text-black dark:bg-glass-purple/40 dark:text-white'"
+        :disabled="isBusy"
+        @click="handlePlaylist(playlist.id, playlist.title)"
+      >
+        {{ playlist.title }}
       </button>
     </div>
 

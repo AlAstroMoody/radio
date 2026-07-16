@@ -14,11 +14,11 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const POSITION_SAVE_INTERVAL = 1000
 
-const { activeTrack, isLoadingLiked, isLoadingRadio, isShuffle, lastQuery, loadLiked, loadSimilarTracks, nextTrack, prevTrack, shuffleTracks } = useYt()
+const { activeTrack, isLoadingLiked, isLoadingRadio, isRepeat, isShuffle, lastQuery, loadLiked, loadSimilarTracks, nextTrack, prevTrack, shuffleTracks, toggleRepeat } = useYt()
 const playbackStore = usePlaybackStore()
 const ytStore = useYtStore()
 const { isYtMode } = storeToRefs(playbackStore)
-const { volume, ytCoverArt } = useAudioSettings()
+const { loop, volume, ytCoverArt } = useAudioSettings()
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
@@ -42,6 +42,30 @@ const fallbackDuration = computed(() => activeTrack.value?.duration_seconds)
 const activeSourceId = computed(() => (
   activeTrack.value?.videoId ? `yt-${activeTrack.value.videoId}` : null
 ))
+
+const repeatMode = computed(() => {
+  if (loop.value)
+    return 'one' as const
+  if (isRepeat.value)
+    return 'all' as const
+  return 'off' as const
+})
+
+function cycleRepeat(): void {
+  if (loop.value) {
+    loop.value = false
+    if (!isRepeat.value)
+      toggleRepeat()
+    return
+  }
+
+  if (isRepeat.value) {
+    toggleRepeat()
+    return
+  }
+
+  loop.value = true
+}
 
 const {
   currentTime,
@@ -235,6 +259,8 @@ useHotkeys([
     void nextTrack()
   }, key: 'n', preventDefault: true },
   { callback: prevTrack, key: 'p', preventDefault: true },
+  { callback: cycleRepeat, key: 'r', preventDefault: true },
+  { callback: shuffleTracks, key: 's', preventDefault: true },
 ])
 
 onMounted(() => {
@@ -289,6 +315,7 @@ watch([currentTime, duration], () => {
       :loading-favorites="isLoadingLiked"
       :is-favorites="lastQuery === 'Liked'"
       :is-shuffle="isShuffle"
+      :repeat-mode="repeatMode"
       :show-library-controls="false"
       @seek-backward="seekBackward"
       @prev-file="prevTrack"
@@ -298,6 +325,7 @@ watch([currentTime, duration], () => {
       @load-similar-tracks="() => void loadSimilarTracks()"
       @load-favorites="() => void loadLiked()"
       @shuffle-files="shuffleTracks"
+      @toggle-repeat="cycleRepeat"
     />
 
     <ProgressBar

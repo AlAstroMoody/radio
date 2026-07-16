@@ -1,12 +1,14 @@
-import type { YtLikedPlaylist, YtRadioResponse, YtSearchPage, YtSuggestResponse, YtTrack } from 'shared/types/yt'
+import type { YtLikedPlaylist, YtPlaylistResponse, YtRadioResponse, YtSearchPage, YtSuggestResponse, YtTrack } from 'shared/types/yt'
 
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
-const API_BASE = 'https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api/yt'
+const API_BASE = (import.meta.env.VITE_APP_API_URL as string | undefined)?.replace(/\/$/, '')
+  || ('https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api/yt')
 const DEFAULT_SEARCH_QUERY = 'Dracondaz'
 const RADIO_TRACK_LIMIT = 25
+const PLAYLIST_TRACK_LIMIT = 100
 
 interface YtPlaybackPosition {
   position: number
@@ -19,11 +21,20 @@ function filterTracks(tracks: YtTrack[]): YtTrack[] {
 
 async function parseApiError(response: Response): Promise<string> {
   try {
-    const data = await response.json() as { error?: string }
+    const data = await response.json() as { code?: string, error?: string }
     if (data.error)
       return data.error
+
+    if (data.code === 'expired')
+      return 'Stream expired'
+    if (data.code === 'unavailable')
+      return 'Track unavailable'
+    if (data.code === 'geo')
+      return 'Not available in region'
+    if (data.code === 'upstream')
+      return 'Upstream error'
   }
-  catch {}
+  catch { }
 
   if (response.status === 503)
     return 'Auth не настроен на бэке'
@@ -43,10 +54,13 @@ export const useYtStore = defineStore('yt', () => {
   const isLoading = ref(false)
   const isLoadingLiked = ref(false)
   const isLoadingMore = ref(false)
+  const isLoadingPlaylist = ref(false)
   const isLoadingRadio = ref(false)
   const isLoadingSuggestions = ref(false)
   const isShuffle = ref(false)
+  const isRepeat = ref(false)
   const originalResults = ref<YtTrack[]>([])
+  const activePlaylistId = ref<null | string>(null)
   const suggestions = ref<string[]>([])
   const error = ref('')
 
@@ -87,6 +101,10 @@ export const useYtStore = defineStore('yt', () => {
     }
 
     activeIndex.value = 0
+  }
+
+  function clearActivePlaylist(): void {
+    activePlaylistId.value = null
   }
   function getStreamUrl(videoId: string): string {
     return `${API_BASE}/stream?videoId=${encodeURIComponent(videoId)}`
@@ -176,6 +194,11 @@ export const useYtStore = defineStore('yt', () => {
       return
     }
 
+    if (isRepeat.value) {
+      activeIndex.value = 0
+      return
+    }
+
     if (continuationToken.value) {
       await loadMore()
       if (nextIndex < results.value.length) {
@@ -245,6 +268,7 @@ export const useYtStore = defineStore('yt', () => {
     isLoading.value = true
     error.value = ''
     continuationToken.value = null
+    clearActivePlaylist()
     clearSuggestions()
 
     try {
@@ -267,6 +291,10 @@ export const useYtStore = defineStore('yt', () => {
     finally {
       isLoading.value = false
     }
+  }
+
+  function toggleRepeat(): void {
+    isRepeat.value = !isRepeat.value
   }
 
   function shuffleTracks(): void {
@@ -307,6 +335,43 @@ export const useYtStore = defineStore('yt', () => {
     }
   }
 
+  async function loadPlaylist(playlistId: string, title?: string): Promise<void> {
+    const id = playlistId.trim()
+    if (!id || isLoadingPlaylist.value)
+      return
+
+    isLoadingPlaylist.value = true
+    error.value = ''
+    continuationToken.value = null
+    clearSuggestions()
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/playlist?id=${encodeURIComponent(id)}&limit=${PLAYLIST_TRACK_LIMIT}`,
+      )
+      if (!response.ok)
+        throw new Error(await parseApiError(response))
+
+      const data = await response.json() as YtPlaylistResponse
+      const tracks = filterTracks(data.tracks ?? [])
+
+      if (!tracks.length) {
+        error.value = 'Плейлист пустой'
+        return
+      }
+
+      replaceResults(tracks)
+      activePlaylistId.value = data.id || id
+      lastQuery.value = title?.trim() || data.title || id
+    }
+    catch (e) {
+      error.value = e instanceof Error ? e.message : 'Ошибка загрузки плейлиста'
+    }
+    finally {
+      isLoadingPlaylist.value = false
+    }
+  }
+
   async function loadLiked(): Promise<void> {
     if (isLoadingLiked.value)
       return
@@ -314,6 +379,7 @@ export const useYtStore = defineStore('yt', () => {
     isLoadingLiked.value = true
     error.value = ''
     continuationToken.value = null
+    clearActivePlaylist()
     clearSuggestions()
 
     try {
@@ -390,6 +456,7 @@ export const useYtStore = defineStore('yt', () => {
 
   return {
     activeIndex,
+    activePlaylistId,
     activeTrack,
     changeActiveTrack,
     clearPlaybackPosition,
@@ -404,12 +471,15 @@ export const useYtStore = defineStore('yt', () => {
     isLoading,
     isLoadingLiked,
     isLoadingMore,
+    isLoadingPlaylist,
     isLoadingRadio,
     isLoadingSuggestions,
+    isRepeat,
     isShuffle,
     lastQuery,
     loadLiked,
     loadMore,
+    loadPlaylist,
     loadSimilarTracks,
     nextTrack,
     prevTrack,
@@ -418,5 +488,6 @@ export const useYtStore = defineStore('yt', () => {
     search,
     shuffleTracks,
     suggestions,
+    toggleRepeat,
   }
 })

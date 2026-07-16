@@ -12,7 +12,6 @@ const {
   electricEffects,
   equalizerPresets,
   filterSettings,
-  loop,
   playbackRate,
   selectedPreset,
   visualization,
@@ -106,11 +105,6 @@ const visualizationOptions = [
       :max="144"
       :step="1"
       unit=" FPS"
-    />
-
-    <CheckboxInput
-      v-model="loop"
-      label="Repeat (one file)"
     />
 
     <CheckboxInput

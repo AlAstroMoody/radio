@@ -79,7 +79,7 @@ function trackThumbnail(track: YtTrack): string | undefined {
       {{ error }}
     </p>
     <div v-else class="mb-2 shrink-0 px-2 text-center text-xs">
-      {{ results.length ? 'select a track to play' : 'search or open Liked' }}
+      {{ results.length ? 'select a track to play' : 'search, Liked or a playlist' }}
     </div>
 
     <div

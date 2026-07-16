@@ -2,25 +2,27 @@
 import { ArrowDownTrayIcon, ArrowPathIcon, ArrowsUpDownIcon, ArrowUturnLeftIcon, BookmarkIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, PauseIcon, PlayIcon, SparklesIcon } from '@heroicons/vue/24/solid'
 import { BaseButton, iSpin } from 'shared/ui'
 
+export type RepeatMode = 'all' | 'off' | 'one'
+
 const {
   isFavorites = false,
   isPlaying,
-  isRepeat = false,
   isShuffle = false,
   loadingFavorites = false,
   loadingSimilarTracks = false,
   pending = false,
   playError = '',
+  repeatMode = 'off',
   showLibraryControls = true,
 } = defineProps<{
   isFavorites?: boolean
   isPlaying: boolean
-  isRepeat?: boolean
   isShuffle?: boolean
   loadingFavorites?: boolean
   loadingSimilarTracks?: boolean
   pending?: boolean
   playError?: string
+  repeatMode?: RepeatMode
   showLibraryControls?: boolean
 }>()
 
@@ -37,6 +39,12 @@ const emit = defineEmits<{
   toggleRepeat: []
   undoLastSeek: []
 }>()
+
+const repeatLabel = {
+  all: 'Повтор очереди',
+  off: 'Включить повтор',
+  one: 'Повтор одного трека',
+} as const
 </script>
 
 <template>
@@ -118,14 +126,20 @@ const emit = defineEmits<{
       </BaseButton>
       <BaseButton
         variant="player"
-        :class="{ 'text-purple-500': isRepeat }"
-        :label="isRepeat ? 'Отключить повтор' : 'Включить повтор'"
+        :class="{ 'text-purple-500': repeatMode !== 'off' }"
+        :label="repeatLabel[repeatMode]"
         @click="emit('toggleRepeat')"
       >
         <div class="relative">
           <ArrowPathIcon class="h-5 w-5" />
+          <span
+            v-if="repeatMode === 'one'"
+            class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-purple-500 text-[9px] font-bold leading-none text-white"
+          >
+            1
+          </span>
           <div
-            v-if="isRepeat"
+            v-else-if="repeatMode === 'all'"
             class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
           />
         </div>
@@ -167,6 +181,26 @@ const emit = defineEmits<{
           <ArrowsUpDownIcon class="h-5 w-5" />
           <div
             v-if="isShuffle"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
+          />
+        </div>
+      </BaseButton>
+      <BaseButton
+        variant="player"
+        :class="{ 'text-purple-500': repeatMode !== 'off' }"
+        :label="repeatLabel[repeatMode]"
+        @click="emit('toggleRepeat')"
+      >
+        <div class="relative">
+          <ArrowPathIcon class="h-5 w-5" />
+          <span
+            v-if="repeatMode === 'one'"
+            class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-purple-500 text-[9px] font-bold leading-none text-white"
+          >
+            1
+          </span>
+          <div
+            v-else-if="repeatMode === 'all'"
             class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse"
           />
         </div>

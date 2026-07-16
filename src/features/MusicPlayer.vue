@@ -36,9 +36,33 @@ const {
   updateFiles,
   updateFilesWithoutReset,
 } = libraryStore
-const { autoplay, volume } = useAudioSettings()
+const { autoplay, loop, volume } = useAudioSettings()
 
 const currentFileName = computed(() => activeFile.value?.name || '')
+
+const repeatMode = computed(() => {
+  if (loop.value)
+    return 'one' as const
+  if (isRepeat.value)
+    return 'all' as const
+  return 'off' as const
+})
+
+function cycleRepeat(): void {
+  if (loop.value) {
+    loop.value = false
+    if (!isRepeat.value)
+      toggleRepeat()
+    return
+  }
+
+  if (isRepeat.value) {
+    toggleRepeat()
+    return
+  }
+
+  loop.value = true
+}
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 const audioController = useAudioController()
@@ -201,7 +225,7 @@ useHotkeys([
   }, key: 'ArrowDown', preventDefault: true },
   { callback: nextFile, key: 'n', preventDefault: true },
   { callback: prevFile, key: 'p', preventDefault: true },
-  { callback: toggleRepeat, key: 'r', preventDefault: true },
+  { callback: cycleRepeat, key: 'r', preventDefault: true },
   { callback: shuffleFiles, key: 's', preventDefault: true },
   { callback: undoLastSeek, key: 'u', preventDefault: true },
   { callback: openFiles, key: 'o', preventDefault: true },
@@ -293,7 +317,7 @@ watch([currentTime, duration], () => {
       <AudioControls
         :is-playing="isPlaying"
         :is-shuffle="isShuffle"
-        :is-repeat="isRepeat"
+        :repeat-mode="repeatMode"
         :pending="pending"
         @seek-backward="seekBackward"
         @prev-file="prevFile"
@@ -302,7 +326,7 @@ watch([currentTime, duration], () => {
         @seek-forward="seekForward"
         @shuffle-files="shuffleFiles"
         @open-files="openFiles"
-        @toggle-repeat="toggleRepeat"
+        @toggle-repeat="cycleRepeat"
         @undo-last-seek="undoLastSeek"
       />
       <ProgressBar

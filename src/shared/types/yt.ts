@@ -3,9 +3,21 @@ export interface YtArtist {
   name?: string
 }
 
+export interface YtCuratedPlaylist {
+  id: string
+  title: string
+}
+
 export interface YtLikedPlaylist {
   author?: YtArtist
   id?: string
+  trackCount?: number
+  tracks: YtTrack[]
+}
+
+export interface YtPlaylistResponse {
+  id: string
+  title?: string
   trackCount?: number
   tracks: YtTrack[]
 }
@@ -40,6 +52,15 @@ export interface YtTrack {
   title?: string
   videoId?: string
 }
+
+/** Public chart / curated playlists (no auth). IDs from YTM charts. */
+export const YT_CURATED_PLAYLISTS: YtCuratedPlaylist[] = [
+  { id: 'PL4fGSI1pDJn61unMfmrUSz68RT8IFFnks', title: 'Hits' },
+  { id: 'PL4fGSI1pDJn69On1f-8NAvX_CYlx7QyZc', title: 'Charts' },
+  { id: 'PL4fGSI1pDJn77aK7sAW2AT0oOzo5inWY8', title: 'Pop' },
+  { id: 'PL4fGSI1pDJn5LOptOQixqnzXNGjNXAgYY', title: 'Rock' },
+  { id: 'PLrEnWoR732-DtKgaDdnPkezM_nDidBU9H', title: 'Trending' },
+]
 
 export function formatYtArtists(track: undefined | YtTrack): string {
   return track?.artists?.map(artist => artist.name).filter(Boolean).join(', ') || 'Unknown artist'
