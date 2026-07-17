@@ -12,7 +12,7 @@
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version",
-    "deploy": "npm run version:patch && npm run build && git add dist package.json -f && git commit -m \"Deploy v$(node -p \"require('./package.json').version\")\" && git push origin --delete gh-pages && git subtree push --prefix dist origin gh-pages"
+    "deploy": "npm run version:patch && npm run build && git add dist package.json -f && git commit -m \"Deploy v$(node -p \"require('./package.json').version\")\" && git push origin main && git subtree split --prefix dist -b gh-pages-tmp && git push origin gh-pages-tmp:gh-pages --force && git branch -D gh-pages-tmp"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
