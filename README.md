@@ -6,6 +6,6 @@ PWA-плеер с тремя режимами:
 - **Radio** — интернет-радиостанции
 - **YouTube** — поиск и плейлисты YouTube Music
 
-![alt text](/public/readme/image.webp)
+![alt text](/public/favicon/screenshot-wide.webp)
 
 https://alastromoody.github.io/radio/

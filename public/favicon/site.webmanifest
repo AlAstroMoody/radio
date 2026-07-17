@@ -18,8 +18,8 @@
   "orientation": "portrait",
   "screenshots": [
     {
-      "src": "./screenshot.webp",
-      "sizes": "370x666",
+      "src": "./screenshot-wide.webp",
+      "sizes": "2560x1324",
       "type": "image/webp",
       "form_factor": "wide",
       "label": "Application"
@@ -27,7 +27,7 @@
     {
       "src": "./screenshot.webp",
       "type": "image/webp",
-      "sizes": "370x666",
+      "sizes": "1440x3120",
       "form_factor": "narrow"
     }
   ],
