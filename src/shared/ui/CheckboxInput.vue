@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const { label } = defineProps<{
+const { disabled = false, label } = defineProps<{
+  disabled?: boolean
   label: string
 }>()
 
@@ -11,14 +12,19 @@ const inputId = computed(() => `checkbox-${label.toLowerCase().replace(/\s+/g, '
 </script>
 
 <template>
-  <label :for="inputId" class="text-sm flex items-center gap-2 text-black dark:text-white">
+  <label
+    :for="inputId"
+    class="text-sm flex items-center gap-2 text-black dark:text-white"
+    :class="disabled && 'opacity-50'"
+  >
     {{ label }}:
     <input
       :id="inputId"
       v-model="modelValue"
       type="checkbox"
+      :disabled="disabled"
       :aria-label="label"
-      class="checkbox-input"
+      class="checkbox-input disabled:cursor-not-allowed"
     >
   </label>
 </template>

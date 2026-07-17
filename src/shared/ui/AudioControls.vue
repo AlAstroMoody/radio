@@ -41,72 +41,62 @@ const emit = defineEmits<{
 }>()
 
 const repeatLabel = {
-  all: 'Повтор очереди',
-  off: 'Включить повтор',
-  one: 'Повтор одного трека',
+  all: 'Repeat queue',
+  off: 'Enable repeat',
+  one: 'Repeat one track',
 } as const
 </script>
 
 <template>
   <div class="flex flex-col items-center gap-2">
-    <!-- Основные кнопки управления -->
     <div class="flex items-center gap-4">
       <BaseButton
         variant="player"
-        label="Перемотать назад на 10 секунд"
+        label="Seek back 10 seconds"
         @click="emit('seekBackward')"
       >
         <span class="font-bold font-blackcraft">-10</span>
       </BaseButton>
       <BaseButton
         variant="player"
-        label="Предыдущий трек"
+        label="Previous track"
         @click="emit('prevFile')"
       >
         <ChevronDoubleLeftIcon class="h-6 w-6" />
       </BaseButton>
-      <div class="relative group">
-        <BaseButton
-          variant="player"
-          class="size-14!"
-          :class="{ 'text-red-500 dark:text-red-400': playError }"
-          :disabled="pending"
-          :label="playError || (pending ? 'Загрузка' : isPlaying ? 'Пауза' : 'Воспроизвести')"
-          @click="emit('togglePlayPause')"
-        >
-          <iSpin v-if="pending" class="mr-0! h-10 w-10" />
-          <PlayIcon v-else-if="!isPlaying" class="h-10 w-10" />
-          <PauseIcon v-else class="h-10 w-10" />
-        </BaseButton>
-        <div
-          v-if="playError"
-          class="pointer-events-none absolute -top-10 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1.5 text-sm text-white shadow-lg"
-        >
-          {{ playError }}
-        </div>
-      </div>
       <BaseButton
         variant="player"
-        label="Следующий трек"
+        class="size-14!"
+        :class="{ 'text-red-500 dark:text-red-400': playError }"
+        :disabled="pending"
+        :label="playError || (pending ? 'Loading' : isPlaying ? 'Pause' : 'Play')"
+        @click="emit('togglePlayPause')"
+      >
+        <iSpin v-if="pending" class="mr-0! h-10 w-10" />
+        <PlayIcon v-else-if="!isPlaying" class="h-10 w-10" />
+        <PauseIcon v-else class="h-10 w-10" />
+      </BaseButton>
+      <BaseButton
+        variant="player"
+        label="Next track"
         @click="emit('nextFile')"
       >
         <ChevronDoubleRightIcon class="h-6 w-6" />
       </BaseButton>
       <BaseButton
         variant="player"
-        label="Перемотать вперёд на 10 секунд"
+        label="Seek forward 10 seconds"
         @click="emit('seekForward')"
       >
         <span class="font-bold font-blackcraft">+10</span>
       </BaseButton>
     </div>
 
-    <!-- Дополнительные кнопки -->
     <div v-if="showLibraryControls" class="flex items-center gap-4">
       <BaseButton
         variant="player"
         :class="{ 'text-purple-500': isShuffle }"
-        :label="isShuffle ? 'Отключить случайный порядок' : 'Включить случайный порядок'"
+        :label="isShuffle ? 'Disable shuffle' : 'Enable shuffle'"
         @click="emit('shuffleFiles')"
       >
         <div class="relative">
@@ -119,7 +109,7 @@ const repeatLabel = {
       </BaseButton>
       <BaseButton
         variant="player"
-        label="Открыть файлы"
+        label="Open files"
         @click="emit('openFiles')"
       >
         <ArrowDownTrayIcon class="h-5 w-5" />
@@ -146,7 +136,7 @@ const repeatLabel = {
       </BaseButton>
       <BaseButton
         variant="player"
-        label="Отменить последнюю перемотку"
+        label="Undo last seek"
         @click="emit('undoLastSeek')"
       >
         <ArrowUturnLeftIcon class="h-5 w-5" />
@@ -156,7 +146,7 @@ const repeatLabel = {
     <div v-else class="flex items-center gap-4">
       <BaseButton
         variant="player"
-        label="Похожие треки после текущего"
+        label="Similar tracks after current"
         :disabled="loadingSimilarTracks"
         @click="emit('loadSimilarTracks')"
       >
@@ -166,7 +156,7 @@ const repeatLabel = {
         variant="player"
         :class="{ 'text-purple-500': isFavorites }"
         :disabled="loadingFavorites"
-        label="Избранное"
+        label="Favorites"
         @click="emit('loadFavorites')"
       >
         <BookmarkIcon class="h-5 w-5" :class="{ 'animate-pulse': loadingFavorites }" />
@@ -174,7 +164,7 @@ const repeatLabel = {
       <BaseButton
         variant="player"
         :class="{ 'text-purple-500': isShuffle }"
-        :label="isShuffle ? 'Отключить случайный порядок' : 'Включить случайный порядок'"
+        :label="isShuffle ? 'Disable shuffle' : 'Enable shuffle'"
         @click="emit('shuffleFiles')"
       >
         <div class="relative">

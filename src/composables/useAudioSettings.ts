@@ -29,7 +29,6 @@ export interface useAudioSettingsReturn {
   visualizationFPS: Ref<number>
   visualizationIntensity: Ref<number>
   volume: Ref<number>
-  ytCoverArt: Ref<boolean>
 }
 
 export function useAudioSettings(): useAudioSettingsReturn {
@@ -41,7 +40,6 @@ export function useAudioSettings(): useAudioSettingsReturn {
   const visualizationIntensity = useStorage('visualization-intensity', 1)
   const visualizationFPS = useStorage('visualization-fps', 60)
   const electricEffects = useStorage('electric-effects', true)
-  const ytCoverArt = useStorage('yt-cover-art', false)
   const selectedPreset = useStorage('audio-equalizer-preset', 'default')
   const filterSettings = useStorage<FilterSettings>('audio-filter-settings', {
     bass: { frequency: 100, gain: 0 },
@@ -79,6 +77,5 @@ export function useAudioSettings(): useAudioSettingsReturn {
     visualizationFPS,
     visualizationIntensity,
     volume,
-    ytCoverArt,
   }
 }

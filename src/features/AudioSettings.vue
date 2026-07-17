@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useRadio } from 'composables/useRadio'
+import { storeToRefs } from 'pinia'
 import { BaseSelect, CheckboxInput, RangeInput } from 'shared'
 import { usePlaybackStore } from 'stores'
+import { computed } from 'vue'
 
 const { isRadioMode } = useRadio()
 const playbackStore = usePlaybackStore()
+const { isMusicMode } = storeToRefs(playbackStore)
 const {
   applyPreset,
   autoplay,
@@ -18,7 +21,6 @@ const {
   visualizationFPS,
   visualizationIntensity,
   volume,
-  ytCoverArt,
 } = useAudioSettings()
 
 function handlePresetChange(presetName: string) {
@@ -36,15 +38,20 @@ const playbackRateOptions = [
   { label: '2x', value: 2 },
 ]
 
-const visualizationOptions = [
+const visualizationOptions = computed(() => [
   { label: 'Bars', value: 'bars' },
+  { disabled: isRadioMode.value, label: 'Cover art', value: 'cover' },
   { label: 'Radial', value: 'radial' },
   { label: 'Waveform', value: 'waveform' },
   { label: 'Particle', value: 'particle' },
   { label: 'Spectrum', value: 'spectrum' },
   { label: 'HexagonGrid', value: 'hexagongrid' },
   { label: 'Nothing', value: '' },
-]
+])
+
+const showVisTuning = computed(() => !!visualization.value && visualization.value !== 'cover')
+const playbackRateEnabled = computed(() => isMusicMode.value)
+const electricEffectsEnabled = computed(() => showVisTuning.value)
 </script>
 
 <template>
@@ -60,14 +67,15 @@ const visualizationOptions = [
       unit="%"
     />
 
-    <BaseSelect v-model="playbackRate" :options="playbackRateOptions" placeholder="default" label="Playback Rate:" :disabled="isRadioMode" />
+    <BaseSelect
+      v-model="playbackRate"
+      :options="playbackRateOptions"
+      placeholder="default"
+      label="Playback Rate:"
+      :disabled="!playbackRateEnabled"
+    />
     <BaseSelect v-model="visualization" :options="visualizationOptions" placeholder="default" label="Visualization:" />
 
-    <CheckboxInput
-      v-if="playbackStore.isYtMode"
-      v-model="ytCoverArt"
-      label="Cover art instead of visualization"
-    />
     <BaseSelect
       v-model="selectedPreset" :options="equalizerPresets.map((preset) => ({
         label: preset.name,
@@ -88,24 +96,26 @@ const visualizationOptions = [
       />
     </div>
 
-    <RangeInput
-      v-model="visualizationIntensity"
-      label="Vis. Intensity"
-      :min="0.5"
-      :max="2"
-      :step="0.1"
-      unit="x"
-      :format-value="(value) => value.toFixed(1)"
-    />
+    <template v-if="showVisTuning">
+      <RangeInput
+        v-model="visualizationIntensity"
+        label="Vis. Intensity"
+        :min="0.5"
+        :max="2"
+        :step="0.1"
+        unit="x"
+        :format-value="(value) => value.toFixed(1)"
+      />
 
-    <RangeInput
-      v-model="visualizationFPS"
-      label="Vis. FPS"
-      :min="30"
-      :max="144"
-      :step="1"
-      unit=" FPS"
-    />
+      <RangeInput
+        v-model="visualizationFPS"
+        label="Vis. FPS"
+        :min="30"
+        :max="144"
+        :step="1"
+        unit=" FPS"
+      />
+    </template>
 
     <CheckboxInput
       v-model="autoplay"
@@ -115,6 +125,16 @@ const visualizationOptions = [
     <CheckboxInput
       v-model="electricEffects"
       label="Electric Effects"
+      :disabled="!electricEffectsEnabled"
     />
+
+    <a
+      href="https://github.com/AlAstroMoody/radio/issues"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="mt-1 text-right text-sm text-purple-600 underline-offset-2 hover:underline dark:text-purple-300"
+    >
+      Report an issue
+    </a>
   </div>
 </template>

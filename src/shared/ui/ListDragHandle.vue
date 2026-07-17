@@ -9,7 +9,7 @@ defineOptions({ inheritAttrs: false })
     v-bind="$attrs"
     role="button"
     tabindex="-1"
-    aria-label="Перетащить для сортировки"
+    aria-label="Drag to reorder"
     class="flex shrink-0 items-center justify-center self-stretch px-1 text-gray-400 hover:text-purple-500 dark:text-gray-500 dark:hover:text-purple-400"
     @click.stop
     @mousedown.stop

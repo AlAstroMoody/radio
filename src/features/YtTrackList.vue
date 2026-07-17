@@ -4,7 +4,7 @@ import type { YtTrack } from 'shared/types/yt'
 import { useScrollToActive } from 'composables/useScrollToActive'
 import { useYt } from 'composables/useYt'
 import { formatYtArtists, formatYtTitle, getYtThumbnailUrl } from 'shared/types/yt'
-import { BaseButton, iNote } from 'shared/ui'
+import { BaseButton, iNote, ListSkeleton } from 'shared/ui'
 import { ref, useTemplateRef } from 'vue'
 
 import YtSearchInput from './YtSearchInput.vue'
@@ -87,7 +87,12 @@ function trackThumbnail(track: YtTrack): string | undefined {
       class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]"
       @scroll="handleScroll"
     >
-      <div ref="buttonsContainer" class="flex flex-col gap-3 py-3 pl-2 pr-2 list-optimized">
+      <ListSkeleton v-if="isLoading && !results.length" with-thumb />
+      <div
+        v-else
+        ref="buttonsContainer"
+        class="flex flex-col gap-3 py-3 pl-2 pr-2 list-optimized"
+      >
         <BaseButton
           v-for="(track, index) in results"
           :key="track.videoId"
@@ -125,6 +130,13 @@ function trackThumbnail(track: YtTrack): string | undefined {
           </div>
         </BaseButton>
 
+        <p
+          v-if="!results.length && !isLoading && !error"
+          class="px-4 py-8 text-center text-sm opacity-70 dark:text-white"
+        >
+          No tracks yet. Search, open Liked, or pick a playlist.
+        </p>
+
         <button
           v-if="hasMore"
           type="button"
@@ -132,7 +144,7 @@ function trackThumbnail(track: YtTrack): string | undefined {
           :disabled="isLoadingMore"
           @click="loadMore"
         >
-          {{ isLoadingMore ? 'Загрузка...' : 'Загрузить ещё' }}
+          {{ isLoadingMore ? 'Loading...' : 'Load more' }}
         </button>
       </div>
     </div>

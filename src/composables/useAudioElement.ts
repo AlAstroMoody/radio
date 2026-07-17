@@ -85,25 +85,25 @@ export function useAudioElement(
       state.isReady = false
 
       if (!error) {
-        state.error = 'Неизвестная ошибка аудио'
+        state.error = 'Unknown audio error'
         return
       }
 
       switch (error.code) {
         case MediaError.MEDIA_ERR_ABORTED:
-          state.error = 'Воспроизведение прервано'
+          state.error = 'Playback aborted'
           break
         case MediaError.MEDIA_ERR_DECODE:
-          state.error = 'Ошибка декодирования аудио'
+          state.error = 'Audio decode error'
           break
         case MediaError.MEDIA_ERR_NETWORK:
-          state.error = 'Сетевая ошибка / стрим недоступен'
+          state.error = 'Network error / stream unavailable'
           break
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          state.error = 'Стрим недоступен или не поддерживается'
+          state.error = 'Stream unavailable or unsupported'
           break
         default:
-          state.error = 'Ошибка аудио'
+          state.error = 'Audio error'
       }
     })
   }

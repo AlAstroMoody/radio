@@ -1,5 +1,11 @@
 <script setup lang="ts">
-const { formatValue = (value: number) => value.toString(), step = 1, unit = '' } = defineProps<{
+const {
+  compact = false,
+  formatValue = (value: number) => value.toString(),
+  step = 1,
+  unit = '',
+} = defineProps<{
+  compact?: boolean
   formatValue?: (value: number) => string
   label: string
   max: number
@@ -12,8 +18,16 @@ const modelValue = defineModel<number>({ required: true })
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
-    <label class="w-24 text-sm text-black dark:text-white">{{ label }}:</label>
+  <div
+    class="flex items-center gap-2"
+    :class="compact && 'min-w-0 flex-1'"
+  >
+    <label
+      v-if="!compact"
+      class="w-24 text-sm text-black dark:text-white"
+    >
+      {{ label }}:
+    </label>
     <input
       v-model.number="modelValue"
       type="range"
@@ -21,9 +35,15 @@ const modelValue = defineModel<number>({ required: true })
       :max="max"
       :step="step"
       :aria-label="label"
-      class="range-input flex-1 max-w-32"
+      class="range-input flex-1"
+      :class="compact ? 'min-w-0' : 'max-w-32'"
     >
-    <span class="w-10 text-sm whitespace-nowrap text-black dark:text-white">{{ formatValue(modelValue) }}{{ unit }}</span>
+    <span
+      class="shrink-0 whitespace-nowrap text-black dark:text-white"
+      :class="compact ? 'w-10 text-right text-xs tabular-nums' : 'w-10 text-sm'"
+    >
+      {{ formatValue(modelValue) }}{{ unit }}
+    </span>
   </div>
 </template>
 

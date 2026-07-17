@@ -3,11 +3,12 @@ import type { PlaybackMode } from 'stores/playback'
 
 import { useAudioSettings } from 'composables/useAudioSettings'
 import { useModal } from 'composables/useModal'
+import { useMusicCover } from 'composables/useMusicCover'
 import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer, YtPlayer, YtTrackList } from 'features'
 import { storeToRefs } from 'pinia'
 import { formatYtTitle, getYtThumbnailUrl } from 'shared/types/yt'
-import { AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
+import { AppToast, AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
 import { runStorageMigration } from 'shared/utils/storage-migration'
 import { useLibraryStore, usePlaybackStore, useStationsStore, useYtStore } from 'stores'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -19,8 +20,10 @@ const stationsStore = useStationsStore()
 const libraryStore = useLibraryStore()
 const playbackStore = usePlaybackStore()
 const ytStore = useYtStore()
+const { activeFile } = storeToRefs(libraryStore)
 const { activeTrack: ytActiveTrack } = storeToRefs(ytStore)
 const isYtMode = computed(() => playbackStore.mode === 'yt')
+const isMusicMode = computed(() => playbackStore.mode === 'music')
 const modeLabel = computed(() => {
   if (isYtMode.value)
     return 'yt'
@@ -60,10 +63,31 @@ watch(() => playbackStore.mode, (mode) => {
 const { clearFilesFromIndexedDB, saveActiveFileIndex, saveFilesToIndexedDB, updateFiles } = libraryStore
 const { openModal } = useModal()
 const currentModal = ref<'audio-settings' | 'playlist' | null>(null)
-const { visualization, ytCoverArt } = useAudioSettings()
+const { visualization } = useAudioSettings()
 
-const showYtCover = computed(() => isYtMode.value && ytCoverArt.value && !!ytCoverUrl.value)
-const showVisualizer = computed(() => !!visualization.value && !showYtCover.value)
+const isCoverMode = computed(() => visualization.value === 'cover')
+const musicCoverEnabled = computed(() => isMusicMode.value && isCoverMode.value)
+const { coverTitle: musicCoverTitle, coverUrl: musicCoverUrl } = useMusicCover(activeFile, musicCoverEnabled)
+
+const stageCoverUrl = computed(() => {
+  if (isYtMode.value)
+    return ytCoverUrl.value
+  if (isMusicMode.value)
+    return musicCoverUrl.value
+  return undefined
+})
+
+const stageCoverTitle = computed(() => {
+  if (isYtMode.value)
+    return ytCoverTitle.value
+  if (isMusicMode.value)
+    return musicCoverTitle.value
+  return 'Cover art'
+})
+
+const showStageCover = computed(() => isCoverMode.value && !!stageCoverUrl.value && (isYtMode.value || isMusicMode.value))
+const showVisualizer = computed(() => !!visualization.value && visualization.value !== 'cover')
+
 function handleOpenAudioSettings() {
   currentModal.value = 'audio-settings'
   openModal()
@@ -83,13 +107,11 @@ onMounted(() => {
       const fileHandles = launchParams.files
       if (fileHandles && fileHandles.length > 0) {
         try {
-          // Переключаемся в режим музыки при открытии файлов
           playbackStore.setMode('music')
 
           const newFiles = await Promise.all(fileHandles.map(handle => handle.getFile()))
           if (newFiles.length) {
             updateFiles(newFiles)
-            // Сохраняем файлы в IndexedDB для восстановления
             await clearFilesFromIndexedDB()
             await saveFilesToIndexedDB(newFiles)
             await saveActiveFileIndex(0)
@@ -109,10 +131,23 @@ watch(isYtMode, (value) => {
 
 <template>
   <AudioRoot>
-    <div
+    <main
       class="relative flex min-h-mobile w-full flex-col gap-4 md:gap-2"
     >
-      <div class="z-1 flex h-[calc(100dvh-144px)] w-full flex-1 pb-safe md:h-[calc(100dvh-64px)] md:flex-row md:gap-3 md:p-3">
+      <div
+        class="art-wash pointer-events-none absolute inset-0 z-0 transition-opacity duration-400"
+        :class="showStageCover ? 'opacity-100' : 'opacity-0'"
+        aria-hidden="true"
+      >
+        <img
+          v-if="stageCoverUrl"
+          :src="stageCoverUrl"
+          alt=""
+          class="art-wash-image"
+        >
+      </div>
+
+      <div class="relative z-1 flex h-[calc(100dvh-144px)] w-full flex-1 pb-safe md:h-[calc(100dvh-64px)] md:flex-row md:gap-3 md:p-3">
         <RadioList
           v-if="!isYtView"
           class="z-1 w-full hidden md:block md:h-full md:w-96 md:min-w-[24rem] bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-0 border-t-0 rounded-br-lg md:rounded-xl md:border-l md:border-t"
@@ -122,19 +157,20 @@ watch(isYtMode, (value) => {
           class="z-1 w-full hidden md:block md:h-full md:w-96 md:min-w-[24rem] bg-glass backdrop-blur-md shadow-lg dark:shadow-xl shadow-right p-4 dark:bg-glass-purple border border-glass dark:border-glass-purple-border border-l-0 border-t-0 rounded-br-lg md:rounded-xl md:border-l md:border-t"
         />
 
-        <div class="flex min-h-0 flex-1 flex-col items-center">
+        <div class="relative flex min-h-0 flex-1 flex-col items-center">
           <div
-            class="mt-4 flex h-10 w-full max-w-sm shrink-0 items-center justify-center px-3 text-center font-blackcraft text-4xl text-black dark:text-white lg:text-5xl"
+            class="relative z-1 mt-4 flex h-10 w-full max-w-sm shrink-0 items-center justify-center px-3 text-center font-blackcraft text-4xl text-black dark:text-white lg:text-5xl"
           >
             Amazing {{ modeLabel }}
           </div>
 
-          <div class="mt-auto mb-24 flex w-full flex-col items-center gap-3 md:mb-15">
+          <div class="relative z-1 mt-auto mb-24 flex w-full flex-col items-center gap-3 md:mb-15">
             <div class="flex min-h-40 w-full shrink-0 items-center justify-center md:min-h-48">
               <img
-                v-if="showYtCover"
-                :src="ytCoverUrl"
-                :alt="ytCoverTitle"
+                v-if="showStageCover"
+                :src="stageCoverUrl"
+                :alt="stageCoverTitle"
+                crossorigin="anonymous"
                 class="size-48 rounded-xl object-cover shadow-lg ring-1 ring-glass-purple-border md:size-40"
               >
               <AudioVisualizer
@@ -158,7 +194,7 @@ watch(isYtMode, (value) => {
       </div>
 
       <ControlPanel
-        class="md:mx-3 md:mb-2"
+        class="relative z-1 md:mx-3 md:mb-2"
         @open-audio-settings="handleOpenAudioSettings"
         @open-playlist="handleOpenPlaylist"
       />
@@ -167,12 +203,14 @@ watch(isYtMode, (value) => {
 
       <HotkeysHint />
 
+      <AppToast />
+
       <BaseModal>
         <AudioSettings v-if="currentModal === 'audio-settings'" class="m-auto" />
         <YtTrackList v-if="currentModal === 'playlist' && isYtMode" />
         <RadioList v-else-if="currentModal === 'playlist'" />
       </BaseModal>
-    </div>
+    </main>
   </AudioRoot>
 </template>
 
@@ -181,6 +219,38 @@ watch(isYtMode, (value) => {
 
 .mode-slide-host {
   overflow: hidden;
+}
+
+.art-wash {
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 75% at 50% 42%,
+    #000 0%,
+    #000 35%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 85% 75% at 50% 42%,
+    #000 0%,
+    #000 35%,
+    transparent 78%
+  );
+}
+
+.art-wash-image {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: min(1200px, 160vw);
+  height: min(900px, 120vh);
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+  filter: blur(80px) saturate(1.3);
+  opacity: 0.38;
+}
+
+.dark .art-wash-image {
+  opacity: 0.48;
+  filter: blur(90px) saturate(1.4);
 }
 
 .mode-slide-next-enter-active,

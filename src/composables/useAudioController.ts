@@ -10,7 +10,7 @@ export function useAudioController(required = true): AudioController | null {
   const controller = inject(audioControllerKey, null)
 
   if (!controller && required) {
-    throw new Error('AudioController не найден!')
+    throw new Error('AudioController not found!')
   }
 
   return controller
@@ -20,7 +20,7 @@ export function useAudioControllerRequired(): AudioController {
   const controller = inject(audioControllerKey, null)
 
   if (!controller) {
-    throw new Error('AudioController не найден!')
+    throw new Error('AudioController not found!')
   }
 
   return controller

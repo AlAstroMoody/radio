@@ -83,19 +83,21 @@ defineExpose({
   <div
     ref="dropZone"
     :class="hasFiles ? 'hidden' : 'flex'"
-    class="z-10 mx-auto h-24 w-24 cursor-pointer items-center justify-between rounded-xl border border-dashed border-dark-100 dark:border-light-100"
+    class="relative z-10 mx-auto min-h-40 w-full max-w-[280px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-dark-100 px-4 py-6 text-center dark:border-light-100"
   >
-    <span class="absolute left-0 right-0 text-center">
-      click or drag
-      <br>
-      for add files
-    </span>
+    <p class="pointer-events-none font-blackcraft text-lg text-black dark:text-white">
+      Drop audio here
+    </p>
+    <p class="pointer-events-none text-sm opacity-70 dark:text-white">
+      or click to open files
+    </p>
     <input
       ref="input"
       type="file"
       accept="audio/*"
       multiple
-      class="h-full w-full cursor-pointer opacity-0"
+      class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      aria-label="Open audio files"
       @change.stop="changeFiles"
     >
   </div>

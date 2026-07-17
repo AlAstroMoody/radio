@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useEventListener, useWindowSize } from '@vueuse/core'
+import { useFocusTrap } from 'composables/useFocusTrap'
 import { useModal } from 'composables/useModal'
 import { iClose } from 'shared/ui/icons'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 const SHEET_BREAKPOINT = 1024
 const DISMISS_DISTANCE = 96
@@ -17,6 +18,13 @@ const dragY = ref(0)
 const isDragging = ref(false)
 const isDismissing = ref(false)
 const panelEl = ref<HTMLElement | null>(null)
+const closeButtonEl = useTemplateRef<HTMLButtonElement>('closeButtonEl')
+
+const isTrapActive = computed(() => Boolean(isOpen.value) && !isDismissing.value)
+
+useFocusTrap(panelEl, isTrapActive, {
+  initialFocus: closeButtonEl,
+})
 
 let dragStartY = 0
 let lastY = 0
@@ -161,7 +169,9 @@ async function requestClose(): Promise<void> {
           ref="panelEl"
           role="dialog"
           aria-modal="true"
-          class="sheet-panel relative z-10 flex min-h-0 flex-col bg-light-100 shadow-xl dark:bg-dark-100 content-visibility-auto"
+          aria-label="Dialog"
+          tabindex="-1"
+          class="sheet-panel relative z-10 flex min-h-0 flex-col bg-light-100 shadow-xl dark:bg-dark-100 content-visibility-auto outline-none"
           :class="isSheet
             ? 'max-h-[88dvh] w-full rounded-t-2xl pb-safe'
             : 'max-h-[90vh] w-auto max-w-2xl rounded-lg'"
@@ -181,6 +191,7 @@ async function requestClose(): Promise<void> {
           </div>
 
           <button
+            ref="closeButtonEl"
             class="absolute right-3 top-3 z-10 rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             :class="isSheet ? 'top-2.5' : 'top-4 right-4'"
             aria-label="Close"

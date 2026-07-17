@@ -6,7 +6,6 @@ import { computed, ref, watch } from 'vue'
 
 const API_BASE = (import.meta.env.VITE_APP_API_URL as string | undefined)?.replace(/\/$/, '')
   || ('https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api/yt')
-const DEFAULT_SEARCH_QUERY = 'Dracondaz'
 const RADIO_TRACK_LIMIT = 25
 const PLAYLIST_TRACK_LIMIT = 100
 
@@ -37,10 +36,10 @@ async function parseApiError(response: Response): Promise<string> {
   catch { }
 
   if (response.status === 503)
-    return 'Auth не настроен на бэке'
+    return 'Auth not configured on the backend'
 
   if (response.status === 500)
-    return 'Ошибка YouTube Music / auth'
+    return 'YouTube Music / auth error'
 
   return `Request failed: ${response.status}`
 }
@@ -170,7 +169,7 @@ export const useYtStore = defineStore('yt', () => {
       return true
     }
     catch (e) {
-      error.value = e instanceof Error ? e.message : 'Ошибка загрузки radio'
+      error.value = e instanceof Error ? e.message : 'Failed to load radio'
       return false
     }
     finally {
@@ -261,7 +260,7 @@ export const useYtStore = defineStore('yt', () => {
   async function search(query: string): Promise<void> {
     const trimmed = query.trim()
     if (!trimmed) {
-      error.value = 'Введите поисковый запрос'
+      error.value = 'Enter a search query'
       return
     }
 
@@ -286,7 +285,7 @@ export const useYtStore = defineStore('yt', () => {
       continuationToken.value = data.continuation ?? null
     }
     catch (e) {
-      error.value = e instanceof Error ? e.message : 'Ошибка поиска'
+      error.value = e instanceof Error ? e.message : 'Search failed'
     }
     finally {
       isLoading.value = false
@@ -356,7 +355,7 @@ export const useYtStore = defineStore('yt', () => {
       const tracks = filterTracks(data.tracks ?? [])
 
       if (!tracks.length) {
-        error.value = 'Плейлист пустой'
+        error.value = 'Playlist is empty'
         return
       }
 
@@ -365,7 +364,7 @@ export const useYtStore = defineStore('yt', () => {
       lastQuery.value = title?.trim() || data.title || id
     }
     catch (e) {
-      error.value = e instanceof Error ? e.message : 'Ошибка загрузки плейлиста'
+      error.value = e instanceof Error ? e.message : 'Failed to load playlist'
     }
     finally {
       isLoadingPlaylist.value = false
@@ -391,15 +390,16 @@ export const useYtStore = defineStore('yt', () => {
       const tracks = filterTracks(data.tracks ?? [])
 
       if (!tracks.length) {
-        error.value = 'Liked пустой'
+        error.value = 'Liked is empty'
         return
       }
 
       replaceResults(tracks)
       lastQuery.value = 'Liked'
+      shuffleTracks()
     }
     catch (e) {
-      error.value = e instanceof Error ? e.message : 'Ошибка загрузки Liked'
+      error.value = e instanceof Error ? e.message : 'Failed to load Liked'
     }
     finally {
       isLoadingLiked.value = false
@@ -428,7 +428,7 @@ export const useYtStore = defineStore('yt', () => {
       continuationToken.value = data.continuation ?? null
     }
     catch (e) {
-      error.value = e instanceof Error ? e.message : 'Ошибка подгрузки'
+      error.value = e instanceof Error ? e.message : 'Failed to load more'
     }
     finally {
       isLoadingMore.value = false
@@ -442,16 +442,16 @@ export const useYtStore = defineStore('yt', () => {
 
     const added = await insertSimilarTracksAfterActive(videoId)
     if (!added && !error.value)
-      error.value = 'Похожие треки не найдены'
+      error.value = 'No similar tracks found'
 
     return added
   }
 
   async function ensureDefaultSearch(): Promise<void> {
-    if (lastQuery.value || results.value.length || isLoading.value)
+    if (lastQuery.value || results.value.length || isLoading.value || isLoadingLiked.value)
       return
 
-    await search(DEFAULT_SEARCH_QUERY)
+    await loadLiked()
   }
 
   return {

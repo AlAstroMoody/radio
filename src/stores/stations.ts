@@ -109,7 +109,7 @@ export const useStationsStore = defineStore('stations', () => {
 
       const data: ApiResponse<StationsResponse> = await response.json()
       if (!data.success)
-        throw new Error('Не удалось получить список станций')
+        throw new Error('Failed to fetch stations')
 
       const normalizedStations = data.data.stations.map(station => normalizeStation(station))
       const orderedStations = mergeWithSavedOrder(userRadios.value, normalizedStations)

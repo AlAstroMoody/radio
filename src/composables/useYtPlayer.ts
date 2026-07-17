@@ -43,7 +43,7 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
       }
     },
     onLoadError: (error) => {
-      loadError.value = error instanceof Error ? error.message : 'Ошибка загрузки стрима'
+      loadError.value = error instanceof Error ? error.message : 'Failed to load stream'
     },
   })
 
@@ -102,7 +102,7 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
         await applySavedPosition(pendingVideoId)
       }
       catch (error) {
-        loadError.value = error instanceof Error ? error.message : 'Ошибка загрузки стрима'
+        loadError.value = error instanceof Error ? error.message : 'Failed to load stream'
         audioPlayer.pause()
       }
     })()
@@ -201,7 +201,7 @@ export function useYtPlayer(activeTrack: Ref<undefined | YtTrack>): UseYtPlayerR
       if (error instanceof Error && error.name === 'AbortError')
         return
 
-      loadError.value = error instanceof Error ? error.message : 'Ошибка воспроизведения'
+      loadError.value = error instanceof Error ? error.message : 'Playback failed'
     }
   }
 

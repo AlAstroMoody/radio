@@ -21,6 +21,7 @@ const musicHotkeys = [
 const radioHotkeys = [
   { action: 'play/pause', key: 'Space' },
   { action: 'volume', key: '↑', suffix: ' / ↓' },
+  { action: 'mute', key: 'm' },
   { action: 'next station', key: 'n' },
   { action: 'previous station', key: 'p' },
 ]

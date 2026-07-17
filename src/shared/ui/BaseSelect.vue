@@ -1,7 +1,9 @@
 <script setup lang="ts" generic="T extends PropertyKey">
-import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
+import { onClickOutside } from '@vueuse/core'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 interface Option<T> {
+  disabled?: boolean
   label: string
   value: T
 }
@@ -29,32 +31,41 @@ const selectedOption = computed(() => {
   return options.find(option => option.value === model.value) || { label: '' }
 })
 
+onClickOutside(selectRef, () => {
+  if (!isOpen.value)
+    return
+  closeDropdown()
+})
+
 function closeDropdown() {
   isOpen.value = false
   focusedOptionIndex.value = -1
 }
 
 function focusNextOption() {
-  focusedOptionIndex.value = Math.min(focusedOptionIndex.value + 1, options.length - 1)
-  scrollToFocusedOption()
+  for (let i = focusedOptionIndex.value + 1; i < options.length; i += 1) {
+    if (!options[i]?.disabled) {
+      focusedOptionIndex.value = i
+      scrollToFocusedOption()
+      return
+    }
+  }
 }
 
 function focusPreviousOption() {
-  focusedOptionIndex.value = Math.max(focusedOptionIndex.value - 1, 0)
-  scrollToFocusedOption()
-}
-
-function handleClickOutside(event: MouseEvent) {
-  if (selectRef.value && !selectRef.value.contains(event.target as Node)) {
-    isOpen.value = false
-    focusedOptionIndex.value = -1
+  for (let i = focusedOptionIndex.value - 1; i >= 0; i -= 1) {
+    if (!options[i]?.disabled) {
+      focusedOptionIndex.value = i
+      scrollToFocusedOption()
+      return
+    }
   }
 }
 
 function openAndFocusFirst() {
   if (!isOpen.value) {
     isOpen.value = true
-    focusedOptionIndex.value = 0
+    focusedOptionIndex.value = options.findIndex(option => !option.disabled)
     nextTick(() => dropdownRef.value?.focus())
   }
 }
@@ -73,6 +84,9 @@ function selectFocusedOption() {
 }
 
 function selectOption(option: Option<T>) {
+  if (option.disabled)
+    return
+
   model.value = option.value
   emit('change', option.value)
   isOpen.value = false
@@ -82,21 +96,16 @@ function selectOption(option: Option<T>) {
 function toggleDropdown() {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
-    focusedOptionIndex.value = options.findIndex(option => option.value === model.value)
+    const currentIndex = options.findIndex(option => option.value === model.value)
+    focusedOptionIndex.value = currentIndex >= 0 && !options[currentIndex]?.disabled
+      ? currentIndex
+      : options.findIndex(option => !option.disabled)
     nextTick(() => dropdownRef.value?.focus())
   }
   else {
     focusedOptionIndex.value = -1
   }
 }
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
 </script>
 
 <template>
@@ -136,7 +145,8 @@ onUnmounted(() => {
       <div
         v-if="isOpen"
         ref="dropdownRef"
-        class="absolute z-10 w-full mt-1 bg-white dark:bg-dark-200 border border-light-100 dark:border-purple-500/50 rounded-md shadow-button dark:shadow-lg max-h-60 overflow-auto"
+        tabindex="-1"
+        class="absolute z-10 mt-1 max-h-40 w-full overflow-auto rounded-md border border-light-100 bg-white shadow-button outline-none dark:border-purple-500/50 dark:bg-dark-200 dark:shadow-lg"
         @keydown.arrow-down.prevent="focusNextOption"
         @keydown.arrow-up.prevent="focusPreviousOption"
         @keydown.enter.prevent="selectFocusedOption"
@@ -144,20 +154,23 @@ onUnmounted(() => {
       >
         <label
           v-for="(option, index) in options"
-          :key="option.value"
-          class="block px-2 py-1 cursor-pointer transition-all duration-200"
+          :key="String(option.value)"
+          class="block px-2 py-1 transition-all duration-200"
           :class="{
-            'bg-light-200 dark:bg-purple-500/30 text-dark-100 dark:text-white': index === focusedOptionIndex || option.value === model,
-            'hover:bg-light-100 dark:hover:bg-purple-500/20': index !== focusedOptionIndex && option.value !== model,
-            'text-dark-200 dark:text-gray-200': index !== focusedOptionIndex && option.value !== model,
+            'cursor-pointer': !option.disabled,
+            'cursor-not-allowed opacity-40': option.disabled,
+            'bg-light-200 dark:bg-purple-500/30 text-dark-100 dark:text-white': !option.disabled && (index === focusedOptionIndex || option.value === model),
+            'hover:bg-light-100 dark:hover:bg-purple-500/20': !option.disabled && index !== focusedOptionIndex && option.value !== model,
+            'text-dark-200 dark:text-gray-200': !option.disabled && index !== focusedOptionIndex && option.value !== model,
+            'bg-light-200/60 dark:bg-purple-500/20 text-dark-100 dark:text-white': option.disabled && option.value === model,
           }"
         >
           <input
-            v-model="model"
             type="radio"
-            :value="option.value"
+            :checked="option.value === model"
+            :disabled="option.disabled"
             class="sr-only"
-            @change="selectOption(option)"
+            @click.prevent="selectOption(option)"
           >
           <span>{{ option.label }}</span>
         </label>

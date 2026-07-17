@@ -90,7 +90,13 @@ watch(files, loadVisibleDurations, { immediate: true })
       {{ listHint }}
     </div>
     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
-      <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 max-w-2xl list-optimized">
+      <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 max-w-2xl list-optimized items-center">
+        <p
+          v-if="!files.length"
+          class="px-4 py-8 text-center text-sm opacity-70 dark:text-white"
+        >
+          No files yet. Drop audio on the player or press Open.
+        </p>
         <BaseButton
           v-for="(file, index) in files"
           :key="file.name"

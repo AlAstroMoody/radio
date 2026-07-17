@@ -4,6 +4,7 @@ import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
 import { usePlaybackProgress } from 'composables/usePlaybackProgress'
+import { useToast } from 'composables/useToast'
 import { useYt } from 'composables/useYt'
 import { useYtPlayer } from 'composables/useYtPlayer'
 import { storeToRefs } from 'pinia'
@@ -19,6 +20,7 @@ const playbackStore = usePlaybackStore()
 const ytStore = useYtStore()
 const { isYtMode } = storeToRefs(playbackStore)
 const { loop, volume } = useAudioSettings()
+const { showToast } = useToast()
 
 const { isSupported: isMediaSessionSupported, setActionHandlers, setMetadata, setPlaybackState, setPositionState } = useMediaSession()
 
@@ -29,6 +31,11 @@ const {
   pending,
   play,
 } = useYtPlayer(activeTrack)
+
+watch(playError, (error) => {
+  if (error)
+    showToast(error)
+})
 
 const audioController = useAudioController()
 const wasPlayingBeforeSwitch = ref(false)
@@ -286,7 +293,10 @@ watch([currentTime, duration], () => {
 </script>
 
 <template>
-  <div v-if="activeTrack" class="flex w-full max-w-[360px] flex-col items-center gap-2">
+  <div
+    v-if="activeTrack"
+    class="flex w-full max-w-[360px] flex-col items-center gap-2"
+  >
     <AudioControls
       :is-playing="isPlaying"
       :pending="pending"
@@ -329,4 +339,10 @@ watch([currentTime, duration], () => {
       </div>
     </div>
   </div>
+  <p
+    v-else
+    class="flex min-h-40 w-full max-w-[360px] items-center justify-center px-4 text-center text-sm opacity-70 dark:text-white"
+  >
+    Search or pick a track to play
+  </p>
 </template>

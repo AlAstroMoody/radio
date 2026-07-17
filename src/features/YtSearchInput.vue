@@ -94,7 +94,7 @@ async function handleSuggestionClick(suggestion: string): Promise<void> {
         v-model="query"
         type="text"
         class="min-w-0 flex-1 rounded-lg border border-glass-purple-border bg-glass px-3 py-2 text-sm text-black dark:text-white"
-        placeholder="Искать в YouTube Music"
+        placeholder="Search YouTube Music"
         autocomplete="off"
         @focus="handleSearchFocus"
         @blur="handleSearchBlur"

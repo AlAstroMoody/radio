@@ -2,6 +2,7 @@
 import type { PlaybackMode } from 'stores/playback'
 
 import { AdjustmentsVerticalIcon, ListBulletIcon, MusicalNoteIcon, RadioIcon } from '@heroicons/vue/24/solid'
+import { usePlaylistFirstRunHint } from 'composables/usePlaylistFirstRunHint'
 import { useTheme } from 'composables/useTheme'
 import { storeToRefs } from 'pinia'
 import { ButtonWithIcon, iLamp, iNote } from 'shared/ui'
@@ -15,6 +16,12 @@ const emit = defineEmits<{
 const { toggleDark } = useTheme()
 const playbackStore = usePlaybackStore()
 const { mode } = storeToRefs(playbackStore)
+const { dismissHint, showHint } = usePlaylistFirstRunHint()
+
+function openPlaylist(): void {
+  dismissHint()
+  emit('openPlaylist')
+}
 
 function setMode(next: PlaybackMode): void {
   playbackStore.setMode(next)
@@ -23,14 +30,35 @@ function setMode(next: PlaybackMode): void {
 
 <template>
   <div
-    class="z-50 flex w-fit items-center gap-1 rounded-xl border border-glass bg-glass p-1 shadow-lg shadow-top backdrop-blur-xl dark:border-glass-purple-border dark:bg-glass-purple max-md:fixed max-md:bottom-[max(0.5rem,env(safe-area-inset-bottom))] max-md:left-1/2 max-md:-translate-x-1/2"
+    class="z-50 flex w-fit items-center gap-2 rounded-xl border border-glass bg-glass p-1 shadow-lg shadow-top backdrop-blur-xl dark:border-glass-purple-border dark:bg-glass-purple max-md:fixed max-md:bottom-[max(0.5rem,env(safe-area-inset-bottom))] max-md:left-1/2 max-md:-translate-x-1/2"
   >
     <ButtonWithIcon label="theme" @click="toggleDark()">
       <iLamp />
     </ButtonWithIcon>
-    <ButtonWithIcon label="playlist" @click="emit('openPlaylist')">
-      <ListBulletIcon class="size-6" />
-    </ButtonWithIcon>
+
+    <div class="relative">
+      <ButtonWithIcon label="playlist" @click="openPlaylist">
+        <ListBulletIcon class="size-6" />
+      </ButtonWithIcon>
+
+      <Transition name="playlist-hint">
+        <button
+          v-if="showHint"
+          type="button"
+          class="absolute bottom-[calc(100%+0.6rem)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg border border-glass bg-black px-3 py-2 text-left text-xs text-white shadow-lg dark:border-glass-purple-border md:hidden"
+          aria-label="Open playlist. Tap to dismiss"
+          @click.stop="openPlaylist"
+        >
+          Open playlist
+          <span
+            class="absolute left-1/2 top-full -translate-x-1/2"
+            aria-hidden="true"
+            style="border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #000;"
+          />
+        </button>
+      </Transition>
+    </div>
+
     <ButtonWithIcon
       label="music"
       :active="mode === 'music'"
@@ -57,3 +85,15 @@ function setMode(next: PlaybackMode): void {
     </ButtonWithIcon>
   </div>
 </template>
+
+<style>
+.playlist-hint-enter-active,
+.playlist-hint-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.playlist-hint-enter-from,
+.playlist-hint-leave-to {
+  opacity: 0;
+}
+</style>

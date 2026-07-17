@@ -4,7 +4,7 @@
  */
 
 const MIGRATION_VERSION_KEY = 'storage-migration-version'
-const CURRENT_MIGRATION_VERSION = 1
+const CURRENT_MIGRATION_VERSION = 3
 
 // Старые ключи, которые нужно удалить или мигрировать
 const OLD_KEYS_TO_REMOVE = [
@@ -14,7 +14,7 @@ const OLD_KEYS_TO_REMOVE = [
 
 // Ключи для миграции данных (старый -> новый)
 const MIGRATION_MAP: Record<string, string> = {
-  // 'old-key': 'new-key' - пример, если нужно перенести данные
+  'yt-cover-art': 'cover-art',
 }
 
 export function runStorageMigration(): void {
@@ -46,6 +46,15 @@ export function runStorageMigration(): void {
       }
       localStorage.removeItem(oldKey)
     }
+  }
+
+  // cover-art checkbox → visualization mode "cover"
+  if (lastVersionNum < 3) {
+    const coverEnabled = localStorage.getItem('cover-art')
+    if (coverEnabled === 'true')
+      localStorage.setItem('audio-visualization', JSON.stringify('cover'))
+    localStorage.removeItem('cover-art')
+    localStorage.removeItem('yt-cover-art')
   }
 
   // Сохраняем версию миграции
