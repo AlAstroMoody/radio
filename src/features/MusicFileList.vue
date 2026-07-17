@@ -82,7 +82,7 @@ watch(files, loadVisibleDurations, { immediate: true })
 </script>
 
 <template>
-  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden p-4 px-1">
+  <div class="font-medium flex h-full min-h-0 max-w-full flex-col overflow-hidden px-1">
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
