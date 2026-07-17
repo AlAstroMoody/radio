@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAudioControllerRequired } from 'composables/useAudioController'
 import { useDragDrop } from 'composables/useDragDrop'
 import { useScrollToActive } from 'composables/useScrollToActive'
 import { storeToRefs } from 'pinia'
@@ -10,6 +11,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 const libraryStore = useLibraryStore()
 const { activeFile, files } = storeToRefs(libraryStore)
 const { changeActiveFile, reorderFiles } = libraryStore
+const audioController = useAudioControllerRequired()
 
 const buttonsContainer = useTemplateRef('buttonsContainer')
 const scrollContainer = useTemplateRef('scrollContainer')
@@ -53,6 +55,49 @@ function isDropBefore(index: number): boolean {
 
 const fileDurations = ref<Record<string, string>>({})
 
+function parseTimeToSeconds(timeStr: string): number {
+  const parts = timeStr.split(':')
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0], 10)
+    const seconds = parseInt(parts[1], 10)
+    return minutes * 60 + seconds
+  }
+  return 0
+}
+
+const totalDuration = computed(() => {
+  let totalSeconds = 0
+  files.value.forEach((file: File) => {
+    const durationStr = fileDurations.value[file.name]
+    if (durationStr && durationStr !== '...') {
+      totalSeconds += parseTimeToSeconds(durationStr)
+    }
+  })
+  return formatTime(totalSeconds)
+})
+
+const remainingDuration = computed(() => {
+  const activeIndex = files.value.findIndex((file: File) => file.name === activeFile.value?.name)
+  if (activeIndex === -1) {
+    return '0:00'
+  }
+  let remainingSeconds = 0
+  for (let i = activeIndex; i < files.value.length; i++) {
+    const durationStr = fileDurations.value[files.value[i].name]
+    if (durationStr && durationStr !== '...') {
+      const fileDuration = parseTimeToSeconds(durationStr)
+      if (i === activeIndex) {
+        // Subtract current playback position from active file
+        remainingSeconds += Math.max(0, fileDuration - audioController.state.currentTime)
+      }
+      else {
+        remainingSeconds += fileDuration
+      }
+    }
+  }
+  return formatTime(remainingSeconds)
+})
+
 async function loadFileDuration(file: File): Promise<void> {
   const fileName = file.name
   if (!fileDurations.value[fileName]) {
@@ -86,11 +131,12 @@ watch(files, loadVisibleDurations, { immediate: true })
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
-    <div class="text-xs text-center mb-2 shrink-0 dark:text-white">
-      {{ listHint }}
+    <div class="text-xs text-left mb-2 shrink-0 dark:text-white flex justify-between max-w-80 m-auto flex justify-between w-full">
+      <span>{{ listHint }}</span>
+      <span v-if="totalDuration !== '0:00'" class="ml-4 text-right">плейлист: {{ totalDuration }} <br/> осталось: {{ remainingDuration }}</span>
     </div>
     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
-      <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 max-w-2xl list-optimized items-center">
+      <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 list-optimized items-center">
         <p
           v-if="!files.length"
           class="px-4 py-8 text-center text-sm opacity-70 dark:text-white"
