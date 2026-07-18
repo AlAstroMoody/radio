@@ -31,7 +31,7 @@ const dragDrop = useDragDrop(
 const currentFileName = computed(() => activeFile.value?.name || '')
 
 const listHint = computed(() =>
-  files.value.length ? 'use ⋮⋮ handle to reorder' : 'No files selected',
+  files.value.length ? 'use ⋮ handle to reorder' : 'No files selected',
 )
 
 useScrollToActive({
@@ -55,11 +55,33 @@ function isDropBefore(index: number): boolean {
 
 const fileDurations = ref<Record<string, string>>({})
 
+function formatTimeExtended(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return '0 ч 0 мин 0 сек'
+  }
+
+  const truncatedSeconds = Math.trunc(seconds)
+  const hours = Math.floor(truncatedSeconds / 3600)
+  const minutes = Math.floor((truncatedSeconds % 3600) / 60)
+  const remainingSeconds = truncatedSeconds % 60
+
+  const parts = []
+  if (hours > 0) {
+    parts.push(`${hours} ч`)
+  }
+  if (minutes > 0 || hours > 0) {
+    parts.push(`${minutes} мин`)
+  }
+  parts.push(`${remainingSeconds} сек`)
+
+  return parts.join(' ')
+}
+
 function parseTimeToSeconds(timeStr: string): number {
   const parts = timeStr.split(':')
   if (parts.length === 2) {
-    const minutes = parseInt(parts[0], 10)
-    const seconds = parseInt(parts[1], 10)
+    const minutes = Number.parseInt(parts[0], 10)
+    const seconds = Number.parseInt(parts[1], 10)
     return minutes * 60 + seconds
   }
   return 0
@@ -73,13 +95,13 @@ const totalDuration = computed(() => {
       totalSeconds += parseTimeToSeconds(durationStr)
     }
   })
-  return formatTime(totalSeconds)
+  return formatTimeExtended(totalSeconds)
 })
 
 const remainingDuration = computed(() => {
   const activeIndex = files.value.findIndex((file: File) => file.name === activeFile.value?.name)
   if (activeIndex === -1) {
-    return '0:00'
+    return '0 ч 0 мин 0 сек'
   }
   let remainingSeconds = 0
   for (let i = activeIndex; i < files.value.length; i++) {
@@ -95,7 +117,7 @@ const remainingDuration = computed(() => {
       }
     }
   }
-  return formatTime(remainingSeconds)
+  return formatTimeExtended(remainingSeconds)
 })
 
 async function loadFileDuration(file: File): Promise<void> {
@@ -131,9 +153,9 @@ watch(files, loadVisibleDurations, { immediate: true })
     <div class="mb-4 font-blackcraft text-3xl text-black dark:text-white text-center shrink-0">
       Audio files
     </div>
-    <div class="text-xs text-left mb-2 shrink-0 dark:text-white flex justify-between max-w-80 m-auto flex justify-between w-full">
+    <div class="text-xs text-left mb-2 shrink-0 dark:text-white flex justify-between max-w-80 m-auto w-full gap-1 flex-wrap">
       <span>{{ listHint }}</span>
-      <span v-if="totalDuration !== '0:00'" class="ml-4 text-right">плейлист: {{ totalDuration }} <br/> осталось: {{ remainingDuration }}</span>
+      <span v-if="totalDuration !== '0:00'" class="text-right">плейлист: {{ totalDuration }} <br> осталось: {{ remainingDuration }}</span>
     </div>
     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
       <div ref="buttonsContainer" class="pl-2 pr-2 flex flex-col gap-3 py-3 list-optimized items-center">
@@ -148,7 +170,7 @@ watch(files, loadVisibleDurations, { immediate: true })
           :key="file.name"
           :label="file.name"
           variant="list"
-          class="relative flex w-full max-w-80 items-center gap-1"
+          class="relative flex w-full max-w-85 items-center gap-1"
           :class="[
             dragDrop.createHandlers(index, file).row.class,
             isDropBefore(index) && 'outline-2 outline-purple-500 dark:outline-purple-400 outline-offset-[-6px]',

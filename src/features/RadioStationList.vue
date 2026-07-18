@@ -81,7 +81,7 @@ function isDropBefore(index: number): boolean {
       </button>
     </div>
     <div v-else class="text-xs text-center mb-2 shrink-0 dark:text-white">
-      use ⋮⋮ handle to reorder
+      use ⋮ handle to reorder
     </div>
 
     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-auto overscroll-y-contain md:max-h-[600px]">
