@@ -5,13 +5,14 @@ import { useAudioSettings } from 'composables/useAudioSettings'
 import { useHotkeys } from 'composables/useHotkeys'
 import { useMediaSession } from 'composables/useMediaSession'
 import { storeToRefs } from 'pinia'
-import { AudioControls, FileDropZone, MarqueeText, ProgressBar } from 'shared/ui'
+import { AudioControls, FileDropZone, iSpin, MarqueeText, ProgressBar } from 'shared/ui'
 import { useLibraryStore, usePlaybackStore } from 'stores'
 import { computed, nextTick, ref, watch } from 'vue'
 
 const fileDropZone = ref<InstanceType<typeof FileDropZone> | null>(null)
 const wasPlayingBeforeSwitch = ref<boolean>(false)
 const isRestoringFromDb = ref(false)
+const isLoadingLibrary = ref(true)
 
 const playbackStore = usePlaybackStore()
 const libraryStore = useLibraryStore()
@@ -94,6 +95,8 @@ async function enterMusicMode(shouldPlay: boolean): Promise<void> {
     return
   }
 
+  isLoadingLibrary.value = false
+
   if (!activeFile.value)
     return
 
@@ -140,8 +143,10 @@ async function initializeAudioWithSettings(shouldAutoPlay = false) {
 }
 
 async function initPlayerOnMount(): Promise<void> {
-  if (files.value.length)
+  if (files.value.length) {
+    isLoadingLibrary.value = false
     return
+  }
 
   try {
     const [dbFiles, activeIndex] = await Promise.all([loadFilesFromIndexedDB(), loadActiveFileIndex()])
@@ -156,6 +161,7 @@ async function initPlayerOnMount(): Promise<void> {
   }
   catch { }
   finally {
+    isLoadingLibrary.value = false
     isRestoringFromDb.value = false
   }
 }
@@ -294,9 +300,18 @@ watch([currentTime, duration], () => {
 </script>
 
 <template>
-  <div class="relative flex w-full max-w-[360px] flex-col items-center landscape-flex-row">
+  <div class="relative flex w-full max-w-90 flex-col items-center landscape-flex-row">
     <div class="z-10 w-full md:relative">
+      <div
+        v-if="isLoadingLibrary && !files?.length"
+        class="relative z-10 mx-auto flex min-h-40 w-full max-w-70 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-dark-100 px-4 py-6 text-center dark:border-light-100"
+        aria-busy="true"
+        aria-label="Loading library"
+      >
+        <iSpin class="mr-0! h-10 w-10" />
+      </div>
       <FileDropZone
+        v-else
         ref="fileDropZone"
         :has-files="!!files?.length"
         @files-selected="handleFilesSelected"
@@ -333,7 +348,7 @@ watch([currentTime, duration], () => {
           :min-duration="8"
           class="max-w-[calc(100%-48px)]"
         />
-        <div class="flex min-w-[48px] items-center justify-center text-center">
+        <div class="flex min-w-12 items-center justify-center text-center">
           {{ progress }}%
         </div>
       </div>
