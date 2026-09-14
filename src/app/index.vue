@@ -8,7 +8,7 @@ import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer, YtPlayer, YtTrackList } from 'features'
 import { storeToRefs } from 'pinia'
 import { formatYtTitle, getYtThumbnailUrl } from 'shared/types/yt'
-import { AppToast, AudioVisualizer, BaseModal, HotkeysHint } from 'shared/ui'
+import { AppToast, AudioVisualizer, BaseModal, HotkeysHint, iNote } from 'shared/ui'
 import { runStorageMigration } from 'shared/utils/storage-migration'
 import { useLibraryStore, usePlaybackStore, useStationsStore, useYtStore } from 'stores'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -88,6 +88,14 @@ const stageCoverTitle = computed(() => {
 const showStageCover = computed(() => isCoverMode.value && !!stageCoverUrl.value && (isYtMode.value || isMusicMode.value))
 const showVisualizer = computed(() => !!visualization.value && visualization.value !== 'cover')
 
+const stageCoverError = ref(false)
+const artWashError = ref(false)
+
+watch(stageCoverUrl, () => {
+  stageCoverError.value = false
+  artWashError.value = false
+})
+
 function handleOpenAudioSettings() {
   currentModal.value = 'audio-settings'
   openModal()
@@ -136,7 +144,7 @@ watch(isYtMode, (value) => {
     >
       <div
         class="art-wash pointer-events-none absolute inset-0 z-0 transition-opacity duration-400"
-        :class="showStageCover ? 'opacity-100' : 'opacity-0'"
+        :class="showStageCover && !artWashError ? 'opacity-100' : 'opacity-0'"
         aria-hidden="true"
       >
         <img
@@ -144,6 +152,7 @@ watch(isYtMode, (value) => {
           :src="stageCoverUrl"
           alt=""
           class="art-wash-image"
+          @error="artWashError = true"
         >
       </div>
 
@@ -167,12 +176,21 @@ watch(isYtMode, (value) => {
           <div class="relative z-1 mt-auto mb-24 flex w-full flex-col items-center gap-3 md:mb-15">
             <div class="flex min-h-40 w-full shrink-0 items-center justify-center md:min-h-48">
               <img
-                v-if="showStageCover"
+                v-if="showStageCover && !stageCoverError"
                 :src="stageCoverUrl"
                 :alt="stageCoverTitle"
                 crossorigin="anonymous"
                 class="size-48 rounded-xl object-cover shadow-lg ring-1 ring-glass-purple-border md:size-40"
+                @error="stageCoverError = true"
               >
+              <div
+                v-else-if="showStageCover && stageCoverError"
+                class="flex size-48 items-center justify-center rounded-xl bg-glass/40 shadow-lg ring-1 ring-glass-purple-border dark:bg-glass-purple/30 md:size-40"
+                aria-label="stageCoverTitle"
+                role="img"
+              >
+                <iNote class="size-16 opacity-80" />
+              </div>
               <AudioVisualizer
                 v-else-if="showVisualizer"
                 class="shrink-0"

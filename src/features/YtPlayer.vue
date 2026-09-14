@@ -32,14 +32,19 @@ const {
   play,
 } = useYtPlayer(activeTrack)
 
-watch(playError, (error) => {
-  if (error)
-    showToast(error)
-})
-
 const audioController = useAudioController()
 const wasPlayingBeforeSwitch = ref(false)
 let lastPositionSavedAt = 0
+
+watch(playError, (error, prevError) => {
+  if (error) {
+    showToast(error)
+    if (!prevError) {
+      wasPlayingBeforeSwitch.value = true
+      nextTrack()
+    }
+  }
+})
 
 const trackTitle = computed(() => formatYtTitle(activeTrack.value))
 const trackArtist = computed(() => formatYtArtists(activeTrack.value))

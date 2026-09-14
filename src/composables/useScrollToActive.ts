@@ -3,7 +3,7 @@
 
 import type { Ref } from 'vue'
 
-import { nextTick, onMounted, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 
 interface UseScrollToActiveOptions<TItem, TActive> {
   activeItem: Ref<TActive | undefined>
@@ -26,6 +26,7 @@ export function useScrollToActive<TItem, TActive>({
   scrollToActive: (immediate?: boolean) => void
 } {
   let scrollTimeout: null | number = null
+  let rafId: null | number = null
 
   function scrollToActive(immediate = false): void {
     if (!scrollContainer.value || !activeItem.value)
@@ -59,29 +60,30 @@ export function useScrollToActive<TItem, TActive>({
   }
 
   function debouncedScrollToActive(): void {
-    if (scrollTimeout) {
+    if (scrollTimeout)
       clearTimeout(scrollTimeout)
-    }
 
-    scrollTimeout = setTimeout(() => {
-      scrollToActive(true)
-    }, debounceMs)
+    scrollTimeout = setTimeout(() => scrollToActive(true), debounceMs)
   }
 
   watch(activeItem, () => {
-    requestAnimationFrame(() => {
-      nextTick(() => scrollToActive())
-    })
+    rafId = requestAnimationFrame(() => nextTick(() => scrollToActive()))
   })
 
   watch(items, () => {
-    if (items.value.length > 0 && activeItem.value) {
+    if (items.value.length > 0 && activeItem.value)
       nextTick(() => debouncedScrollToActive())
-    }
-  })
+  }, { immediate: true })
 
   onMounted(() => {
-    nextTick(() => scrollToActive())
+    rafId = requestAnimationFrame(() => nextTick(() => scrollToActive(true)))
+  })
+
+  onUnmounted(() => {
+    if (scrollTimeout)
+      clearTimeout(scrollTimeout)
+    if (rafId)
+      cancelAnimationFrame(rafId)
   })
 
   return {
