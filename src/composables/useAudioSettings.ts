@@ -22,6 +22,8 @@ export interface useAudioSettingsReturn {
   electricEffects: Ref<boolean>
   equalizerPresets: { name: string, settings: { bass: { frequency: number, gain: number }, mid: { frequency: number, gain: number }, treble: { frequency: number, gain: number } } }[]
   filterSettings: Ref<{ bass: { frequency: number, gain: number }, mid: { frequency: number, gain: number }, treble: { frequency: number, gain: number } }>
+  fireAudioReactive: Ref<boolean>
+  fireEnabled: Ref<boolean>
   loop: Ref<boolean>
   playbackRate: Ref<number>
   selectedPreset: Ref<string>
@@ -40,6 +42,8 @@ export function useAudioSettings(): useAudioSettingsReturn {
   const visualizationIntensity = useStorage('visualization-intensity', 1)
   const visualizationFPS = useStorage('visualization-fps', 60)
   const electricEffects = useStorage('electric-effects', true)
+  const fireAudioReactive = useStorage('fire-audio-reactive', true)
+  const fireEnabled = useStorage('fire-enabled', true)
   const selectedPreset = useStorage('audio-equalizer-preset', 'default')
   const filterSettings = useStorage<FilterSettings>('audio-filter-settings', {
     bass: { frequency: 100, gain: 0 },
@@ -70,6 +74,8 @@ export function useAudioSettings(): useAudioSettingsReturn {
     electricEffects,
     equalizerPresets,
     filterSettings,
+    fireAudioReactive,
+    fireEnabled,
     loop,
     playbackRate,
     selectedPreset,

@@ -8,7 +8,7 @@ import { useRadio } from 'composables/useRadio'
 import { AudioSettings, ControlPanel, iLovePwa, MusicPlayer, RadioList, RadioPlayer, YtPlayer, YtTrackList } from 'features'
 import { storeToRefs } from 'pinia'
 import { formatYtTitle, getYtThumbnailUrl } from 'shared/types/yt'
-import { AppToast, AudioVisualizer, BaseModal, HotkeysHint, iNote } from 'shared/ui'
+import { AppToast, AudioVisualizer, BaseModal, FireBackground, HotkeysHint, iNote } from 'shared/ui'
 import { runStorageMigration } from 'shared/utils/storage-migration'
 import { useLibraryStore, usePlaybackStore, useStationsStore, useYtStore } from 'stores'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -139,6 +139,8 @@ watch(isYtMode, (value) => {
 
 <template>
   <AudioRoot>
+    <FireBackground />
+
     <main
       class="relative flex min-h-mobile w-full flex-col gap-4 md:gap-2"
     >
@@ -196,7 +198,7 @@ watch(isYtMode, (value) => {
                 class="shrink-0"
               />
             </div>
-            <div class="mode-slide-host mx-auto flex min-h-56 w-full max-w-[360px] flex-col justify-end">
+            <div class="mode-slide-host mx-auto flex min-h-56 w-full max-w-90 flex-col justify-end">
               <Transition :name="modeSlideName" mode="out-in">
                 <YtPlayer v-if="isYtView" key="yt" class="w-full" />
                 <MusicPlayer v-else-if="isMusicView" key="music" class="w-full" />

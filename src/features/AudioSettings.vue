@@ -15,6 +15,8 @@ const {
   electricEffects,
   equalizerPresets,
   filterSettings,
+  fireAudioReactive,
+  fireEnabled,
   playbackRate,
   selectedPreset,
   visualization,
@@ -126,6 +128,17 @@ const electricEffectsEnabled = computed(() => showVisTuning.value)
       v-model="electricEffects"
       label="Electric Effects"
       :disabled="!electricEffectsEnabled"
+    />
+
+    <CheckboxInput
+      v-model="fireEnabled"
+      label="Fire"
+    />
+
+    <CheckboxInput
+      v-model="fireAudioReactive"
+      label="Fire Audio Reactive"
+      :disabled="!fireEnabled"
     />
 
     <a
