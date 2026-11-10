@@ -2,10 +2,9 @@ import type { YtLikedPlaylist, YtPlaylistResponse, YtRadioResponse, YtSearchPage
 
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
+import { API_YT_BASE_URL } from 'shared/config/api'
 import { computed, ref, watch } from 'vue'
 
-const API_BASE = (import.meta.env.VITE_APP_API_URL as string | undefined)?.replace(/\/$/, '')
-  || ('https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api/yt')
 const RADIO_TRACK_LIMIT = 25
 const PLAYLIST_TRACK_LIMIT = 100
 
@@ -106,7 +105,7 @@ export const useYtStore = defineStore('yt', () => {
     activePlaylistId.value = null
   }
   function getStreamUrl(videoId: string): string {
-    return `${API_BASE}/stream?videoId=${encodeURIComponent(videoId)}`
+    return `${API_YT_BASE_URL}/stream?videoId=${encodeURIComponent(videoId)}`
   }
 
   function changeActiveTrack(index: number): void {
@@ -150,7 +149,7 @@ export const useYtStore = defineStore('yt', () => {
 
     try {
       const response = await fetch(
-        `${API_BASE}/radio?videoId=${encodeURIComponent(videoId)}&limit=${RADIO_TRACK_LIMIT}`,
+        `${API_YT_BASE_URL}/radio?videoId=${encodeURIComponent(videoId)}&limit=${RADIO_TRACK_LIMIT}`,
       )
       if (!response.ok)
         throw new Error(await parseApiError(response))
@@ -238,7 +237,7 @@ export const useYtStore = defineStore('yt', () => {
     isLoadingSuggestions.value = true
 
     try {
-      const response = await fetch(`${API_BASE}/suggest?q=${encodeURIComponent(trimmed)}`)
+      const response = await fetch(`${API_YT_BASE_URL}/suggest?q=${encodeURIComponent(trimmed)}`)
       if (!response.ok)
         throw new Error(await parseApiError(response))
 
@@ -272,7 +271,7 @@ export const useYtStore = defineStore('yt', () => {
 
     try {
       const response = await fetch(
-        `${API_BASE}/search?q=${encodeURIComponent(trimmed)}&paginated=1`,
+        `${API_YT_BASE_URL}/search?q=${encodeURIComponent(trimmed)}&paginated=1`,
       )
       if (!response.ok)
         throw new Error(await parseApiError(response))
@@ -346,7 +345,7 @@ export const useYtStore = defineStore('yt', () => {
 
     try {
       const response = await fetch(
-        `${API_BASE}/playlist?id=${encodeURIComponent(id)}&limit=${PLAYLIST_TRACK_LIMIT}`,
+        `${API_YT_BASE_URL}/playlist?id=${encodeURIComponent(id)}&limit=${PLAYLIST_TRACK_LIMIT}`,
       )
       if (!response.ok)
         throw new Error(await parseApiError(response))
@@ -382,7 +381,7 @@ export const useYtStore = defineStore('yt', () => {
     clearSuggestions()
 
     try {
-      const response = await fetch(`${API_BASE}/liked`)
+      const response = await fetch(`${API_YT_BASE_URL}/liked`)
       if (!response.ok)
         throw new Error(await parseApiError(response))
 
@@ -415,7 +414,7 @@ export const useYtStore = defineStore('yt', () => {
 
     try {
       const response = await fetch(
-        `${API_BASE}/search/continue?continuation=${encodeURIComponent(continuationToken.value)}`,
+        `${API_YT_BASE_URL}/search/continue?continuation=${encodeURIComponent(continuationToken.value)}`,
       )
       if (!response.ok)
         throw new Error(await parseApiError(response))

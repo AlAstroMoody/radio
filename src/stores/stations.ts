@@ -2,6 +2,7 @@ import type { Category, Wave } from 'shared/types/audio'
 
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
+import { API_BASE_URL } from 'shared/config/api'
 import { ref, watch } from 'vue'
 
 import { usePlaybackStore } from './playback'
@@ -21,7 +22,6 @@ interface StationsResponse {
   total: number
 }
 
-const API_BASE_URL = 'https://' + 'actepukc90' + '.' + 'fvds' + '.' + 'ru' + '/api'
 const STATIONS_CACHE_TTL = 60_000
 
 export const useStationsStore = defineStore('stations', () => {
